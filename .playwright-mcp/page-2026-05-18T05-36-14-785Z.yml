@@ -1,0 +1,495 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - link "Nivedan AI Autonomous Proposal Intelligence" [ref=e5] [cursor=pointer]:
+        - /url: "#top"
+        - img [ref=e7]
+        - generic [ref=e12]:
+          - generic [ref=e13]: Nivedan AI
+          - generic [ref=e14]: Autonomous Proposal Intelligence
+      - generic [ref=e15]:
+        - link "Login" [ref=e16] [cursor=pointer]:
+          - /url: "#"
+        - button "Book a Demo" [ref=e18] [cursor=pointer]:
+          - text: Book a Demo
+          - img [ref=e19]
+  - main [ref=e21]:
+    - generic [ref=e22]:
+      - img
+      - generic [ref=e24]:
+        - generic [ref=e25]:
+          - generic [ref=e26]:
+            - img [ref=e27]
+            - text: AUTONOMOUS PROPOSAL INTELLIGENCE PLATFORM
+          - heading "Proposals that win. Written by AI, in 20 minutes." [level=1] [ref=e29]:
+            - text: Proposals that win.
+            - text: Written by AI,
+            - text: in 20 minutes.
+          - paragraph [ref=e30]: Nivedan AI deploys six specialized AI agents to research, write, review, and perfect RFP responses that are tailored, compliant, and ready to win.
+          - generic [ref=e31]:
+            - button "Start Free Trial" [ref=e32] [cursor=pointer]:
+              - text: Start Free Trial
+              - img [ref=e33]
+            - button "See How It Works" [ref=e35] [cursor=pointer]:
+              - img [ref=e37]
+              - text: See How It Works
+          - generic [ref=e45]:
+            - generic [ref=e46]:
+              - generic [ref=e47]:
+                - img [ref=e48]
+                - img [ref=e50]
+                - img [ref=e52]
+                - img [ref=e54]
+                - img [ref=e56]
+              - generic [ref=e58]: 4.9/5
+            - generic [ref=e59]: Trusted by 250+ agencies & enterprises worldwide
+          - generic [ref=e60]:
+            - generic [ref=e61]:
+              - img [ref=e63]
+              - generic [ref=e66]: 95%
+              - generic [ref=e67]: Time Reduction
+            - generic [ref=e68]:
+              - img [ref=e70]
+              - generic [ref=e73]: 3×
+              - generic [ref=e74]: More Proposals
+            - generic [ref=e75]:
+              - img [ref=e77]
+              - generic [ref=e79]: 40–50%
+              - generic [ref=e80]: Higher Win Rate
+            - generic [ref=e81]:
+              - img [ref=e83]
+              - generic [ref=e85]: Enterprise
+              - generic [ref=e86]: Secure & Scalable
+        - generic [ref=e89]:
+          - generic [ref=e90]:
+            - generic [ref=e91]:
+              - generic [ref=e92]: Proposal_Apollo_v1.pdf
+              - generic [ref=e93]: Processing with 6 AI agents
+            - generic [ref=e94]: Live
+          - generic [ref=e96]:
+            - generic [ref=e98]:
+              - img [ref=e101]
+              - generic [ref=e104]:
+                - generic [ref=e105]: RFP Parsing
+                - generic [ref=e106]: Requirements extracted
+              - generic [ref=e111]: "01"
+            - generic [ref=e112]:
+              - img [ref=e115]
+              - generic [ref=e119]: Client Research
+              - generic [ref=e120]: "02"
+            - generic [ref=e121]:
+              - img [ref=e124]
+              - generic [ref=e131]: Requirements Matching
+              - generic [ref=e132]: "03"
+            - generic [ref=e133]:
+              - img [ref=e136]
+              - generic [ref=e140]: Proposal Writing
+              - generic [ref=e141]: "04"
+            - generic [ref=e142]:
+              - img [ref=e145]
+              - generic [ref=e149]: Quality Review
+              - generic [ref=e150]: "05"
+            - generic [ref=e151]:
+              - img [ref=e154]:
+                - generic [ref=e156]: PDF
+              - generic [ref=e158]: PDF Export
+              - generic [ref=e159]: "06"
+          - generic [ref=e160]:
+            - generic [ref=e162]: PDF
+            - generic [ref=e163]:
+              - generic [ref=e164]: Proposal_Apollo_v1.pdf
+              - generic [ref=e165]: Awaiting pipeline completion…
+      - generic [ref=e166]:
+        - generic [ref=e167]: Trusted by agencies & enterprises
+        - generic [ref=e168]:
+          - generic [ref=e171]: Meridian
+          - generic [ref=e174]: Northwind
+          - generic [ref=e177]: Atlas
+          - generic [ref=e180]: Apex Consulting
+          - generic [ref=e183]: Vertex
+          - generic [ref=e186]: Stratum
+          - generic [ref=e189]: Lumen
+          - generic [ref=e192]: Praxis
+          - generic [ref=e195]: Meridian
+          - generic [ref=e198]: Northwind
+          - generic [ref=e201]: Atlas
+          - generic [ref=e204]: Apex Consulting
+          - generic [ref=e207]: Vertex
+          - generic [ref=e210]: Stratum
+          - generic [ref=e213]: Lumen
+          - generic [ref=e216]: Praxis
+    - generic [ref=e218]:
+      - generic [ref=e219]:
+        - generic [ref=e220]: THE REAL-WORLD PROBLEM
+        - heading "The way teams write proposals today is broken." [level=2] [ref=e222]
+        - paragraph [ref=e223]: One software agency handles 15 RFPs a month — that's up to 300 hours of senior staff time, every month, on work that should take minutes.
+      - generic [ref=e224]:
+        - generic [ref=e225]:
+          - generic [ref=e226]:
+            - generic [ref=e227]: ✕
+            - generic [ref=e228]:
+              - generic [ref=e229]: Before
+              - generic [ref=e230]: The status quo
+          - list [ref=e231]:
+            - listitem [ref=e232]:
+              - generic [ref=e233]: ✕
+              - text: Sales managers read 40-page RFPs manually — 3 hours just to understand
+            - listitem [ref=e234]:
+              - generic [ref=e235]: ✕
+              - text: Writing starts from a blank Google Doc, copy-pasting from old proposals
+            - listitem [ref=e236]:
+              - generic [ref=e237]: ✕
+              - text: "Pinging 5 teammates: \"What was that case study from last year?\""
+            - listitem [ref=e238]:
+              - generic [ref=e239]: ✕
+              - text: Proposal feels generic — barely addresses the client's situation
+            - listitem [ref=e240]:
+              - generic [ref=e241]: ✕
+              - text: Reviewer finds missing sections — entire rewrite needed
+            - listitem [ref=e242]:
+              - generic [ref=e243]: ✕
+              - text: 8–20 hours of senior staff time wasted per proposal
+        - generic [ref=e244]:
+          - generic [ref=e245]:
+            - generic [ref=e246]: ✓
+            - generic [ref=e247]:
+              - generic [ref=e248]: After Nivedan AI
+              - generic [ref=e249]: Proposals in 20 minutes
+          - list [ref=e250]:
+            - listitem [ref=e251]:
+              - generic [ref=e252]: ✓
+              - text: Upload an RFP — agents parse every requirement in 60 seconds
+            - listitem [ref=e253]:
+              - generic [ref=e254]: ✓
+              - text: Client Research Agent finds the company's latest news and priorities
+            - listitem [ref=e255]:
+              - generic [ref=e256]: ✓
+              - text: Past case studies retrieved from your knowledge base automatically
+            - listitem [ref=e257]:
+              - generic [ref=e258]: ✓
+              - text: Every section is tailored to that specific client's context
+            - listitem [ref=e259]:
+              - generic [ref=e260]: ✓
+              - text: Quality Review Agent checks every requirement before export
+            - listitem [ref=e261]:
+              - generic [ref=e262]: ✓
+              - text: Complete proposal ready in 15–20 minutes — zero hours of human writing
+    - generic [ref=e264]:
+      - generic [ref=e265]:
+        - generic [ref=e266]: SIX SPECIALIZED AGENTS
+        - heading "One pipeline. Six instruments. Played in perfect order." [level=2] [ref=e268]
+        - paragraph [ref=e269]: Each agent has one clearly defined job — and passes its structured output to the next, building your proposal layer by layer.
+      - generic [ref=e270]:
+        - generic [ref=e271]:
+          - generic [ref=e272]:
+            - img [ref=e274]
+            - generic [ref=e277]: "01"
+          - heading "Orchestrator Agent" [level=3] [ref=e278]
+          - generic [ref=e279]: Root ADK Agent · Pipeline Manager
+          - paragraph [ref=e280]: Manages the entire pipeline. Creates session state, routes downstream agents, handles failures gracefully — the conductor that ensures all six instruments play in the right order.
+          - generic [ref=e281]: gemini-3.1-pro-preview
+        - generic [ref=e283]:
+          - generic [ref=e284]:
+            - img [ref=e286]
+            - generic [ref=e289]: "02"
+          - heading "RFP Parser Agent" [level=3] [ref=e290]
+          - generic [ref=e291]: Document Intelligence · Requirement Extractor
+          - paragraph [ref=e292]: Reads the entire RFP — no matter how long, no matter how messy — and extracts mandatory requirements, budget ceilings, timelines, evaluation criteria, and compliance flags.
+          - generic [ref=e293]: gemini-3.1-flash-lite
+        - generic [ref=e295]:
+          - generic [ref=e296]:
+            - img [ref=e298]
+            - generic [ref=e302]: "03"
+          - heading "Client Research Agent" [level=3] [ref=e303]
+          - generic [ref=e304]: Company Intelligence · Context Builder
+          - paragraph [ref=e305]: Researches the client's recent news, funding, leadership changes, product launches, and strategic priorities — so every proposal feels deeply informed.
+          - generic [ref=e306]: gemini-3.1-flash-lite
+        - generic [ref=e308]:
+          - generic [ref=e309]:
+            - img [ref=e311]
+            - generic [ref=e317]: "04"
+          - heading "Requirements Matcher Agent" [level=3] [ref=e318]
+          - generic [ref=e319]: Capability Alignment · Proof Finder
+          - paragraph [ref=e320]: Compares what the client needs against what you actually offer. Mines your knowledge base for the strongest evidence and maps every requirement to a proof point.
+          - generic [ref=e321]: gemini-3.1-flash-lite
+        - generic [ref=e323]:
+          - generic [ref=e324]:
+            - img [ref=e326]
+            - generic [ref=e329]: "05"
+          - heading "Proposal Writer Agent" [level=3] [ref=e330]
+          - generic [ref=e331]: Full Document Drafter · Section Builder
+          - paragraph [ref=e332]: The core creative agent. Writes the full proposal from Executive Summary through Pricing — every sentence written with this specific client in mind.
+          - generic [ref=e333]: gemini-3.1-pro-preview
+        - generic [ref=e335]:
+          - generic [ref=e336]:
+            - img [ref=e338]:
+              - generic [ref=e340]: PDF
+            - generic [ref=e341]: "06"
+          - heading "Quality Review & Export Agent" [level=3] [ref=e342]
+          - generic [ref=e343]: Editor · Validator · PDF Generator
+          - paragraph [ref=e344]: Senior-editor pass. Validates every mandatory requirement is addressed, fixes conflicts, then exports a clean, branded PDF ready for submission.
+          - generic [ref=e345]: gemini-3.1-flash-lite
+    - generic [ref=e348]:
+      - generic [ref=e349]:
+        - generic [ref=e350]: END-TO-END WORKFLOW
+        - heading "From RFP upload to a submission-ready PDF" [level=2] [ref=e352]
+        - paragraph [ref=e353]: Watch the pipeline as the document flows from one agent to the next.
+      - generic [ref=e354]:
+        - generic [ref=e355]:
+          - generic [ref=e357]:
+            - generic [ref=e358]:
+              - generic [ref=e359]: STEP 01
+              - generic [ref=e360]: ·
+              - generic [ref=e361]: Orchestrator
+            - heading "Session initialized" [level=3] [ref=e362]
+            - paragraph [ref=e363]: Reads file metadata, creates a session with job ID and company profile, decides the execution sequence.
+          - generic [ref=e365]:
+            - generic [ref=e366]:
+              - generic [ref=e367]: STEP 02
+              - generic [ref=e368]: ·
+              - generic [ref=e369]: RFP Parser
+            - heading "Requirements extracted" [level=3] [ref=e370]
+            - paragraph [ref=e371]: Converts a chaotic 40-page document into a clean JSON object — mandatory vs optional, budgets, timelines, evaluation weights.
+          - generic [ref=e373]:
+            - generic [ref=e374]:
+              - generic [ref=e375]: STEP 03
+              - generic [ref=e376]: ·
+              - generic [ref=e377]: Client Research
+            - heading "Client intelligence gathered" [level=3] [ref=e378]
+            - paragraph [ref=e379]: Web research surfaces recent news, funding rounds, strategic priorities — the context that makes proposals feel custom.
+          - generic [ref=e381]:
+            - generic [ref=e382]:
+              - generic [ref=e383]: STEP 04
+              - generic [ref=e384]: ·
+              - generic [ref=e385]: Requirements Matcher
+            - heading "Capabilities mapped" [level=3] [ref=e386]
+            - paragraph [ref=e387]: Every requirement linked to your strongest proof point from past case studies, certifications, and team bios.
+          - generic [ref=e389]:
+            - generic [ref=e390]:
+              - generic [ref=e391]: STEP 05
+              - generic [ref=e392]: ·
+              - generic [ref=e393]: Proposal Writer
+            - heading "Full proposal drafted" [level=3] [ref=e394]
+            - paragraph [ref=e395]: Executive Summary through Pricing — every sentence tailored to the client's mission, constraints, and language.
+          - generic [ref=e397]:
+            - generic [ref=e398]:
+              - generic [ref=e399]: STEP 06
+              - generic [ref=e400]: ·
+              - generic [ref=e401]: Quality Review
+            - heading "Validated & exported" [level=3] [ref=e402]
+            - paragraph [ref=e403]: Senior-editor pass catches conflicts. Exports a branded PDF and emails it. Saved to your library, instantly.
+        - generic [ref=e406]:
+          - generic [ref=e407]:
+            - generic [ref=e408]:
+              - generic [ref=e409]: "01"
+              - generic [ref=e410]: Orchestrator
+              - generic [ref=e412]: Processing
+            - generic [ref=e417]:
+              - generic [ref=e418]: "02"
+              - generic [ref=e419]: RFP Parser
+            - generic [ref=e421]:
+              - generic [ref=e422]: "03"
+              - generic [ref=e423]: Client Research
+            - generic [ref=e425]:
+              - generic [ref=e426]: "04"
+              - generic [ref=e427]: Requirements Matcher
+            - generic [ref=e429]:
+              - generic [ref=e430]: "05"
+              - generic [ref=e431]: Proposal Writer
+            - generic [ref=e433]:
+              - generic [ref=e434]: "06"
+              - generic [ref=e435]: Quality Review
+          - generic [ref=e436]:
+            - generic [ref=e438]: PDF
+            - generic [ref=e439]:
+              - generic [ref=e440]: Proposal_Apollo_v1.pdf
+              - generic [ref=e441]: Awaiting completion…
+    - generic [ref=e443]:
+      - generic [ref=e444]:
+        - generic [ref=e445]: KEY BENEFITS
+        - heading "The numbers behind winning more." [level=2] [ref=e447]
+        - paragraph [ref=e448]: Same team. 3× the bids. Twice the win rate. Zero missed requirements.
+      - generic [ref=e449]:
+        - generic [ref=e450]:
+          - generic [ref=e451]: 0%
+          - generic [ref=e452]: Time Reduction
+          - paragraph [ref=e453]: From 8–20 hours per proposal down to 15–20 minutes. Senior staff reclaim hundreds of hours monthly.
+        - generic [ref=e454]:
+          - generic [ref=e455]: 2×
+          - generic [ref=e456]: Higher Win Rate
+          - paragraph [ref=e457]: Tailored, research-backed proposals convert at 40–50% — double the industry average of 20–25%.
+        - generic [ref=e458]:
+          - generic [ref=e459]: 3×
+          - generic [ref=e460]: More Bids Submitted
+          - paragraph [ref=e461]: The same team capacity handles 3× more RFPs per month — without hiring additional headcount.
+        - generic [ref=e462]:
+          - generic [ref=e463]: "0"
+          - generic [ref=e464]: Missed Requirements
+          - paragraph [ref=e465]: The Quality Review Agent checks every mandatory item before export. Nothing gets missed.
+        - generic [ref=e466]:
+          - generic [ref=e467]: ₹0
+          - generic [ref=e468]: Extra Infrastructure
+          - paragraph [ref=e469]: A single Next.js monorepo on Vercel. No separate backend, no extra servers, minimal overhead.
+        - generic [ref=e470]:
+          - generic [ref=e471]: ∞
+          - generic [ref=e472]: Knowledge Retention
+          - paragraph [ref=e473]: Every approved proposal is stored — and becomes part of the knowledge base making the next one smarter.
+    - generic [ref=e475]:
+      - generic [ref=e476]:
+        - generic [ref=e477]: WHO USES NIVEDAN AI
+        - heading "Built for teams that live and breathe RFPs." [level=2] [ref=e479]
+        - paragraph [ref=e480]: From solo freelancers to consulting firms running 30 bids a quarter.
+      - generic [ref=e481]:
+        - generic [ref=e482]:
+          - generic [ref=e483]:
+            - img [ref=e485]
+            - heading "Software Agencies" [level=3] [ref=e487]
+          - paragraph [ref=e488]: Agencies responding to 10–15 RFPs per month from enterprise clients, hospitals, government, and corporates.
+          - generic [ref=e489]: ₹16,000 – ₹25,000 /mo
+        - generic [ref=e490]:
+          - generic [ref=e491]:
+            - img [ref=e493]
+            - heading "Freelance Developers" [level=3] [ref=e496]
+          - paragraph [ref=e497]: Bidders on Upwork, Toptal, and direct clients who need professional proposals before competitors do.
+          - generic [ref=e498]: ₹8,000 – ₹12,000 /mo
+        - generic [ref=e499]:
+          - generic [ref=e500]:
+            - img [ref=e502]
+            - heading "SaaS Sales Teams" [level=3] [ref=e504]
+          - paragraph [ref=e505]: Enterprise teams responding to security RFPs and Fortune 500 questionnaires. Each deal is worth crores.
+          - generic [ref=e506]: ₹25,000 – ₹40,000 /mo
+        - generic [ref=e507]:
+          - generic [ref=e508]:
+            - img [ref=e510]
+            - heading "Consulting Firms" [level=3] [ref=e513]
+          - paragraph [ref=e514]: Management and IT consultants for whom proposal writing is the core business cost. Cut it by 90%.
+          - generic [ref=e515]: ₹25,000 – ₹40,000 /mo
+        - generic [ref=e516]:
+          - generic [ref=e517]:
+            - img [ref=e519]
+            - heading "Construction & Infra" [level=3] [ref=e521]
+          - paragraph [ref=e522]: Companies bidding on complex government tenders — roads, buildings, utilities — where a missed clause disqualifies the bid.
+          - generic [ref=e523]: ₹12,000 – ₹20,000 /mo
+        - generic [ref=e524]:
+          - generic [ref=e525]:
+            - img [ref=e527]
+            - heading "EdTech & Research" [level=3] [ref=e530]
+          - paragraph [ref=e531]: Universities and research orgs applying for government grants, partnerships, and EdTech procurement contracts.
+          - generic [ref=e532]: ₹8,000 – ₹16,000 /mo
+    - generic [ref=e535]:
+      - img [ref=e536]
+      - generic [ref=e549]:
+        - generic [ref=e550]:
+          - generic [ref=e551]: Ready in 20 minutes
+          - heading "Win the next RFP before your competitors finish reading it." [level=2] [ref=e553]
+          - paragraph [ref=e554]: Spin up your first proposal in under five minutes. No credit card. No infrastructure to install.
+        - generic [ref=e555]:
+          - button "Start Free Trial" [ref=e556] [cursor=pointer]:
+            - text: Start Free Trial
+            - img [ref=e557]
+          - button "Book a Demo" [ref=e559] [cursor=pointer]
+          - generic [ref=e560]: SOC 2 · Enterprise SSO · ISO 27001
+  - contentinfo [ref=e561]:
+    - generic [ref=e562]:
+      - generic [ref=e563]:
+        - generic [ref=e564]:
+          - link "Nivedan AI" [ref=e565] [cursor=pointer]:
+            - /url: "#top"
+            - img [ref=e567]
+            - generic [ref=e572]: Nivedan AI
+          - paragraph [ref=e573]: “निवेदन” — the formal submission that wins contracts. Written by AI in 20 minutes, not 20 hours.
+          - generic [ref=e574]:
+            - link [ref=e575] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e576]
+            - link [ref=e578] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e579]
+            - link [ref=e581] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e582]
+        - generic [ref=e584]:
+          - generic [ref=e585]: Product
+          - list [ref=e586]:
+            - listitem [ref=e587]:
+              - link "Overview" [ref=e588] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e589]:
+              - link "Agents" [ref=e590] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e591]:
+              - link "Pricing" [ref=e592] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e593]:
+              - link "Integrations" [ref=e594] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e595]:
+              - link "Changelog" [ref=e596] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=e597]:
+          - generic [ref=e598]: Solutions
+          - list [ref=e599]:
+            - listitem [ref=e600]:
+              - link "Agencies" [ref=e601] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e602]:
+              - link "Consulting" [ref=e603] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e604]:
+              - link "SaaS Sales" [ref=e605] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e606]:
+              - link "Government RFPs" [ref=e607] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e608]:
+              - link "Construction" [ref=e609] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=e610]:
+          - generic [ref=e611]: Resources
+          - list [ref=e612]:
+            - listitem [ref=e613]:
+              - link "Documentation" [ref=e614] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e615]:
+              - link "API" [ref=e616] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e617]:
+              - link "Case Studies" [ref=e618] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e619]:
+              - link "Blog" [ref=e620] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e621]:
+              - link "Templates" [ref=e622] [cursor=pointer]:
+                - /url: "#"
+        - generic [ref=e623]:
+          - generic [ref=e624]: Company
+          - list [ref=e625]:
+            - listitem [ref=e626]:
+              - link "About" [ref=e627] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e628]:
+              - link "Customers" [ref=e629] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e630]:
+              - link "Security" [ref=e631] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e632]:
+              - link "Careers" [ref=e633] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e634]:
+              - link "Contact" [ref=e635] [cursor=pointer]:
+                - /url: "#"
+      - generic [ref=e637]:
+        - generic [ref=e638]: © 2026 Nivedan AI · Built with Google ADK + Gemini 3.1 + Next.js 16
+        - generic [ref=e639]:
+          - link "Privacy" [ref=e640] [cursor=pointer]:
+            - /url: "#"
+          - link "Terms" [ref=e641] [cursor=pointer]:
+            - /url: "#"
+          - link "Security" [ref=e642] [cursor=pointer]:
+            - /url: "#"
+          - link "Status" [ref=e643] [cursor=pointer]:
+            - /url: "#"
+  - button "Open Next.js Dev Tools" [ref=e649] [cursor=pointer]:
+    - img [ref=e650]
