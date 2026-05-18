@@ -177,3 +177,77 @@ Frontend / UI work:           C:\Users\ES\.claude\skills\nextstack.skill
 - PDF generation uses company profile settings for branding (logo, colors, fonts) applied automatically
 - Auth: Clerk · Database: Neon PostgreSQL via Drizzle ORM · File upload: UploadThing · Email: Resend
 - The knowledge base (past proposals, case studies, certifications) is the key differentiator — surface it visually everywhere possible
+
+---
+
+## Landing Page (Phase 0 — Marketing Site)
+
+The public-facing landing page at `/` is fully implemented. It is a premium cinematic single-page site with ivory/forest-green/gold theme, glassmorphism cards, scroll-reveal animations, and a sticky workflow section.
+
+### Files Created
+
+```
+src/app/layout.tsx            — Sora + Inter via next/font/google; metadata title/description
+src/app/globals.css           — Brand CSS vars, animation keyframes, utility classes
+src/app/page.tsx              — Section composition (imports all landing components)
+src/lib/utils.ts              — cn() helper (clsx + tailwind-merge)
+
+src/components/landing/
+  Navbar.tsx                  — Glassmorphism sticky nav; scroll-aware blur intensification
+  Hero.tsx                    — 2-col hero: left (H1, CTAs, stats, avatars), right (WorkflowViz)
+  WorkflowViz.tsx             — Animated 7-stage grid snake pipeline (hero right panel) ← see below
+  TrustedStrip.tsx            — Horizontal scrolling enterprise wordmark strip
+  ProblemSolution.tsx         — Before/After comparison cards (red vs green)
+  Agents.tsx                  — 6 AI agent cards in 3-col grid with hover glow
+  HowItWorks.tsx              — Sticky scroll: 6 steps left, live pipeline visualization right
+  Benefits.tsx                — 6 animated counter cards (95%, 2×, 3×, 0 missed, ₹0 infra, ∞)
+  Audience.tsx                — 6 target audience cards (3-col grid) with pricing tags
+  FinalCTA.tsx                — Dark forest section with gold radial accents + dual CTAs
+  Footer.tsx                  — 5-col footer: logo/tagline/socials + 4 link columns
+```
+
+### Design Tokens (globals.css)
+
+| Token | Value |
+|-------|-------|
+| `--forest` | `#2F5D50` |
+| `--forest-deep` | `#234539` |
+| `--gold` | `#D4A84F` |
+| `--gold-deep` | `#B88A2F` |
+| `--ivory` | `#FAF7F2` |
+| `--ivory-warm` | `#F4EFE6` |
+| `--champagne` | `#F7E7C1` |
+| `--sage-soft` | `#EBF1E7` |
+| `--f-display` | `Sora` (headings) |
+| `--f-body` | `Inter` (body) |
+| `--f-mono` | `JetBrains Mono` (badges, model names) |
+
+Key classes: `.ni-glass` (glassmorphism), `.ni-section`, `.ni-container`, `.ni-eyebrow`, `.ni-section-head`, `.ni-text-gradient-gold`, `.btn-primary`, `.btn-gold`
+
+Animations: `drift 8s ease-in-out infinite` (WorkflowViz float), `pulseGold`, `twinkle`, `floatParticle`
+
+### WorkflowViz — Grid Snake Layout
+
+The hero right panel shows a 7-stage pipeline in a horizontal snake pattern:
+
+```
+[01 RFP Upload] → [02 RFP Parsing] → [03 Client Research] → [04 Requirements Matching]
+                                                                          ↓
+                 [07 PDF Export]  ← [06 Quality Review]  ← [05 Proposal Writing]
+```
+
+- CSS Grid: `gridTemplateColumns: "1fr 15px 1fr 15px 1fr 15px 1fr"`, `gridTemplateRows: "auto 28px auto"`
+- Row 2 stages placed at cols 3, 5, 7 (so stage 05 aligns under stage 04 for the ↓ connector)
+- `active` state: `useState(4)` → cycles 0–6 every 2500ms via `setInterval`
+- Active card: `rgba(247,231,193,0.35)` bg + gold border + gold dot top-right
+- Done card (idx < active): white bg + 100% progress bar
+- Pending card (idx > active): white bg + "Pending" text
+- Progress bar fill: `linear-gradient(90deg, #E8C97A 0%, #C99437 100%)` (gold gradient)
+- Stage 01 only: file chip "Hospital_RFP.pdf · 38.4 MB"
+- Bottom panels: "Proposal Preview" (left) + "AI Agents Active" with 6 agent icon rings (right)
+- Outer wrapper: `drift 8s` float animation + `.ni-glass` glassmorphism
+
+### Responsive Breakpoints
+
+- `≤ 1180px`: hero/sticky grids → 1 col; agent/benefit/audience grids → 2 col; nav links hide
+- `≤ 760px`: all grids → 1 col
