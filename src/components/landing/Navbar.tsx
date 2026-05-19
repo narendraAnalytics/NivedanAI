@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useUser, UserButton, SignInButton, SignUpButton } from "@clerk/nextjs";
 
 const Logo = () => (
   <a href="#top" style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -149,6 +150,7 @@ export { MagneticButton };
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const { isSignedIn, user } = useUser();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -202,34 +204,60 @@ export default function Navbar() {
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <a
-              href="#"
-              style={{
-                fontSize: 14.5,
-                fontWeight: 500,
-                color: "var(--ink-soft)",
-                padding: "10px 14px",
-              }}
-            >
-              Login
-            </a>
-            <MagneticButton>
-              <button
-                className="ni-btn ni-btn-gold"
-                style={{ padding: "12px 20px" }}
-              >
-                Book a Demo
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path
-                    d="M3 11 L11 3 M5 3 H11 V9"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-            </MagneticButton>
+            {isSignedIn ? (
+              <>
+                <span
+                  style={{
+                    fontSize: 14.5,
+                    fontWeight: 500,
+                    color: "var(--forest)",
+                    padding: "10px 14px",
+                    fontFamily: "var(--f-display)",
+                  }}
+                >
+                  Welcome, {user?.username ?? user?.firstName ?? "there"}
+                </span>
+                <UserButton afterSignOutUrl="/" />
+              </>
+            ) : (
+              <>
+                <SignInButton>
+                  <button
+                    style={{
+                      fontSize: 14.5,
+                      fontWeight: 500,
+                      color: "var(--ink-soft)",
+                      padding: "10px 14px",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      fontFamily: "var(--f-body)",
+                    }}
+                  >
+                    Login
+                  </button>
+                </SignInButton>
+                <MagneticButton>
+                  <SignUpButton>
+                    <button
+                      className="ni-btn ni-btn-gold"
+                      style={{ padding: "12px 20px" }}
+                    >
+                      Book a Demo
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <path
+                          d="M3 11 L11 3 M5 3 H11 V9"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </SignUpButton>
+                </MagneticButton>
+              </>
+            )}
           </div>
         </div>
       </div>

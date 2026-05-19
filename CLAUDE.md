@@ -1,3 +1,4 @@
+he skill isn't registered as a plugin
 # CLAUDE.md — Nivedan AI
 
 > This file is the authoritative context document for Claude when working on Nivedan AI.
