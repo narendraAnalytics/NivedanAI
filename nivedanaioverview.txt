@@ -1,0 +1,179 @@
+﻿MULTI-AGENT AI SAAS · GOOGLE ADK 
+Nivedan AI
+AUTONOMOUS PROPOSAL INTELLIGENCE PLATFORM
+"निवेदन" - The formal submission that wins contracts, written by AI in 20 minutes, not 20 hours."
+FRAMEWORK Google ADK (TypeScript) 
+gemini-3.1-pro (for Orchestrator & Writer)
+gemini-3.1-flash-lite (for Parser, Researcher, Matcher, & Reviewer)
+AGENTS 6 Specialized Agents 
+STACK Next.js 15 · Neon · Clerk · Drizzle 
+01 
+What Is Nivedan AI?
+Nivedan AI is an autonomous, multi-agent SaaS platform that transforms the way agencies, freelancers, and sales teams respond to RFPs - Request for Proposals. The name comes from the Hindi and Sanskrit word निवेदन, meaning a formal, respectful submission - which is exactly what an RFP response is. A professionally written proposal submitted to win a contract, a government tender, or a large enterprise deal. 
+Built on Google Agent Development Kit (ADK) with TypeScript, Nivedan AI deploys six highly specialised AI agents that work in a coordinated pipeline - reading the uploaded RFP document, researching the client company, matching your capabilities to their requirements, writing a full tailored proposal, reviewing it for completeness, and exporting a professionally formatted PDF - all in under 20 minutes. 
+The platform runs entirely within a single Next.js 15 monorepo. All agents execute inside Next.js API routes powered by Gemini 3.1 models - no separate backend server, no external infrastructure. Authentication is handled by Clerk, data by Neon PostgreSQL with Drizzle ORM, and final reports are delivered by email via Resend. The result is a production-grade enterprise tool deployed to Vercel as a single application. 
+Nivedan AI does not generate generic proposals. Every proposal it creates is deeply tailored to the specific client - using real-time research about that company, their recent news, their industry priorities, and the exact requirements stated in their RFP. It is the difference between a 20% win rate and a 50% win rate. 
+02 
+The Real-World Problem
+✗
+BEFORE NIVEDAN AI 
+* ✗Sales manager reads 40-page RFP manually - 3 hours just to understand requirements
+* ✗Starts writing from a blank Google Doc, copy-pasting from old proposals
+* ✗Pings 5 teammates - "What was that case study from last year?"
+* ✗Proposal feels generic - barely addresses the client's specific situation
+* ✗Reviewer finds missing sections - entire rewrite needed
+* ✗8 to 20 hours of senior staff time wasted per proposal
+* ✗Win rate stays at 20-25% because proposals are not tailored
+* ✗Agency handles 15 RFPs/month - 150 to 300 hours wasted monthly
+✓
+AFTER NIVEDAN AI 
+* ✓User uploads RFP PDF - agents parse every requirement in 60 seconds
+* ✓Client Research Agent finds the company's latest news, priorities, and pain points
+* ✓All past case studies retrieved from company knowledge base automatically
+* ✓Every section of the proposal is tailored to that specific client's context
+* ✓Quality Review Agent checks every mandatory requirement is addressed before export
+* ✓Complete proposal ready in 15 to 20 minutes - zero hours of human writing
+* ✓Win rate improves to 40-50% because proposals are precise and specific
+* ✓Team handles 3x more proposals with the same headcount
+💰
+A software agency winning just one extra contract per month using Nivedan AI earns an additional ₹25-₹50 lakhs annually. The subscription pays for itself in the first hour of use. That is why businesses pay without hesitation. 
+03 
+The Six Agents - What Each One Does
+Nivedan AI orchestrates six specialised agents in a coordinated pipeline. Each agent has one clearly defined job. The Orchestrator manages session state and routes tasks. The remaining five agents execute in sequence, each one passing its structured output to the next - building the final proposal layer by layer. 
+01
+Orchestrator Agent
+THE BRAIN · ROOT ADK AGENT
+gemini-3.1-pro
+The Orchestrator is the root agent that manages the entire pipeline. When a user uploads an RFP and submits their job, this agent creates the session state, reads the uploaded file reference and the company profile, and decides the exact execution sequence of all downstream agents. It handles errors gracefully - if an agent fails, it retries or skips and continues the pipeline rather than crashing the entire workflow. It is the conductor that ensures all six instruments play in the right order. 
+REAL EXAMPLE
+User uploads a 38-page hospital RFP and clicks "Generate Proposal." The Orchestrator reads the file metadata, creates a session with the job ID and company profile, and begins triggering agents in sequence - starting immediately with the RFP Parser Agent.
+OUTPUT Structured session state object shared across all agents 
+02
+RFP Parser Agent
+DOCUMENT INTELLIGENCE · REQUIREMENT EXTRACTOR
+gemini-3.1-flash-lite 
+This agent reads the entire RFP document - no matter how long, no matter how poorly structured - and extracts every critical piece of information from it. It identifies mandatory requirements versus optional ones, pulls out the budget ceiling, project timeline, evaluation criteria, preferred vendor qualifications, and any compliance or certification requirements mentioned. It converts a chaotic 40-page document into a clean, structured JSON object that every other agent can reliably reference. 
+REAL EXAMPLE
+The RFP says on page 12 - "Vendor must have HIPAA compliance experience." On page 28 - "Budget not to exceed $150,000." On page 5 - "Delivery within 6 months." This agent finds all three, regardless of where they appear in the document, and marks them as mandatory requirements with priority flags.
+OUTPUT Structured RFP Blueprint JSON - mandatory requirements, budget, timeline, evaluation weights 
+03
+Client Research Agent
+COMPANY INTELLIGENCE · CONTEXT BUILDER
+gemini-3.1-flash-lite
+This agent researches the company that sent the RFP using the company name extracted from the document. It searches the web for recent news, funding rounds, leadership changes, product launches, expansion plans, and stated strategic priorities. This intelligence is what makes the resulting proposal feel like it was written by someone who deeply understands the client - not a generic template. A proposal that references a client's recent initiative is always more compelling than one that does not. 
+REAL EXAMPLE
+The RFP is from Apollo Hospitals. This agent discovers that Apollo recently announced a ₹2,000 crore investment in digital health infrastructure and is expanding their telemedicine platform to Tier 2 cities. The proposal now opens with: "Given Apollo's strategic focus on digital health expansion into Tier 2 markets, our solution directly addresses your infrastructure modernisation goals..."
+OUTPUT Client Profile JSON - company context, priorities, recent news, industry position 
+04
+Requirements Matcher Agent
+CAPABILITY ALIGNMENT · PROOF FINDER
+Gemini 3.1 Flash-Lite 
+This agent compares what the client needs against what your company actually offers - and finds the strongest evidence for each match. It searches your company knowledge base - past proposals, case studies, team bios, certifications, technology stack documentation - and maps every RFP requirement to your most relevant proof point. If you have delivered something similar before, this agent finds it and connects it to the right section of the proposal. No requirement goes unaddressed. 
+REAL EXAMPLE
+Client requires HIPAA compliance experience. The knowledge base contains a 2024 case study where your team built a HIPAA-compliant patient portal for a US clinic. This agent retrieves it, extracts the key metrics - 10,000 patients migrated, zero compliance violations, delivered 3 weeks early - and maps it directly to the requirement. The proposal now has real evidence, not empty claims.
+OUTPUT Capability Match Table - requirement to proof point mapping with confidence scores 
+05
+Proposal Writer Agent
+FULL DOCUMENT DRAFTER · SECTION BUILDER
+gemini-3.1-pro
+This is the core creative agent. It takes all structured outputs from the previous three agents - the parsed requirements, the client research, and the capability matches - and writes the complete proposal document from scratch. It generates every standard section: Executive Summary, Understanding of Requirements, Proposed Solution, Technical Approach, Case Studies, Team & Expertise, Project Timeline, and Pricing Structure. Every sentence is written with the specific client in mind. Gemini 3.1 Pro is used here because this task demands the highest level of language reasoning, context retention, and coherent long-form writing. 
+REAL EXAMPLE
+The Executive Summary opens with Apollo's digital health mission, acknowledges their Tier 2 expansion initiative, and immediately connects it to your team's healthcare technology track record - all in the first three sentences. The Proposed Solution section maps each of their eight stated requirements to a specific feature of your system with supporting evidence from past projects. No generic filler.
+OUTPUT Full proposal draft - all sections written, structured, and ready for review 
+06
+Quality Review & Export Agent
+EDITOR · VALIDATOR · PDF GENERATOR
+gemini-3.1-flash-lite
+This agent acts as a senior editor and quality gate. It reads the complete draft proposal against the original RFP requirements and checks that every mandatory requirement has been addressed, that the budget is respected, that the timeline aligns with the client's deadline, and that no section contains conflicting information. It flags issues, corrects them, and then hands the final approved document to the export module which formats it into a professionally branded PDF - with your company's logo, colors, table of contents, cover page, and page numbers - ready for immediate submission. 
+REAL EXAMPLE
+The draft says the project will be delivered in 8 months. The RFP required 6 months. This agent catches the conflict, revises the timeline section, and updates the project milestones to fit within 6 months. Then exports a clean, professional PDF with your agency's branding applied automatically from your profile settings.
+OUTPUT Submission-ready branded PDF proposal + dashboard view + Resend email delivery 
+04 
+End-to-End Workflow
+U
+User Action
+Uploads RFP PDF + submits company profile (one-time setup of past proposals, case studies, team bios, certifications)
+01
+Orchestrator Agent → Creates session, routes pipeline
+Initialises the full workflow, manages state across all agents
+02
+RFP Parser Agent → Structured requirements extracted
+Reads entire document, identifies mandatory vs optional, pulls budget, timeline, evaluation criteria
+03
+Client Research Agent → Company intelligence gathered
+Web research on client company - news, priorities, strategic direction, industry context
+04
+Requirements Matcher Agent → Capability map built
+Searches your knowledge base, maps every requirement to your strongest proof point
+05
+Proposal Writer Agent → Full draft written
+Writes all sections - Executive Summary through Pricing - tailored to this specific client
+06
+Quality Review & Export Agent → Validated and exported
+Checks all requirements addressed, corrects conflicts, exports branded PDF
+✓
+Final Output - 15 to 20 minutes after upload
+Dashboard view · Downloadable PDF · Email delivery via Resend · Saved to Neon DB
+05 
+Who Uses Nivedan AI
+🏢
+Software Agencies
+Agencies responding to 10-15 RFPs per month from enterprise clients, hospitals, government bodies, and large corporations. Each proposal currently costs 8-20 hours of senior developer or BD manager time.
+₹16,000 - ₹25,000/month 
+💼
+Freelance Developers
+Freelancers bidding on Upwork, Toptal, or direct client projects who need to submit professional proposals quickly to win contracts before competitors. One extra win per month justifies the subscription entirely.
+₹8,000 - ₹12,000/month 
+📊
+SaaS Sales Teams
+Enterprise sales teams responding to detailed questionnaires and security RFPs from Fortune 500 prospects. Each deal they are responding to is worth ₹50 lakhs to ₹5 crores - proposal quality directly impacts win rates.
+₹25,000 - ₹40,000/month 
+🏛️
+Consulting Firms
+Management and IT consulting firms that live and breathe proposal writing. Proposal development is their core business cost - reducing it by 90% has a direct impact on their profitability and capacity to bid on more projects simultaneously.
+₹25,000 - ₹40,000/month 
+🏗️
+Construction & Infrastructure
+Companies bidding on government tenders and infrastructure projects - roads, buildings, utilities. These RFPs are notoriously complex and lengthy. Missing one requirement can disqualify an otherwise strong bid.
+₹12,000 - ₹20,000/month 
+🎓
+EdTech & Research Institutes
+Universities and research organisations applying for government grants, academic partnerships, and EdTech procurement contracts - all of which require detailed formal proposals with specific structural requirements.
+₹8,000 - ₹16,000/month 
+06 
+Key Benefits at a Glance
+95%
+Time Reduction
+From 8-20 hours per proposal down to 15-20 minutes. Senior staff reclaim hundreds of hours monthly.
+2×
+Win Rate Improvement
+Tailored, research-backed proposals convert at 40-50% versus the industry average of 20-25%.
+3×
+More Bids Submitted
+Same team capacity now handles 3 times more RFPs per month without hiring additional headcount.
+0
+Missed Requirements
+Quality Review Agent checks every mandatory requirement before export. Nothing gets missed or disqualifies the bid.
+₹0
+Extra Infrastructure Cost
+Single Next.js monorepo on Vercel. No separate backend. No extra servers. Minimal operational overhead.
+∞
+Knowledge Retention
+Every approved proposal is stored and becomes part of the knowledge base - making each future proposal smarter than the last.
+07 
+Technology Stack
+Next.js 15 (App Router)
+Google ADK (TypeScript)
+Gemini 3.1 Pro / Flash / Flash-Lite
+Clerk Authentication
+Neon PostgreSQL
+Drizzle ORM
+UploadThing (File Upload)
+Resend (Email Delivery)
+pdf-parse + mammoth (Document Parsing)
+Vercel (Deployment)
+PROJECT VISION
+Nivedan AI exists to give every agency, every freelancer, and every sales team the same proposal quality that was previously only possible with a dedicated team of senior writers, researchers, and designers. 
+A solo developer in Palakollu should be able to submit a proposal that competes with one prepared by a 10-person agency in Mumbai. Nivedan AI makes that the new normal. 
+Nivedan AI
+Narendra Kumar · nk-analytics · Built with Google ADK + Gemini 3.1 + Next.js 15 · 2026
