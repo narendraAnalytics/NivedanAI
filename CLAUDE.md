@@ -7,6 +7,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## Production
+
+- **Live URL:** https://nivedan-ai.vercel.app/
+- **Deployment:** Vercel (auto-deploys on push to `main`)
+
+---
+
 ## Commands
 
 ```bash
