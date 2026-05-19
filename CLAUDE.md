@@ -1,8 +1,73 @@
-he skill isn't registered as a plugin
-# CLAUDE.md — Nivedan AI
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 > This file is the authoritative context document for Claude when working on Nivedan AI.
 > Read this fully before making any code, UI, or architecture decision.
+
+---
+
+## Commands
+
+```bash
+npm run dev          # Start Next.js dev server (localhost:3000)
+npm run build        # Production build
+npm run start        # Start production server
+
+npm run db:generate  # Generate Drizzle migration SQL from schema changes
+npm run db:migrate   # Apply pending migrations
+npm run db:push      # Push schema directly (avoid — TCP hangs with Neon; use generate + Neon MCP instead)
+npm run db:studio    # Open Drizzle Studio at localhost:4983
+```
+
+**Schema changes workflow:** Run `db:generate` to produce SQL in `drizzle/`, then apply via the Neon MCP tool (`mcp__neon__run_sql_transaction`) — `db:push` hangs when connecting to Neon from local machine over TCP.
+
+---
+
+## Code Architecture
+
+### Database — `src/db/`
+
+Schema is split into 5 domain files, all re-exported from `src/db/schema/index.ts`:
+
+| File | Tables |
+|---|---|
+| `users.ts` | `users` — Clerk user sync target |
+| `company.ts` | `company_profiles`, `knowledge_base_items` |
+| `jobs.ts` | `rfp_jobs`, `rfp_documents`, `agent_runs` |
+| `agent-outputs.ts` | `parsed_rfp_data`, `client_research_data`, `capability_matches` |
+| `proposals.ts` | `proposals`, `proposal_exports`, `hitl_reviews` |
+
+`src/db/index.ts` creates a single `db` export using `drizzle-orm/neon-http` (HTTP driver — required for Vercel/serverless; never use `pg` or WebSocket driver).
+
+Critical schema rules:
+- `users.id` is `text` (Clerk IDs are `user_xxx` strings — **never** `uuid`)
+- All FKs to `users.id` are also `text`
+- All other PKs are `uuid().defaultRandom()`
+- All FK constraints use `{ onDelete: 'cascade' }` except `capability_matches.knowledge_base_item_id` which uses `set null`
+
+### Auth — `src/middleware.ts` + `src/lib/auth.ts`
+
+- Middleware is `src/middleware.ts` (not `src/proxy.ts`) — public routes: `/`, `/sign-in(.*)`, `/sign-up(.*)`, `/api/inngest`
+- `src/lib/auth.ts` exports `getOrCreateUser()` — call at the top of every protected API route. It lazy-creates the `users` row on first login using `currentUser()` (not `sessionClaims` — Clerk v7 JWT excludes email by default), and syncs the Clerk billing plan on every call via `has({ plan })`.
+- `src/app/api/auth/sync/route.ts` — protected GET route Clerk redirects to after sign-in/sign-up. Calls `getOrCreateUser()` then redirects to `/`.
+
+### Current Build State
+
+| Area | Status |
+|---|---|
+| Landing page (`/`) | Complete — 11 components in `src/components/landing/` |
+| Clerk auth (sign-in, sign-up, sync) | Complete |
+| Neon DB schema (all 12 tables) | Created via Neon MCP |
+| Agent pipeline (Agents 01–06) | Not yet built |
+| Dashboard | Not yet built |
+| Inngest functions | Not yet built (`inngest` package installed, no `src/inngest/` directory) |
+| UploadThing RFP upload | Not yet built |
+
+### Utilities
+
+- `src/lib/utils.ts` — exports `cn()` (clsx + tailwind-merge). Use for all `className` composition.
+- CSS variables and Tailwind tokens live in `src/app/globals.css` `@theme inline {}` — never `tailwind.config.ts`.
 
 ---
 

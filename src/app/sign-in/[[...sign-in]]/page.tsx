@@ -58,7 +58,7 @@ export default function SignInPage() {
         </div>
       </div>
 
-      <SignIn />
+      <SignIn forceRedirectUrl="/api/auth/sync" />
     </div>
   );
 }
