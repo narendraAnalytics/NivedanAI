@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { SignUpButton } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import WorkflowViz from "./WorkflowViz";
 
 const avatarColors = [
@@ -64,6 +64,7 @@ const StatTile = ({
 export default function Hero() {
   const heroRef = useRef<HTMLElement>(null);
   const lightRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -189,20 +190,22 @@ export default function Hero() {
                 alignItems: "center",
               }}
             >
-              <SignUpButton>
-                <button className="ni-btn ni-btn-primary" style={{ padding: "15px 26px" }}>
-                  Start Free Trial
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path
-                      d="M3 8h10M9 4l4 4-4 4"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              </SignUpButton>
+              <button
+                className="ni-btn ni-btn-primary"
+                style={{ padding: "15px 26px" }}
+                onClick={() => router.push("/redirecting?to=sign-up")}
+              >
+                Start Free Trial
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M3 8h10M9 4l4 4-4 4"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
               <button
                 className="ni-btn ni-btn-ghost"
                 style={{ padding: "15px 22px", display: "flex", alignItems: "center", gap: 8 }}

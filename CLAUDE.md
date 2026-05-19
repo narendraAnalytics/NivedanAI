@@ -188,14 +188,23 @@ The public-facing landing page at `/` is fully implemented. It is a premium cine
 ### Files Created
 
 ```
-src/app/layout.tsx            — Sora + Inter via next/font/google; metadata title/description
+src/middleware.ts             — Clerk auth middleware; public routes: /, /sign-in, /sign-up, /api/inngest
+
+src/app/layout.tsx            — Sora + Inter via next/font/google; ClerkProvider; metadata
 src/app/globals.css           — Brand CSS vars, animation keyframes, utility classes
 src/app/page.tsx              — Section composition (imports all landing components)
+src/app/sign-in/
+  [[...sign-in]]/page.tsx     — Branded sign-in page (Nivedan logo + Clerk <SignIn />)
+src/app/sign-up/
+  [[...sign-up]]/page.tsx     — Branded sign-up page (Nivedan logo + Clerk <SignUp />)
+src/app/redirecting/
+  page.tsx                    — Auth transition splash: logo + animated green tick → redirects after 2.2s
+
 src/lib/utils.ts              — cn() helper (clsx + tailwind-merge)
 
 src/components/landing/
-  Navbar.tsx                  — Glassmorphism sticky nav; scroll-aware blur intensification
-  Hero.tsx                    — 2-col hero: left (H1, CTAs, stats, avatars), right (WorkflowViz)
+  Navbar.tsx                  — Glassmorphism sticky nav; auth-aware (Login/Book a Demo → /redirecting; signed-in → Welcome + UserButton)
+  Hero.tsx                    — 2-col hero; Start Free Trial → /redirecting?to=sign-up
   WorkflowViz.tsx             — Animated 7-stage grid snake pipeline (hero right panel) ← see below
   TrustedStrip.tsx            — Horizontal scrolling enterprise wordmark strip
   ProblemSolution.tsx         — Before/After comparison cards (red vs green)
@@ -252,3 +261,56 @@ The hero right panel shows a 7-stage pipeline in a horizontal snake pattern:
 
 - `≤ 1180px`: hero/sticky grids → 1 col; agent/benefit/audience grids → 2 col; nav links hide
 - `≤ 760px`: all grids → 1 col
+
+---
+
+## Auth (Phase 0 — Clerk Integration)
+
+Clerk v7 (`@clerk/nextjs@^7.3.5`) is fully integrated. Auth keys are in `.env`.
+
+### Auth Flow
+
+```
+CTA click (Login / Book a Demo / Start Free Trial)
+  → /redirecting?to=sign-in | sign-up     (2.2s branded splash + tick animation)
+  → /sign-in or /sign-up                  (Clerk hosted UI with Nivedan branding)
+  → / (landing page)                      (NEXT_PUBLIC_CLERK_AFTER_SIGN_IN/UP_URL=/)
+```
+
+### Files Created / Modified
+
+```
+src/middleware.ts                              — Clerk middleware; public: /, /sign-in, /sign-up, /api/inngest
+src/app/sign-in/[[...sign-in]]/page.tsx       — Branded sign-in (Nivedan logo + <SignIn />)
+src/app/sign-up/[[...sign-up]]/page.tsx       — Branded sign-up (Nivedan logo + <SignUp />)
+src/app/redirecting/page.tsx                  — Transition splash: logo + animated tick → redirects after 2.2s
+src/app/layout.tsx                            — <ClerkProvider> wraps children inside <body>
+src/components/landing/Navbar.tsx             — Auth-aware: signed-out → Login/Book a Demo buttons; signed-in → Welcome + <UserButton />
+src/components/landing/Hero.tsx               — Start Free Trial → router.push('/redirecting?to=sign-up')
+```
+
+### Signed-In Navbar State
+
+- `Welcome, {username ?? firstName ?? "there"}` — forest green, Sora font
+- `<UserButton />` — Clerk profile picture with built-in sign-out dropdown
+- Sign-out → `/` via `NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL=/` in `.env`
+
+### Clerk v7 Patterns — Critical
+
+- `useUser()` → `{ isSignedIn, user }` for client-side auth state
+- `<UserButton />` — **no** `afterSignOutUrl` prop (removed in v7; use env var)
+- Middleware: `clerkMiddleware` + `createRouteMatcher` from `@clerk/nextjs/server`
+- CTA navigation uses `useRouter().push('/redirecting?to=...')` — **not** `<SignInButton>` / `<SignUpButton>`
+- All routes are public by default; `auth.protect()` called only for non-public routes
+
+### Transition Page (`/redirecting`) Design
+
+- Background: `#FAF7F2` (ivory)
+- Animation: CSS keyframes only — no animation library
+  - Card fades up on mount (450ms)
+  - Circle strokes in clockwise from top (850ms, `stroke-dashoffset` trick)
+  - Checkmark draws in after circle completes (450ms, 750ms delay)
+  - SVG glow pulses during animation
+  - "Preparing your workspace..." with 3 blinking dots
+- Color: `#2F5D50` (forest green)
+- Auto-redirects after 2200ms via `useEffect` + `setTimeout`
