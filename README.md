@@ -1,3 +1,21 @@
+--------------------https://adk.dev/integrations/
+
+--------------------https://adk.dev/sessions/memory/
+
+import {GOOGLE_SEARCH, LlmAgent} from '@google/adk';
+
+export const rootAgent = new LlmAgent({
+  model: 'gemini-flash-latest',
+  name: 'root_agent',
+  description:
+      'an agent whose job it is to perform Google search queries and answer questions about the results.',
+  instruction:
+      'You are an agent whose job is to perform Google search queries and answer questions about the results.',
+  tools: [GOOGLE_SEARCH],
+});
+
+-------------------------------------------------------------- ----------------------------------------------------------
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
