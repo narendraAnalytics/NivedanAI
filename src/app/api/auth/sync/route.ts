@@ -3,5 +3,5 @@ import { getOrCreateUser } from '@/lib/auth'
 
 export async function GET(req: Request) {
   await getOrCreateUser()
-  return NextResponse.redirect(new URL('/', req.url))
+  return NextResponse.redirect(new URL('/redirecting?to=', req.url))
 }

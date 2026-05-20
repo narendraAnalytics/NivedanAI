@@ -17,7 +17,7 @@ function RedirectingContent() {
     if (redirected.current) return;
     const timer = setTimeout(() => {
       redirected.current = true;
-      router.push(`/${to}`);
+      router.push(to ? `/${to}` : '/');
     }, 2200);
     return () => clearTimeout(timer);
   }, [to, router]);
