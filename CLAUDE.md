@@ -66,8 +66,8 @@ Critical schema rules:
 | Landing page (`/`) | Complete — 11 components in `src/components/landing/` |
 | Clerk auth (sign-in, sign-up, sync) | Complete |
 | Neon DB schema (all 12 tables) | Created via Neon MCP |
+| Dashboard (`/dashboard`) | Complete — UI only (simulated pipeline, no real agents yet) |
 | Agent pipeline (Agents 01–06) | Not yet built |
-| Dashboard | Not yet built |
 | Inngest functions | Not yet built (`inngest` package installed, no `src/inngest/` directory) |
 | UploadThing RFP upload | Not yet built |
 
@@ -343,10 +343,16 @@ Clerk v7 (`@clerk/nextjs@^7.3.5`) is fully integrated. Auth keys are in `.env`.
 ### Auth Flow
 
 ```
-CTA click (Login / Book a Demo / Start Free Trial)
+Signed-out user: CTA click (Login / Book a Demo / Start Free Trial)
   → /redirecting?to=sign-in | sign-up     (2.2s branded splash + tick animation)
   → /sign-in or /sign-up                  (Clerk hosted UI with Nivedan branding)
-  → / (landing page)                      (NEXT_PUBLIC_CLERK_AFTER_SIGN_IN/UP_URL=/)
+  → /api/auth/sync                        (lazy-creates users row, syncs plan)
+  → /redirecting?to=                      (tick animation again)
+  → /                                     (landing page)
+
+Signed-in user: "Start Free Trial" CTA
+  → /redirecting?to=dashboard             (tick animation)
+  → /dashboard
 ```
 
 ### Files Created / Modified
@@ -375,6 +381,12 @@ src/components/landing/Hero.tsx               — Start Free Trial → router.pu
 - CTA navigation uses `useRouter().push('/redirecting?to=...')` — **not** `<SignInButton>` / `<SignUpButton>`
 - All routes are public by default; `auth.protect()` called only for non-public routes
 
+### Hero CTA — Conditional Redirect
+
+`src/components/landing/Hero.tsx` uses `useUser()` to branch on "Start Free Trial":
+- Signed-in → `router.push('/redirecting?to=dashboard')`
+- Signed-out → `router.push('/redirecting?to=sign-up')`
+
 ### Transition Page (`/redirecting`) Design
 
 - Background: `#FAF7F2` (ivory)
@@ -386,3 +398,42 @@ src/components/landing/Hero.tsx               — Start Free Trial → router.pu
   - "Preparing your workspace..." with 3 blinking dots
 - Color: `#2F5D50` (forest green)
 - Auto-redirects after 2200ms via `useEffect` + `setTimeout`
+
+---
+
+## Dashboard (`/dashboard`)
+
+Single `'use client'` file: `src/app/dashboard/page.tsx`. All sub-components are defined in the same file (no separate component files).
+
+### Sub-components
+| Component | Purpose |
+|---|---|
+| `DashLogo` | Logo + "Workspace" label — clicks navigate to `/` |
+| `UserPill` | Avatar initials + name + "Free Plan" badge (from `useUser()`) |
+| `ProcessingPipeline` | 6-stage animated pipeline — simulated via `setInterval`; calls `onComplete` when done |
+| `UploadZone` | Drag-drop / click-to-upload PDF area; sets `fileName` state in Dashboard |
+| `StatCard` | Single stat tile with icon, value, hint |
+| `RecentList` | Proposals table — `userProposals` (state, top) + `sampleProposals` (constant, bottom) |
+| `AgentRoster` | 6 agent list with colored rings |
+| `BgLayer` | Fixed radial gradient background + wave SVG |
+| `Twinkles` | Twinkling gold dots — generated in `useEffect` only (not SSR) to avoid hydration mismatch |
+
+### State in Dashboard component
+```ts
+fileName        — currently selected PDF name (null = show UploadZone)
+completed       — pipeline finished flag
+userProposals   — ProposalEntry[] grows on each onComplete
+proposalCount   — increments on each onComplete; drives StatCard values
+```
+
+### Dynamic stat logic (on each `onComplete`)
+- **Proposals this month** → `proposalCount`
+- **Avg. time saved** → `proposalCount × 19h` (19h = midpoint of 8–20h saved per proposal)
+- **Win rate** → always `—` (no outcome data yet)
+- **Knowledge base** → always `0 docs` (KB upload not built yet)
+
+### `ProposalEntry` type
+```ts
+type ProposalEntry = { name: string; status: string; score: number; date: string; win?: boolean; isOwn?: boolean }
+```
+Entries with `isOwn: true` get green tint + "Yours" badge in `RecentList`.
