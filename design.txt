@@ -1,76 +1,12 @@
-CLAUDE DESIGN + CLAUDE CODE — FILE TYPE ISSUES & FIXES
-========================================================
-Generic reference. Use for any project that starts from a Claude Design handoff.
+./src/app/dashboard/page.tsx:600:23
+Type error: Type '{ afterSignOutUrl: string; }' is not assignable to type 'IntrinsicAttributes & Without<WithClerkProp<PropsWithChildren<UserButtonPropsWithoutCustomPages> & FallbackProp>, "clerk">'.
+  Property 'afterSignOutUrl' does not exist on type 'IntrinsicAttributes & Without<WithClerkProp<PropsWithChildren<UserButtonPropsWithoutCustomPages> & FallbackProp>, "clerk">'.
 
-
-ISSUE 1: Claude Design output is a URL artifact, not a local file
-------------------------------------------------------------------
-CAUSE:
-  claude.ai renders designs as browser artifacts. The output lives at a share URL
-  inside claude.ai — it is NOT automatically saved to your local disk.
-
-SYMPTOM:
-  Claude Code Read tool returns "file not found" when you try to read a local path.
-  The file simply does not exist on disk yet.
-
-FIXES:
-  Option A (simplest — do this first):
-    In claude.ai, open the artifact → click the Copy button (top-right of artifact).
-    Paste the copied text into a new file in your project (e.g. design.txt).
-    Now Claude Code can Read it normally.
-
-  Option B — fetch the artifact URL directly in Claude Code:
-    Use the WebFetch tool with the artifact share URL:
-      WebFetch("https://claude.ai/artifacts/...")
-    Claude Code will pull the full content into the session as readable text.
-
-  Option C — index via context-mode MCP:
-    Use ctx_fetch_and_index with the artifact URL:
-      mcp__plugin_context-mode_context-mode__ctx_fetch_and_index(url: "...")
-    This fetches AND indexes the content so you can search it across the session.
-
-PREVENTION:
-  Before starting Claude Code, always copy the Claude Design artifact content
-  and save it as a plain .txt file in your project root.
-  Do this ONCE and you never hit this issue again.
-
-
-ISSUE 2: Design file saved as binary / non-text format
--------------------------------------------------------
-CAUSE:
-  Design output was saved as a binary file (.fig, .sketch, or other proprietary
-  format) — either by exporting from a design tool or saving the wrong file type.
-  Claude Code cannot parse binary files.
-
-SYMPTOM:
-  Read tool returns garbage characters, errors, or unreadable output.
-  No color tokens, fonts, or specs are extractable from the file.
-
-FIXES:
-  Option A (best):
-    In claude.ai, before saving, click "Copy as Markdown" or "Copy text" on the artifact.
-    Save the copied text to a .txt or .md file. That file is now readable.
-
-  Option B — View Source in browser:
-    Open the artifact URL in your browser.
-    Right-click → View Page Source (or open DevTools → Elements tab).
-    Copy the HTML/CSS — it contains all design tokens and specs.
-    Save to design.txt in your project.
-
-  Option C — re-prompt Claude:
-    In claude.ai, send a follow-up:
-      "Re-output the full design spec as plain text/markdown only. No rendered output."
-    Claude returns raw text. Copy and save as design.txt.
-
-PREVENTION:
-  Never save a Claude Design output as a binary file.
-  Always export/save as plain text (.txt) or Markdown (.md).
-  The rule: if Claude Code's Read tool can't display it as normal text, it's wrong format.
-
-
-QUICK CHECKLIST BEFORE STARTING CLAUDE CODE
----------------------------------------------
-  [ ] Design content is saved as a plain .txt or .md file (not a URL, not binary)
-  [ ] Claude Code can Read the file and you see normal readable text
-  [ ] File is in the project root so you can reference it easily
-  [ ] If still URL-only: use Option A above (copy from artifact) before proceeding
+  598 |           </button>
+  599 |           <UserPill />
+> 600 |           <UserButton afterSignOutUrl="/" />
+      |                       ^
+  601 |         </div>
+  602 |       </div>
+  603 |
+Next.js build worker exited with code: 1 and signal: null

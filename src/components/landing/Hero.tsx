@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import WorkflowViz from "./WorkflowViz";
 
 const avatarColors = [
@@ -65,6 +66,7 @@ export default function Hero() {
   const heroRef = useRef<HTMLElement>(null);
   const lightRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { isSignedIn } = useUser();
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -193,7 +195,7 @@ export default function Hero() {
               <button
                 className="ni-btn ni-btn-primary"
                 style={{ padding: "15px 26px" }}
-                onClick={() => router.push("/redirecting?to=sign-up")}
+                onClick={() => router.push(isSignedIn ? "/redirecting?to=dashboard" : "/redirecting?to=sign-up")}
               >
                 Start Free Trial
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
