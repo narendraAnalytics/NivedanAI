@@ -1,12 +1,577 @@
-./src/app/dashboard/page.tsx:600:23
-Type error: Type '{ afterSignOutUrl: string; }' is not assignable to type 'IntrinsicAttributes & Without<WithClerkProp<PropsWithChildren<UserButtonPropsWithoutCustomPages> & FallbackProp>, "clerk">'.
-  Property 'afterSignOutUrl' does not exist on type 'IntrinsicAttributes & Without<WithClerkProp<PropsWithChildren<UserButtonPropsWithoutCustomPages> & FallbackProp>, "clerk">'.
+NIVEDAN AI — BUILD WORKFLOW REFERENCE
+======================================
+Stack: Next.js 15 · Google ADK TypeScript (@google/adk@1.1.0) · Inngest@4.4.0 · Neon · Clerk · Drizzle
+Status: Landing ✅ · Auth ✅ · DB Schema (12 tables) ✅ · Dashboard ✅ · Agents ❌ · Inngest ❌
 
-  598 |           </button>
-  599 |           <UserPill />
-> 600 |           <UserButton afterSignOutUrl="/" />
-      |                       ^
-  601 |         </div>
-  602 |       </div>
-  603 |
-Next.js build worker exited with code: 1 and signal: null
+BUILD ORDER: Stage 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
+Never skip a stage. Each depends on the one before.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CRITICAL TYPESCRIPT ADK RULES (from multigentsadk.skill)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. NEVER import @google/adk in 'use client' components → async_hooks crash
+2. next.config.ts MUST have:
+   serverExternalPackages: ['@google/adk', '@google/genai']
+3. NEVER add export const runtime = 'edge' to any route using ADK
+4. INNGEST_DEV=1 → local dev only, NEVER on Vercel
+5. DATABASE_URL → no -pooler suffix, no &channel_binding=require
+6. AGENT PATTERN: Most agents = one-shot generateContent (structured JSON output)
+   ONLY Agent 3 = LlmAgent (needs interactive tool use with googleSearch)
+7. CORRECT IMPORTS:
+   import { LlmAgent } from '@google/adk/agents'
+   import { FunctionTool, googleSearch } from '@google/adk/tools'
+   import { InMemoryMemoryService, InMemorySessionService, Runner } from '@google/adk'
+   import { GoogleGenAI } from '@google/genai'
+8. MODELS (hardcoded in code — do NOT use env vars for model names):
+   Agent 1 (Orchestrator):          'gemini-3.1-pro'
+   Agent 2 (RFP Parser):            'gemini-3.1-flash-lite'
+   Agent 3 (Client Research):       'gemini-3.1-flash'
+   Agent 4 (Requirements Matcher):  'gemini-3.1-flash-lite'
+   Agent 5 (Proposal Writer):       'gemini-3.1-pro'
+   Agent 6 (Quality Review):        'gemini-3.1-flash-lite'
+   Search Agent (sub of Agent 3):   'gemini-3.1-flash'
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STAGE 0 — INNGEST FOUNDATION (Build this first)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Why first: Next.js API routes time out in 10s on Vercel.
+Inngest makes each agent step a durable checkpoint with auto-retry.
+The 15-20 min pipeline CANNOT run without it.
+
+FILES TO CREATE:
+  src/inngest/client.ts                → Inngest client (createInngest)
+  src/inngest/events.ts                → All typed event definitions
+  src/inngest/functions/
+    generate-proposal.ts               → Main pipeline function shell
+  src/app/api/inngest/route.ts         → Serve route (registers all functions)
+  src/db/helpers/job-status.ts         → Neon update helpers (used by every step)
+  src/lib/adk/runner.ts                → Shared ADK Runner
+  src/lib/adk/session.ts               → InMemorySessionService setup
+  src/lib/adk/memory.ts                → InMemoryMemoryService setup
+
+STEP 0.1 — Inngest Client
+  // src/inngest/client.ts
+  import { Inngest } from 'inngest'
+  export const inngest = new Inngest({ id: 'nivedanai' })
+
+STEP 0.2 — Serve Route
+  // src/app/api/inngest/route.ts
+  import { serve } from 'inngest/next'
+  import { inngest } from '@/inngest/client'
+  import { generateProposal } from '@/inngest/functions/generate-proposal'
+  export const { GET, POST, PUT } = serve({ client: inngest, functions: [generateProposal] })
+  NOTE: /api/inngest is already in public routes in middleware.ts (per CLAUDE.md)
+
+STEP 0.3 — Typed Events
+  // src/inngest/events.ts
+  Events to define:
+  - 'nivedan/rfp.submitted'          → { jobId, userId, rfpDocumentUrl, companyProfileId }
+  - 'nivedan/agent.completed'        → { jobId, agentNumber, status }
+  - 'nivedan/hitl.approved'          → { jobId, proposalId }
+  - 'nivedan/hitl.changes.requested' → { jobId, proposalId, flaggedSections, feedbackText }
+  - 'nivedan/hitl.timeout'           → { jobId }
+
+STEP 0.4 — Pipeline Function Shell
+  // src/inngest/functions/generate-proposal.ts
+  export const generateProposal = inngest.createFunction(
+    { id: 'generate-proposal' },
+    { event: 'nivedan/rfp.submitted' },
+    async ({ event, step }) => {
+      await step.run('step-1-orchestrator', async () => { /* TODO */ })
+      await step.run('step-2-rfp-parser', async () => { /* TODO */ })
+      await step.run('step-3-client-research', async () => { /* TODO */ })
+      await step.run('step-4-requirements-matcher', async () => { /* TODO */ })
+      await step.run('step-5-proposal-writer', async () => { /* TODO */ })
+      await step.run('step-6-quality-review', async () => { /* TODO */ })
+      const review = await step.waitForEvent('wait-for-hitl', {
+        event: 'nivedan/hitl.approved',
+        timeout: '7d',
+        match: 'data.jobId',
+      })
+      await step.run('step-8-pdf-export', async () => { /* TODO */ })
+    }
+  )
+
+STEP 0.5 — Neon DB Helpers
+  // src/db/helpers/job-status.ts
+  Helpers to write:
+  - updateJobStatus(jobId, status)        → rfp_jobs.status
+  - updateCurrentAgent(jobId, agentNum)   → rfp_jobs.current_agent
+  - createAgentRun(jobId, agentNum, ...)  → INSERT agent_runs row
+  - completeAgentRun(runId, tokens, ms)   → UPDATE agent_runs row
+
+STEP 0.6 — ADK Runner Setup
+  // src/lib/adk/runner.ts
+  import { Runner, InMemorySessionService, InMemoryMemoryService } from '@google/adk'
+
+  export const sessionService = new InMemorySessionService()
+  export const memoryService = new InMemoryMemoryService()
+
+  export function createRunner(agent: any) {
+    return new Runner({
+      agent,
+      appName: 'nivedanai',
+      sessionService,
+      memoryService,
+    })
+  }
+
+  CRITICAL: All 6 agents MUST share the same sessionService and memoryService instances.
+  If each agent creates its own Runner, search_memory returns nothing across agents.
+
+TEST for Stage 0:
+  - Start Inngest Dev Server: npx inngest-cli@latest dev
+  - Send test 'nivedan/rfp.submitted' event from Inngest Dev UI
+  - Confirm all 6 step.run placeholders execute in sequence
+  - Confirm rfp_jobs.status updates in Neon at each step
+  Only proceed to Stage 1 when this passes.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STAGE 1 — AGENT 1: ORCHESTRATOR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: src/agents/orchestrator.ts
+Model: gemini-3.1-pro
+Inngest step: 'step-1-orchestrator'
+
+WHAT IT DOES:
+  - Creates ADK session via shared sessionService
+  - Session state: { jobId, userId, rfpDocumentUrl, companyProfileId }
+  - Validates input: confirms RFP URL is accessible, company profile exists in Neon
+  - If validation fails → mark job 'failed', throw to stop pipeline
+
+NEON WRITES:
+  - rfp_jobs.status → 'running'
+  - rfp_jobs.current_agent → 1
+  - rfp_jobs.inngest_run_id → stored
+  - agent_runs row for Agent 1 → 'completed'
+
+PATTERN (orchestration logic only — no LlmAgent needed):
+  // Validate RFP URL accessible + company profile exists in Neon via Drizzle
+  // Create session:
+  await sessionService.createSession({ appName: 'nivedanai', userId, sessionId: jobId })
+  // Write initial state into session for downstream agents
+
+TEST: Job initialises correctly in Neon with status 'running'
+Proceed to Stage 2.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STAGE 2 — AGENT 2: RFP PARSER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: src/agents/rfp-parser.ts
+Model: gemini-3.1-flash-lite
+Inngest step: 'step-2-rfp-parser'
+
+WHAT IT DOES:
+  1. Fetch PDF from UploadThing URL (built-in fetch)
+  2. Extract text using pdf-parse (already in package.json)
+  3. Pass full text to generateContent with structured extraction prompt
+  4. Parse JSON response → RFP Blueprint
+
+EXTRACTION OUTPUT SCHEMA:
+  {
+    mandatoryRequirements: Array<{ id, text, category, priority: 'high'|'medium'|'low' }>,
+    optionalRequirements: Array<{ id, text }>,
+    budgetCeiling: string | null,
+    submissionDeadline: string | null,
+    projectTimeline: string | null,
+    evaluationCriteria: { technical, price, experience } | null,
+    vendorQualifications: string[],
+    complianceRequirements: string[],
+    clientName: string,
+    rawSummary: string,
+  }
+
+PATTERN (one-shot generateContent):
+  import { GoogleGenAI } from '@google/genai'
+  const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY! })
+  const result = await ai.models.generateContent({
+    model: 'gemini-3.1-flash-lite',
+    contents: [{ role: 'user', parts: [{ text: parserPrompt }] }],
+  })
+  const rfpBlueprint = JSON.parse(result.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}')
+
+NEON WRITES:
+  - parsed_rfp_data (full JSON)
+  - rfp_jobs.client_name, budget_ceiling, deadline
+  - rfp_documents.page_count
+  - agent_runs row for Agent 2 → 'completed'
+
+SESSION STATE: Write clientName, budgetCeiling, deadline so Agent 3 reads without Neon query
+
+TEST: Upload real RFP PDF → confirm parsed_rfp_data in Neon has correct JSON
+Proceed to Stage 3.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STAGE 3 — AGENT 3: CLIENT RESEARCH
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILES:
+  src/agents/search-agent.ts       → Sub-agent (Google Search tool only)
+  src/agents/client-research.ts    → Primary research agent (delegates to search-agent)
+Model: gemini-3.1-flash (both agents)
+Inngest step: 'step-3-client-research'
+
+TWO-AGENT STRUCTURE:
+  Client Research Agent delegates ALL web lookups to Search Agent.
+  Search Agent has googleSearch as its only tool.
+  Client Research Agent synthesises findings into Client Profile JSON.
+
+ADK GOOGLE SEARCH PATTERN (LlmAgent — only agent needing interactive tool use):
+  import { LlmAgent } from '@google/adk/agents'
+  import { googleSearch } from '@google/adk/tools'
+
+  // Search sub-agent
+  export const searchAgent = new LlmAgent({
+    name: 'search_agent',
+    model: 'gemini-3.1-flash',
+    description: 'Executes Google Search and returns factual results',
+    instruction: 'You are a web search specialist. Execute searches and return structured factual results.',
+    tools: [googleSearch],
+  })
+
+  // Client Research Agent
+  export const clientResearchAgent = new LlmAgent({
+    name: 'client_research',
+    model: 'gemini-3.1-flash',
+    description: 'Researches client company intelligence',
+    instruction: `Research the client company. Find: recent news, strategic priorities,
+    funding, leadership changes, expansion plans. Use search agent for all lookups.
+    Assign research_confidence: high|medium|low based on data found.
+    Return structured JSON only.`,
+    agents: [searchAgent],
+    generateContentConfig: { temperature: 0.3 },
+  })
+
+  // Run via shared Runner
+  const runner = createRunner(clientResearchAgent)
+  // runner.run({ userId, sessionId: jobId, newMessage: ... })
+
+NOTE: googleSearch requires same GOOGLE_API_KEY with Gemini API enabled. No extra package.
+
+CLIENT PROFILE OUTPUT SCHEMA:
+  {
+    companyName: string,
+    industry: string | null,
+    companySummary: string | null,
+    recentNews: Array<{ headline, date, relevance }>,
+    strategicPriorities: string[],
+    keyChallenges: string[],
+    leadership: Array<{ name, role }> | null,
+    fundingStage: string | null,
+    competitors: string[] | null,
+    sources: string[],
+    researchConfidence: 'high' | 'medium' | 'low',
+  }
+
+GRACEFUL DEGRADATION:
+  If search returns nothing → researchConfidence: 'low',
+  build minimal profile from RFP text alone. Never crash pipeline.
+
+NEON WRITES: client_research_data, agent_runs row for Agent 3
+
+TEST: "Apollo Hospitals" as test client → confirm real recent news in output
+Proceed to Stage 4.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STAGE 4 — AGENT 4: REQUIREMENTS MATCHER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: src/agents/requirements-matcher.ts
+Model: gemini-3.1-flash-lite
+Inngest step: 'step-4-requirements-matcher'
+
+WHAT IT DOES:
+  1. Read parsed_rfp_data.mandatoryRequirements from Neon
+  2. Query knowledge_base_items filtered by company_profile_id (Drizzle)
+  3. For each requirement: pass requirement + KB items to generateContent (one-shot)
+  4. Parse JSON response → confidence_score (0.00-1.00) per match
+  5. Items below 0.50 → is_gap: true, gap_suggestion populated
+
+PATTERN (one-shot generateContent per requirement):
+  import { GoogleGenAI } from '@google/genai'
+  const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY! })
+  const result = await ai.models.generateContent({
+    model: 'gemini-3.1-flash-lite',
+    contents: [{ role: 'user', parts: [{ text: matchPrompt }] }],
+  })
+  const matchData = JSON.parse(result.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}')
+
+CAPABILITY MATCH ROW SCHEMA (one row per requirement):
+  {
+    requirementId: string,
+    requirementText: string,
+    knowledgeBaseItemId: uuid | null,
+    matchSummary: string | null,
+    confidenceScore: number,    // 0.00-1.00
+    isGap: boolean,
+    gapSuggestion: string | null,
+  }
+
+SESSION STATE: Write capabilityMatchSummary = { totalRequirements, matched, gaps }
+  Agent 5 reads this to know which sections need gap-filling vs evidence-backed writing.
+
+NEON WRITES: capability_matches rows, agent_runs row for Agent 4
+
+TEST: Each requirement maps to KB item or is flagged as gap with suggestion
+Proceed to Stage 5.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STAGE 5 — AGENT 5: PROPOSAL WRITER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: src/agents/proposal-writer.ts
+Model: gemini-3.1-pro
+Inngest step: 'step-5-proposal-writer'
+
+WHAT IT DOES:
+  Reads from Neon: parsed_rfp_data + client_research_data + capability_matches
+  Writes 8 sections:
+    1. executive_summary
+    2. understanding_of_requirements
+    3. proposed_solution
+    4. technical_approach
+    5. case_studies
+    6. team_and_expertise
+    7. project_timeline
+    8. pricing_structure
+
+PATTERN (one-shot generateContent, large output):
+  import { GoogleGenAI } from '@google/genai'
+  const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY! })
+  const result = await ai.models.generateContent({
+    model: 'gemini-3.1-pro',
+    contents: [{ role: 'user', parts: [{ text: writerPrompt }] }],
+    generationConfig: { maxOutputTokens: 8192, temperature: 0.7 },
+  })
+
+WHY PRO MODEL:
+  Long-form coherent writing across 8 sections needs highest reasoning.
+  Flash cannot retain full context across all proposal sections.
+
+IMPORTANT:
+  - Expected duration: 60-120 seconds. Inngest handles this — no Vercel timeout.
+  - If Pro context window is an issue: write sections one at a time in separate calls.
+  - token count will be HIGH — log and monitor via agent_runs.
+
+NEON WRITES:
+  - proposals (all 8 section fields, version=1, is_approved=false)
+  - proposals.word_count
+  - agent_runs row for Agent 5
+
+SESSION STATE: Write proposalDraftId (proposals.id) so Agent 6 fetches exact record
+
+TEST: Read full proposal in Neon — client name + research context woven naturally into text
+Proceed to Stage 6.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STAGE 6 — AGENT 6: QUALITY REVIEW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: src/agents/quality-review.ts
+Model: gemini-3.1-flash-lite
+Inngest step: 'step-6-quality-review'
+
+WHAT IT DOES:
+  1. Read proposalDraftId from session state → fetch proposals from Neon
+  2. Read parsed_rfp_data.mandatoryRequirements
+  3. Run validation via generateContent:
+     - Every mandatory requirement addressed in proposal
+     - Proposed timeline <= RFP deadline
+     - Proposed budget <= RFP ceiling
+     - No section contradicts another
+     - No generic filler — every section is client-specific
+  4. Conflicts found → corrected in place (re-write affected section)
+  5. Calculate quality_score (0.00-1.00)
+
+PATTERN (one-shot generateContent):
+  Pass full proposal text + full requirements list to flash-lite.
+  Return: { validationPassed: bool, corrections: Array<{section, issue, fix}>, qualityScore: number }
+  Apply corrections to proposals table.
+
+NEON WRITES:
+  - proposals.quality_review_notes
+  - proposals.quality_score
+  - rfp_jobs.status → 'awaiting_review'    PIPELINE PAUSES HERE
+  - rfp_jobs.current_agent → 6
+  - agent_runs row for Agent 6
+
+AFTER Agent 6: Do NOT export PDF. Pipeline pauses at step.waitForEvent for HITL.
+
+TEST: Introduce deliberate timeline conflict (8mo proposal on 6mo RFP) → confirm caught + corrected
+Proceed to Stage 7.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STAGE 7 — HITL GATE (Human-in-the-Loop)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILES TO CREATE:
+  src/app/api/proposals/[jobId]/approve/route.ts    → sends nivedan/hitl.approved
+  src/app/api/proposals/[jobId]/changes/route.ts    → sends nivedan/hitl.changes.requested
+
+PIPELINE PAUSE MECHANISM (in generate-proposal.ts):
+  const review = await step.waitForEvent('wait-for-hitl', {
+    event: 'nivedan/hitl.approved',
+    timeout: '7d',
+    match: 'data.jobId',
+  })
+  Returns null on timeout — pipeline marks job 'expired', does not crash.
+
+PATH A — User Approves:
+  Dashboard "Approve & Export PDF" button
+  → POST /api/proposals/[jobId]/approve
+  → inngest.send('nivedan/hitl.approved', { jobId, proposalId })
+  → step.waitForEvent resolves → pipeline resumes → step-8-pdf-export
+
+PATH B — User Requests Changes:
+  Dashboard "Request Changes" + section checkboxes + feedback text
+  → POST /api/proposals/[jobId]/changes
+  → inngest.send('nivedan/hitl.changes.requested', { jobId, proposalId, flaggedSections, feedbackText })
+  → Pipeline re-runs step-5 for flagged sections only (not full proposal)
+  → Re-runs step-6 for re-validation
+  → Pauses again at step.waitForEvent (round 2)
+  → proposals.version increments to 2
+
+PATH C — Timeout (7 days, no response):
+  step.waitForEvent returns null
+  → rfp_jobs.status → 'expired'
+  → Send Resend reminder email to user
+  → Draft preserved in Neon, approvable from dashboard later
+
+NEON WRITES:
+  hitl_reviews row per round: { round, status, flagged_sections, feedback_text, reviewed_at }
+  rfp_jobs.status: awaiting_review → running (changes) → awaiting_review → completed
+
+TEST: Full approve flow works. Full changes + re-review flow works. Timeout → expired status.
+Proceed to Stage 8.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STAGE 8 — PDF EXPORT & DELIVERY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: src/lib/pdf/generate.ts
+Library: @react-pdf/renderer (already in package.json)
+Inngest step: 'step-8-pdf-export'
+
+ONLY RUNS AFTER HITL APPROVAL.
+
+WHAT IT DOES:
+  1. Read approved proposal sections from Neon
+  2. Read company_profiles: logo_url, brand_color_primary, brand_color_secondary, company_name
+  3. Generate PDF with @react-pdf/renderer:
+     - Branded cover page (logo, client name, proposal title, submission date)
+     - Table of contents
+     - All 8 sections with proper headings
+     - Page numbers
+     - Company footer on every page
+  4. Upload PDF buffer to UploadThing (not stored in server memory)
+  5. Save UploadThing URL to proposal_exports
+  6. Send PDF link via Resend email to user
+  7. Update rfp_jobs.status → 'completed'
+
+NEON WRITES:
+  - proposal_exports: { pdf_url, file_name, file_size_bytes }
+  - proposal_exports.email_sent_to, email_sent_at
+  - proposal_exports.resend_message_id
+  - rfp_jobs.status → 'completed'
+  - rfp_jobs.completed_at → timestamp
+
+TEST: Final PDF is professional, branded, all 8 sections present, downloadable.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ADK TECHNICAL REFERENCE (TypeScript)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CORRECT IMPORTS:
+  import { LlmAgent } from '@google/adk/agents'          // Agent 3 only
+  import { FunctionTool, googleSearch } from '@google/adk/tools'
+  import { InMemoryMemoryService, InMemorySessionService, Runner } from '@google/adk'
+  import { GoogleGenAI } from '@google/genai'             // all one-shot agents
+
+AGENT TYPE DECISION:
+  LlmAgent   → Agent 3 only (needs interactive googleSearch tool use)
+  generateContent → Agents 1, 2, 4, 5, 6 (structured JSON in one call)
+
+RUNNER SETUP (shared instances — critical, never per-agent):
+  export const sessionService = new InMemorySessionService()
+  export const memoryService  = new InMemoryMemoryService()
+
+SESSION FLOW:
+  Agent 1: await sessionService.createSession({ appName: 'nivedanai', userId, sessionId: jobId })
+  Agents 2-6: await sessionService.getSession({ appName: 'nivedanai', userId, sessionId: jobId })
+  Read/write session.state for in-flight data (clientName, budgetCeiling, proposalDraftId, etc.)
+
+MEMORY:
+  await memoryService.addSessionToMemory(session)   → call after full pipeline completes
+  LlmAgent accesses search_memory automatically when memoryService is wired to Runner
+
+next.config.ts — ADD BEFORE FIRST DEPLOY:
+  const nextConfig = {
+    serverExternalPackages: ['@google/adk', '@google/genai'],
+  }
+  export default nextConfig
+
+ENV VARS — .env.local + Vercel Dashboard:
+  GOOGLE_API_KEY=                             aistudio.google.com/app/apikey
+  GOOGLE_GENAI_USE_VERTEXAI=FALSE             Direct Gemini API, NOT Vertex AI
+  INNGEST_EVENT_KEY=                          app.inngest.com
+  INNGEST_SIGNING_KEY=                        app.inngest.com
+  UPLOADTHING_SECRET=                         uploadthing.com
+  UPLOADTHING_APP_ID=                         uploadthing.com
+  RESEND_API_KEY=                             resend.com
+  RESEND_FROM_EMAIL=                          verified sender domain in Resend
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPLETE FILE MAP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+src/
+  inngest/
+    client.ts                              [Stage 0.1]
+    events.ts                              [Stage 0.3]
+    functions/
+      generate-proposal.ts                 [Stage 0.4]
+  lib/
+    adk/
+      runner.ts                            [Stage 0.6]
+      session.ts                           [Stage 0.6]
+      memory.ts                            [Stage 0.6]
+    pdf/
+      generate.ts                          [Stage 8]
+  agents/
+    orchestrator.ts                        [Stage 1]
+    rfp-parser.ts                          [Stage 2]
+    client-research.ts                     [Stage 3]
+    search-agent.ts                        [Stage 3]
+    requirements-matcher.ts               [Stage 4]
+    proposal-writer.ts                     [Stage 5]
+    quality-review.ts                      [Stage 6]
+  db/
+    helpers/
+      job-status.ts                        [Stage 0.5]
+  app/
+    api/
+      inngest/
+        route.ts                           [Stage 0.2]
+      proposals/
+        [jobId]/
+          approve/route.ts                 [Stage 7]
+          changes/route.ts                 [Stage 7]
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SESSION PLAN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Session 1:  Stage 0 — Inngest foundation + ADK runner
+Session 2:  Stage 1 + Stage 2 — Orchestrator + RFP Parser
+Session 3:  Stage 3 — Client Research + Search Agent
+Session 4:  Stage 4 — Requirements Matcher
+Session 5:  Stage 5 — Proposal Writer (slowest, most complex)
+Session 6:  Stage 6 — Quality Review
+Session 7:  Stage 7 — HITL Gate + dashboard approve/changes buttons
+Session 8:  Stage 8 — PDF Export + Email delivery
+Total: ~8 sessions to working end-to-end pipeline.
+
+CURRENT: Start with Session 1 (Stage 0 — Inngest foundation)

@@ -16,6 +16,20 @@ export const rootAgent = new LlmAgent({
 
 -------------------------------------------------------------- ----------------------------------------------------------
 
+
+Relevant for Later Phases
+
+  ┌────────────────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │        Integration         │                                             Why it fits                                             │
+  ├────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Knowledge Engine           │ Google-native private data retrieval — potential upgrade for Agent 4's KB search (Phase 2 MCP work) │
+  ├────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ MCP Toolbox for Databases  │ Expose Neon tables to agents as MCP tools — exact fit for Phase 2 (Add MCP roadmap item)            │
+  ├────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Pinecone / Qdrant / Chroma │ Vector search for knowledge base — better semantic matching than SQL text search for Agent 4        │
+  └────────────────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────┘
+  ---------------------------------------
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
