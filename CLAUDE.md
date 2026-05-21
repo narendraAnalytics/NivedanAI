@@ -68,33 +68,100 @@ Critical schema rules:
 | Neon DB schema (all 12 tables) | Created via Neon MCP |
 | Dashboard (`/dashboard`) | Complete — UI only (simulated pipeline, no real agents yet) |
 | Inngest foundation (Stage 0) | Complete — pipeline shell wired, verified on Inngest Cloud |
-| Agent pipeline (Agents 01–06) | Not yet built |
+| Agent 01 — Orchestrator | Complete — `src/agents/orchestrator.ts` |
+| Agent 02 — RFP Parser | Complete — `src/agents/rfp-parser.ts` |
+| Agent 03 — Client Research | Complete — `src/agents/client-research.ts` + `src/agents/search-agent.ts` |
+| Agents 04–06 | Not yet built |
 | UploadThing RFP upload | Not yet built |
 
-### Stage 0 Infrastructure — `src/inngest/` + `src/lib/adk/` + `src/db/helpers/`
-
-Stage 0 is complete and verified live on Inngest Cloud. These files exist and are working:
+### Infrastructure — `src/inngest/` + `src/lib/adk/` + `src/db/helpers/` + `src/agents/`
 
 ```
 src/inngest/
   client.ts                          — Inngest client: new Inngest({ id: 'nivedanai' })
                                        Also exports NivedanEvents type for all 5 event shapes
   functions/
-    generate-proposal.ts             — Pipeline shell: 6 step.run placeholders + waitForEvent HITL gate
+    generate-proposal.ts             — Pipeline: steps 1–3 wired, steps 4–6 still placeholder
+                                       + waitForEvent HITL gate (7d timeout)
 
-src/app/api/inngest/route.ts         — Inngest serve route (GET/POST/PUT); already public in middleware
+src/app/api/inngest/route.ts         — Inngest serve route (GET/POST/PUT); public in middleware
+
+src/agents/                          — One file per agent; called from Inngest step.run()
+  orchestrator.ts                    — Agent 1: validates inputs, LLM directive, createSession
+  rfp-parser.ts                      — Agent 2: fetch PDF → pdf-parse → LLM → parsedRfpData
+  search-agent.ts                    — Search sub-agent (LlmAgent + GOOGLE_SEARCH tool); used only by client-research
+  client-research.ts                 — Agent 3: LlmAgent + Runner; delegates web lookups to search-agent → clientResearchData
 
 src/lib/adk/
-  session.ts                         — Module-level InMemorySessionService singleton (shared by ALL agents)
-  memory.ts                          — Module-level InMemoryMemoryService singleton (shared by ALL agents)
-  runner.ts                          — createRunner(agent) factory; imports from session.ts + memory.ts
+  session.ts                         — InMemorySessionService singleton (shared by ALL agents)
+  memory.ts                          — InMemoryMemoryService singleton (Agent 3+ only)
+  runner.ts                          — createRunner(agent) factory — used only by agents with LlmAgent
 
 src/db/helpers/
-  job-status.ts                      — Drizzle helpers: updateJobStatus, updateCurrentAgent,
-                                       createAgentRun, completeAgentRun, failAgentRun
+  job-status.ts                      — createAgentRun, completeAgentRun, failAgentRun,
+                                       updateJobStatus, updateCurrentAgent
 ```
 
-**Critical ADK singleton rule:** `sessionService` and `memoryService` are module-level singletons in `session.ts` and `memory.ts`. All 6 agents MUST import from these files — never `new InMemorySessionService()` inside an agent file. If each agent creates its own instance, `search_memory` returns nothing across agents.
+**ADK singleton rule:** Import `sessionService` from `@/lib/adk/session` — never `new InMemorySessionService()` inside an agent. Direct state mutation: `Object.assign(session.state, { ... })` — `InMemorySessionService` has no `updateSession` method.
+
+**`memoryService` usage:** NOT used in Agents 1 & 2 (no Runner). Only wired into Agent 3+ via `createRunner()`. Call `memoryService.addSessionToMemory(session)` once after Agent 6 completes in `generate-proposal.ts`.
+
+### ADK Implementation Pattern per Agent Type
+
+| Agent | LLM approach | memoryService | sessionService |
+|-------|-------------|---------------|----------------|
+| 1 Orchestrator | `generateContent` one-shot | ❌ | `createSession` |
+| 2 RFP Parser | `generateContent` one-shot | ❌ | `getSession` + `Object.assign(session.state)` |
+| 3 Client Research | `LlmAgent` + `createRunner()` | ✅ via Runner | `getSession` + `Object.assign` |
+| 4–6 | `generateContent` one-shot | ❌ | `getSession` + `Object.assign` |
+
+**`GoogleGenAI` constructor — all agents using gemini-3.1 models:**
+```typescript
+const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY!, apiVersion: 'v1alpha' })
+```
+
+**pdf-parse v2 API** (v2.4.5 — class-based, no default export):
+```typescript
+import { PDFParse } from 'pdf-parse'
+const parser = new PDFParse({ data: buffer })
+const [textResult, infoResult] = await Promise.all([parser.getText(), parser.getInfo()])
+const text = textResult.pages.map((p: { text: string }) => p.text).join('\n')
+const pageCount = infoResult.total ?? 0
+await parser.destroy()
+```
+
+### @google/adk TypeScript API — Confirmed Correct Patterns
+
+These were discovered by reading `node_modules/@google/adk/dist/types/` — do not revert:
+
+1. **All ADK exports from root only** — no sub-path imports:
+   ```typescript
+   // ✅ Correct
+   import { LlmAgent, GOOGLE_SEARCH } from '@google/adk'
+   // ❌ Wrong — these paths do not exist in the TypeScript package
+   import { LlmAgent } from '@google/adk/agents'
+   import { googleSearch } from '@google/adk/tools'
+   ```
+
+2. **Google Search tool is `GOOGLE_SEARCH`** (uppercase constant), not `googleSearch`
+
+3. **Sub-agents property is `subAgents`**, not `agents`:
+   ```typescript
+   new LlmAgent({ subAgents: [searchAgent], ... })
+   ```
+
+4. **`runner.runAsync()` takes a single params object** (not positional args):
+   ```typescript
+   runner.runAsync({ userId, sessionId: jobId, newMessage: { role: 'user', parts: [{ text: prompt }] } })
+   ```
+
+5. **`runner.runAsync()` returns `AsyncGenerator<Event>`** — iterate with `for await`:
+   ```typescript
+   for await (const event of runner.runAsync({ ... })) {
+     const text = event.content?.parts?.[0]?.text
+     if (text) finalText = text
+   }
+   ```
 
 ### Inngest v4 API Rules (v4.4.0 — breaking changes from v3)
 
@@ -178,7 +245,7 @@ Each agent has one clearly defined job. Outputs are structured JSON passed seque
 |---|-------|------|-------|
 | 01 | **Orchestrator Agent** | Root ADK agent. Creates session state, routes pipeline, handles retries/failures gracefully. | gemini-3.1-pro |
 | 02 | **RFP Parser Agent** | Reads entire RFP document. Extracts mandatory vs optional requirements, budget, timeline, evaluation criteria, compliance needs. Outputs structured RFP Blueprint JSON. | gemini-3.1-flash-lite |
-| 03 | **Client Research Agent** | Web searches the client company for recent news, funding, leadership changes, strategic priorities. Makes proposals feel deeply client-aware. | gemini-3.1-flash-lite |
+| 03 | **Client Research Agent** | Web searches the client company for recent news, funding, leadership changes, strategic priorities. Makes proposals feel deeply client-aware. | gemini-3.1-flash |
 | 04 | **Requirements Matcher Agent** | Searches company knowledge base (past proposals, case studies, certifications, team bios). Maps every RFP requirement to strongest proof point with confidence scores. | gemini-3.1-flash-lite |
 | 05 | **Proposal Writer Agent** | Core creative agent. Uses all prior structured outputs to write the full proposal: Executive Summary, Solution, Technical Approach, Case Studies, Team, Timeline, Pricing. | gemini-3.1-pro |
 | 06 | **Quality Review & Export Agent** | Validates every mandatory requirement is addressed. Catches conflicts (e.g. timeline mismatch). Exports branded PDF with company logo, colors, TOC, cover page, page numbers. | gemini-3.1-flash-lite |
@@ -280,19 +347,10 @@ This communicates: democratization · empowerment · leverage · AI augmentation
 
 ---
 
-## Skills (always load before working in these areas)
-
-```
-Frontend / UI work:           C:\Users\ES\.claude\skills\nextstack.skill
-                              C:\Users\ES\.claude\skills\multigentsadk.skill
-```
-
----
-
 ## Important Conventions
 
-- All agents are implemented inside **Next.js 15 API routes** — no separate backend
-- ADK agent type: Google ADK (TypeScript) with `LlmAgent`
+- All agents live in `src/agents/` and are called from `src/inngest/functions/generate-proposal.ts` via `step.run()` — not directly in API routes
+- Agent 3 (Client Research) uses `LlmAgent` + `createRunner()` for googleSearch tool use; all other agents use `generateContent` one-shot
 - Session state is the shared contract between all agents — treat it as the source of truth
 - Outputs must always be **structured JSON** between agents; no free-form text passing
 - PDF generation uses company profile settings for branding (logo, colors, fonts) applied automatically

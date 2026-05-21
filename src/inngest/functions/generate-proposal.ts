@@ -1,6 +1,7 @@
 import { inngest } from '@/inngest/client'
 import { runOrchestrator } from '@/agents/orchestrator'
 import { runRfpParser } from '@/agents/rfp-parser'
+import { runClientResearch } from '@/agents/client-research'
 
 export const generateProposal = inngest.createFunction(
   {
@@ -19,8 +20,7 @@ export const generateProposal = inngest.createFunction(
     })
 
     await step.run('step-3-client-research', async () => {
-      // TODO: Stage 3 — Client Research Agent
-      console.log('[step-3-client-research] placeholder', { jobId })
+      await runClientResearch({ jobId, userId })
     })
 
     await step.run('step-4-requirements-matcher', async () => {
