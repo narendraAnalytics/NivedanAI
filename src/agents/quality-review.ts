@@ -8,6 +8,7 @@ import {
   completeAgentRun,
   failAgentRun,
   updateCurrentAgent,
+  updateJobActivity,
   updateJobStatus,
 } from '@/db/helpers/job-status'
 
@@ -87,6 +88,7 @@ export async function runQualityReview(input: QualityReviewInput): Promise<void>
 
   try {
     await updateCurrentAgent(jobId, 6)
+    await updateJobActivity(jobId, 'Running 5 quality checks…')
 
     const session = await sessionService.getSession({
       appName: 'nivedanai',
@@ -177,6 +179,7 @@ Return ONLY valid JSON matching the schema in your instructions.`
       }
     }
 
+    await updateJobActivity(jobId, 'Quality validated — proposal scored')
     const qualityScore = typeof reviewData.qualityScore === 'number' ? reviewData.qualityScore : 0.5
     const qualityReviewNotes = reviewData.qualityReviewNotes ?? 'Review complete.'
     const corrections = reviewData.corrections ?? []

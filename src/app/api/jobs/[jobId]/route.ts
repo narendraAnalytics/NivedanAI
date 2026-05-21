@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getOrCreateUser } from '@/lib/auth'
 import { db } from '@/db'
-import { rfpJobs } from '@/db/schema'
+import { rfpJobs, rfpDocuments } from '@/db/schema'
 import { eq } from 'drizzle-orm'
 
 export async function GET(
@@ -15,12 +15,15 @@ export async function GET(
     .select({
       status: rfpJobs.status,
       currentAgent: rfpJobs.currentAgent,
+      currentActivity: rfpJobs.currentActivity,
       errorMessage: rfpJobs.errorMessage,
       completedAt: rfpJobs.completedAt,
       clientName: rfpJobs.clientName,
       userId: rfpJobs.userId,
+      fileName: rfpDocuments.fileName,
     })
     .from(rfpJobs)
+    .leftJoin(rfpDocuments, eq(rfpDocuments.rfpJobId, rfpJobs.id))
     .where(eq(rfpJobs.id, jobId))
     .limit(1)
 
@@ -31,8 +34,10 @@ export async function GET(
   return NextResponse.json({
     status: job.status,
     currentAgent: job.currentAgent,
+    currentActivity: job.currentActivity,
     errorMessage: job.errorMessage,
     completedAt: job.completedAt,
     clientName: job.clientName,
+    fileName: job.fileName,
   })
 }

@@ -8,6 +8,7 @@ import {
   completeAgentRun,
   failAgentRun,
   updateCurrentAgent,
+  updateJobActivity,
 } from '@/db/helpers/job-status'
 
 const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY!, apiVersion: 'v1alpha' })
@@ -73,6 +74,7 @@ export async function runProposalWriter(input: ProposalWriterInput): Promise<voi
 
   try {
     await updateCurrentAgent(jobId, 5)
+    await updateJobActivity(jobId, 'Drafting 8-section proposal…')
 
     const session = await sessionService.getSession({
       appName: 'nivedanai',
@@ -169,6 +171,7 @@ Return ONLY valid JSON matching the 8-section schema in your instructions.`
       sections = { executiveSummary: raw || 'Proposal generation encountered an error. Please retry.' }
     }
 
+    await updateJobActivity(jobId, 'Proposal draft complete')
     const allText = Object.values(sections).filter(Boolean).join(' ')
     const wordCount = countWords(allText)
 

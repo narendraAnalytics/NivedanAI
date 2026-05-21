@@ -12,6 +12,7 @@ export const rfpJobs = pgTable('rfp_jobs', {
   budgetCeiling: text('budget_ceiling'),
   deadline: text('deadline'),
   currentAgent: integer('current_agent'),
+  currentActivity: text('current_activity'),
   errorMessage: text('error_message'),
   startedAt: timestamp('started_at'),
   completedAt: timestamp('completed_at'),

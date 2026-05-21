@@ -6,6 +6,7 @@ import { sessionService } from '@/lib/adk/session'
 import {
   updateJobStatus,
   updateCurrentAgent,
+  updateJobActivity,
   createAgentRun,
   completeAgentRun,
   failAgentRun,
@@ -102,6 +103,7 @@ export async function runOrchestrator(input: OrchestratorInput): Promise<void> {
     await Promise.all([
       updateJobStatus(jobId, 'running'),
       updateCurrentAgent(jobId, 1),
+      updateJobActivity(jobId, 'Validating inputs & routing pipeline…'),
       db
         .update(rfpJobs)
         .set({ inngestRunId, startedAt: new Date(), updatedAt: new Date() })
@@ -183,6 +185,7 @@ Return ONLY valid JSON — no markdown fences, no explanation text — matching 
       },
     })
 
+    await updateJobActivity(jobId, 'Session created — agents ready')
     await completeAgentRun(runId, inputTokens, outputTokens, Date.now() - startTime)
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error)

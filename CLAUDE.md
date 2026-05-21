@@ -99,14 +99,15 @@ src/app/api/proposals/
   [jobId]/changes/route.ts           — POST: inserts hitlReviews (changes_requested), fires nivedan/hitl.changes.requested
 src/app/api/uploadthing/route.ts     — GET/POST: UploadThing route handler; public in middleware
 src/app/api/jobs/
-  [jobId]/route.ts                   — GET: returns rfp_jobs status + currentAgent for workflow page polling
+  [jobId]/route.ts                   — GET: left-joins rfp_documents; returns status, currentAgent, currentActivity,
+                                       clientName, fileName for workflow page polling
 src/app/api/kb/
   profile/route.ts                   — GET + PATCH company profile (companyName, industry, website, tagline)
   items/route.ts                     — GET all KB items; POST new item (PDF → pdf-parse → LLM extraction)
   items/[itemId]/route.ts            — DELETE KB item
 
 src/app/workflow/[jobId]/page.tsx    — Live pipeline page: polls /api/jobs/[jobId] every 3s, 6-stage vertical
-                                       timeline, HITL approve/changes panel, completion banner
+                                       timeline, live activity bar below active stage (currentActivity), HITL panel
 src/app/knowledge-base/page.tsx      — KB management: company profile editor, PDF upload (AI auto-extracts
                                        title/description/tags via gemini-3.1-flash-lite), manual form, item list
 
@@ -142,8 +143,10 @@ src/lib/adk/
 
 src/db/helpers/
   job-status.ts                      — createAgentRun, completeAgentRun, failAgentRun,
-                                       updateJobStatus, updateCurrentAgent
+                                       updateJobStatus, updateCurrentAgent, updateJobActivity
 ```
+
+**Live activity pattern:** Call `updateJobActivity(jobId, message)` at each meaningful step inside every agent — this writes to `rfp_jobs.current_activity` and is polled by the workflow page every 3s to show real-time progress to the user. Import from `@/db/helpers/job-status`.
 
 **ADK singleton rule:** Import `sessionService` from `@/lib/adk/session` — never `new InMemorySessionService()` inside an agent. Direct state mutation: `Object.assign(session.state, { ... })` — `InMemorySessionService` has no `updateSession` method.
 

@@ -16,6 +16,13 @@ export async function updateCurrentAgent(jobId: string, agentNum: number) {
     .where(eq(rfpJobs.id, jobId))
 }
 
+export async function updateJobActivity(jobId: string, message: string) {
+  await db
+    .update(rfpJobs)
+    .set({ currentActivity: message, updatedAt: new Date() })
+    .where(eq(rfpJobs.id, jobId))
+}
+
 export async function createAgentRun(
   jobId: string,
   agentNumber: number,

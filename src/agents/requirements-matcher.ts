@@ -9,6 +9,7 @@ import {
   completeAgentRun,
   failAgentRun,
   updateCurrentAgent,
+  updateJobActivity,
 } from '@/db/helpers/job-status'
 
 const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY!, apiVersion: 'v1alpha' })
@@ -112,6 +113,7 @@ export async function runRequirementsMatcher(input: RequirementsMatcherInput): P
       .where(eq(knowledgeBaseItems.companyProfileId, companyProfileId))
 
     const activeKbItems = kbItems.filter(item => item.isActive)
+    await updateJobActivity(jobId, `Loaded ${activeKbItems.length} KB items — matching ${mandatoryRequirements.length} requirements…`)
 
     const kbSummary = activeKbItems.map(item => ({
       id: item.id,
@@ -125,7 +127,11 @@ export async function runRequirementsMatcher(input: RequirementsMatcherInput): P
     const matches: MatchResult[] = []
 
     // Match each mandatory requirement against KB
-    for (const req of mandatoryRequirements) {
+    for (let i = 0; i < mandatoryRequirements.length; i++) {
+      const req = mandatoryRequirements[i]
+      if (i % 5 === 0) {
+        await updateJobActivity(jobId, `Matching requirement ${i + 1} / ${mandatoryRequirements.length}…`)
+      }
       const matchPrompt = `${MATCHER_INSTRUCTION}
 
 ---
@@ -181,6 +187,10 @@ Return ONLY valid JSON matching the schema above.`
       })
     }
 
+    const matched = matches.filter(m => !m.isGap).length
+    const gaps = matches.filter(m => m.isGap).length
+    await updateJobActivity(jobId, `Matched ${matched} / ${matches.length} — ${gaps} gaps identified`)
+
     // Bulk insert capability_matches rows
     if (matches.length > 0) {
       await db.insert(capabilityMatches).values(
@@ -200,8 +210,8 @@ Return ONLY valid JSON matching the schema above.`
     Object.assign(session.state, {
       capabilityMatchSummary: {
         totalRequirements: matches.length,
-        matched: matches.filter(m => !m.isGap).length,
-        gaps: matches.filter(m => m.isGap).length,
+        matched,
+        gaps,
       },
     })
 

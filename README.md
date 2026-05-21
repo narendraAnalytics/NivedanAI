@@ -34,6 +34,15 @@ Relevant for Later Phases
   └────────────────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────┘
   ---------------------------------------
 
+ You run "TechSolutions Pvt Ltd" — a software agency. You set up your Company Profile once:
+  - Company Name: TechSolutions Pvt Ltd
+  - Industry: Software Development
+  - Website: techsolutions.com
+  - Tagline: "Delivering enterprise software since 2015"
+
+---------------------------------------- -----------------------------------------------
+
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

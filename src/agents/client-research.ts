@@ -9,6 +9,7 @@ import {
   completeAgentRun,
   failAgentRun,
   updateCurrentAgent,
+  updateJobActivity,
 } from '@/db/helpers/job-status'
 
 const CLIENT_RESEARCH_INSTRUCTION = `
@@ -69,6 +70,7 @@ export async function runClientResearch(input: ClientResearchInput): Promise<voi
 
   try {
     await updateCurrentAgent(jobId, 3)
+    await updateJobActivity(jobId, 'Initialising web research…')
 
     const session = await sessionService.getSession({
       appName: 'nivedanai',
@@ -106,6 +108,7 @@ Search for: recent news, funding, strategic priorities, leadership changes, expa
 Return ONLY valid JSON matching the schema in your instructions.
 `
 
+    await updateJobActivity(jobId, `Searching: ${companyToResearch} — news, strategy, leadership…`)
     const runner = createRunner(clientResearchAgent)
 
     let finalText = ''
@@ -122,6 +125,7 @@ Return ONLY valid JSON matching the schema in your instructions.
       }
     }
 
+    await updateJobActivity(jobId, 'Compiling research intelligence…')
     let clientProfile: Record<string, unknown>
 
     try {
@@ -148,6 +152,7 @@ Return ONLY valid JSON matching the schema in your instructions.
     }
 
     const confidence = (clientProfile.researchConfidence as string) ?? 'low'
+    await updateJobActivity(jobId, `Research complete — confidence: ${confidence}`)
 
     await db.insert(clientResearchData).values({
       rfpJobId: jobId,

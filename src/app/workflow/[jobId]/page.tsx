@@ -8,9 +8,11 @@ import { useUser, UserButton } from '@clerk/nextjs'
 type JobStatus = {
   status: 'pending' | 'running' | 'awaiting_review' | 'completed' | 'failed' | 'expired'
   currentAgent: number | null
+  currentActivity: string | null
   errorMessage: string | null
   completedAt: string | null
   clientName: string | null
+  fileName: string | null
 }
 
 /* ── Stage definitions ── */
@@ -47,8 +49,11 @@ function BgLayer() {
 }
 
 /* ── Nav ── */
-function Nav({ clientName }: { clientName: string | null }) {
+function Nav({ clientName, fileName }: { clientName: string | null; fileName: string | null }) {
   const router = useRouter()
+  const displayName = fileName
+    ? (fileName.length > 28 ? fileName.slice(0, 26) + '…' : fileName)
+    : null
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 20,
@@ -89,6 +94,24 @@ function Nav({ clientName }: { clientName: string | null }) {
           <span style={{ fontFamily: 'var(--f-display)', fontWeight: 600, fontSize: 15, color: 'var(--forest-deep)' }}>
             {clientName ? `${clientName} — Proposal` : 'Proposal Pipeline'}
           </span>
+          {displayName && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              padding: '3px 10px',
+              background: 'rgba(212,168,79,0.10)',
+              border: '1px solid rgba(212,168,79,0.30)',
+              borderRadius: 999,
+              fontSize: 11, fontWeight: 600,
+              color: 'var(--gold-deep)',
+              fontFamily: 'var(--f-mono)',
+            }}>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <rect x="1" y="0.5" width="6.5" height="9" rx="1" stroke="currentColor" strokeWidth="1" />
+                <path d="M3 3h3.5M3 5h3.5M3 7h2" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" />
+              </svg>
+              {displayName}
+            </span>
+          )}
         </div>
       </div>
       <UserButton />
@@ -549,6 +572,19 @@ function JobInfo({ job, elapsedSecs }: { job: JobStatus; elapsedSecs: number }) 
                 }}>
                   {s.model}
                 </span>
+                {job.currentActivity && (
+                  <div style={{
+                    marginTop: 10,
+                    padding: '8px 10px',
+                    background: `${s.color}0f`,
+                    border: `1px solid ${s.color}28`,
+                    borderRadius: 8,
+                    fontSize: 11.5, color: s.color,
+                    fontStyle: 'italic', lineHeight: 1.4,
+                  }}>
+                    {job.currentActivity}
+                  </div>
+                )}
               </>
             )
           })()}
@@ -619,7 +655,7 @@ export default function WorkflowPage() {
   return (
     <div style={{ position: 'relative', minHeight: '100vh', overflow: 'hidden' }}>
       <BgLayer />
-      <Nav clientName={job?.clientName ?? null} />
+      <Nav clientName={job?.clientName ?? null} fileName={job?.fileName ?? null} />
 
       <div style={{
         position: 'relative', zIndex: 1,
@@ -713,15 +749,45 @@ export default function WorkflowPage() {
           {/* Stage cards */}
           {!error && (
             <div>
-              {stages.map((s, i) => (
-                <StageCard
-                  key={s.n}
-                  stage={s}
-                  status={job ? stageStatus(s.n, job) : 'pending'}
-                  isLast={i === stages.length - 1}
-                  animTick={animTick}
-                />
-              ))}
+              {stages.map((s, i) => {
+                const st = job ? stageStatus(s.n, job) : 'pending'
+                const showActivity = st === 'active' && job?.currentActivity
+                return (
+                  <div key={s.n}>
+                    <StageCard
+                      stage={s}
+                      status={st}
+                      isLast={i === stages.length - 1 && !showActivity}
+                      animTick={animTick}
+                    />
+                    {showActivity && (
+                      <div style={{
+                        margin: '-8px 0 20px 56px',
+                        padding: '9px 14px',
+                        background: 'linear-gradient(120deg, #FFFCF4, #FBF1D8)',
+                        border: `1px solid ${s.color}44`,
+                        borderRadius: 10,
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        fontSize: 12.5, color: s.color, fontWeight: 500,
+                      }}>
+                        <span style={{
+                          display: 'inline-flex', gap: 3, alignItems: 'center',
+                        }}>
+                          {[0, 1, 2].map(d => (
+                            <span key={d} style={{
+                              width: 5, height: 5, borderRadius: '50%',
+                              background: s.color,
+                              animation: `pulseGold ${0.9 + d * 0.2}s ease-in-out infinite`,
+                              animationDelay: `${d * 0.18}s`,
+                            }} />
+                          ))}
+                        </span>
+                        {job!.currentActivity}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           )}
 

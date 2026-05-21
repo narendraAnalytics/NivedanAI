@@ -12,6 +12,7 @@ import {
   completeAgentRun,
   failAgentRun,
   updateCurrentAgent,
+  updateJobActivity,
 } from '@/db/helpers/job-status'
 
 const ai = new GoogleGenAI({
@@ -209,6 +210,7 @@ export async function runRfpParser(
   try {
 
     await updateCurrentAgent(input.jobId, 2)
+    await updateJobActivity(input.jobId, 'Fetching RFP document from storage…')
 
     const session = await sessionService.getSession({
       appName: 'nivedanai',
@@ -238,6 +240,7 @@ export async function runRfpParser(
       )
     }
     const pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer())
+    await updateJobActivity(input.jobId, 'Parsing PDF — detecting structure…')
 
     // Extract text + page count
     const parser = new PDFParse({ data: pdfBuffer })
@@ -250,6 +253,7 @@ export async function runRfpParser(
       .join('\n')
     const pageCount = infoResult.total ?? 0
     await parser.destroy()
+    await updateJobActivity(input.jobId, `Sending ${pageCount}-page document for AI extraction…`)
 
     const prompt = `
 ${RFP_PARSER_DESCRIPTION}
@@ -293,6 +297,7 @@ ${rfpDocumentText}
       .trim()
 
     const blueprint = JSON.parse(cleaned)
+    await updateJobActivity(input.jobId, `Extracted ${(blueprint.mandatoryRequirements ?? []).length} mandatory + ${(blueprint.optionalRequirements ?? []).length} optional requirements`)
 
     // Neon writes — run in parallel, rfpDocuments update is best-effort
     await Promise.all([
