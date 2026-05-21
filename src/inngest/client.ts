@@ -1,6 +1,6 @@
-import { EventSchemas, Inngest } from 'inngest'
+import { Inngest } from 'inngest'
 
-type NivedanEvents = {
+export type NivedanEvents = {
   'nivedan/rfp.submitted': {
     data: {
       jobId: string
@@ -37,7 +37,4 @@ type NivedanEvents = {
   }
 }
 
-export const inngest = new Inngest({
-  id: 'nivedanai',
-  schemas: new EventSchemas().fromRecord<NivedanEvents>(),
-})
+export const inngest = new Inngest({ id: 'nivedanai' })

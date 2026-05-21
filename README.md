@@ -1,3 +1,6 @@
+The change: removed EventSchemas (doesn't exist in Inngest v4) — the client is now just new Inngest({ id: 'nivedanai' }). The event
+   types are exported as NivedanEvents for TypeScript use elsewhere.
+
 --------------------https://adk.dev/integrations/
 
 --------------------https://adk.dev/sessions/memory/

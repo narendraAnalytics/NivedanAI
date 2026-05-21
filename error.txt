@@ -1,0 +1,38 @@
+07:56:45.510 Running build in Washington, D.C., USA (East) – iad1
+07:56:45.511 Build machine configuration: 2 cores, 8 GB
+07:56:45.627 Cloning github.com/narendraAnalytics/NivedanAI (Branch: main, Commit: 557ec11)
+07:56:46.254 Cloning completed: 627.000ms
+07:56:48.137 Restored build cache from previous deployment (9wNLhzMyVQdNSBFE8kuq6186cii1)
+07:56:48.381 Running "vercel build"
+07:56:48.401 Vercel CLI 54.2.0
+07:56:48.613 Installing dependencies...
+07:56:52.286 
+07:56:52.286 up to date in 4s
+07:56:52.286 
+07:56:52.286 191 packages are looking for funding
+07:56:52.286   run `npm fund` for details
+07:56:52.319 Detected Next.js version: 16.2.6
+07:56:52.326 Running "npm run build"
+07:56:52.430 
+07:56:52.430 > nivedanai@0.1.0 build
+07:56:52.430 > next build
+07:56:52.431 
+07:56:53.135   Applying modifyConfig from Vercel
+07:56:53.149 ▲ Next.js 16.2.6 (Turbopack)
+07:56:53.150 
+07:56:53.153 ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+07:56:53.184   Creating an optimized production build ...
+07:57:04.892 ✓ Compiled successfully in 11.4s
+07:57:04.907   Running TypeScript ...
+07:57:12.613 Failed to type check.
+07:57:12.614 
+07:57:12.614 ./src/inngest/client.ts:1:10
+07:57:12.615 Type error: Module '"inngest"' has no exported member 'EventSchemas'.
+07:57:12.615 
+07:57:12.615 > 1 | import { EventSchemas, Inngest } from 'inngest'
+07:57:12.615     |          ^
+07:57:12.615   2 |
+07:57:12.616   3 | type NivedanEvents = {
+07:57:12.616   4 |   'nivedan/rfp.submitted': {
+07:57:12.663 Next.js build worker exited with code: 1 and signal: null
+07:57:12.713 Error: Command "npm run build" exited with 1
