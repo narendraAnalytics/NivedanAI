@@ -67,9 +67,57 @@ Critical schema rules:
 | Clerk auth (sign-in, sign-up, sync) | Complete |
 | Neon DB schema (all 12 tables) | Created via Neon MCP |
 | Dashboard (`/dashboard`) | Complete — UI only (simulated pipeline, no real agents yet) |
+| Inngest foundation (Stage 0) | Complete — pipeline shell wired, verified on Inngest Cloud |
 | Agent pipeline (Agents 01–06) | Not yet built |
-| Inngest functions | Not yet built (`inngest` package installed, no `src/inngest/` directory) |
 | UploadThing RFP upload | Not yet built |
+
+### Stage 0 Infrastructure — `src/inngest/` + `src/lib/adk/` + `src/db/helpers/`
+
+Stage 0 is complete and verified live on Inngest Cloud. These files exist and are working:
+
+```
+src/inngest/
+  client.ts                          — Inngest client: new Inngest({ id: 'nivedanai' })
+                                       Also exports NivedanEvents type for all 5 event shapes
+  functions/
+    generate-proposal.ts             — Pipeline shell: 6 step.run placeholders + waitForEvent HITL gate
+
+src/app/api/inngest/route.ts         — Inngest serve route (GET/POST/PUT); already public in middleware
+
+src/lib/adk/
+  session.ts                         — Module-level InMemorySessionService singleton (shared by ALL agents)
+  memory.ts                          — Module-level InMemoryMemoryService singleton (shared by ALL agents)
+  runner.ts                          — createRunner(agent) factory; imports from session.ts + memory.ts
+
+src/db/helpers/
+  job-status.ts                      — Drizzle helpers: updateJobStatus, updateCurrentAgent,
+                                       createAgentRun, completeAgentRun, failAgentRun
+```
+
+**Critical ADK singleton rule:** `sessionService` and `memoryService` are module-level singletons in `session.ts` and `memory.ts`. All 6 agents MUST import from these files — never `new InMemorySessionService()` inside an agent file. If each agent creates its own instance, `search_memory` returns nothing across agents.
+
+### Inngest v4 API Rules (v4.4.0 — breaking changes from v3)
+
+These bit us during build — do not repeat:
+
+1. **`EventSchemas` does not exist in v4** — `new Inngest({ id: '...' })` only; define event types separately as a TypeScript `type`
+2. **`createFunction` takes 2 arguments, not 3** — trigger moves inside the config object:
+   ```typescript
+   inngest.createFunction(
+     { id: 'generate-proposal', triggers: [{ event: 'nivedan/rfp.submitted' }] },
+     async ({ event, step }) => { ... }
+   )
+   ```
+3. **`step.waitForEvent` uses `if:` not `match:`** for event correlation:
+   ```typescript
+   step.waitForEvent('wait-for-hitl', {
+     event: 'nivedan/hitl.approved',
+     timeout: '7d',
+     if: 'event.data.jobId == async.data.jobId',
+   })
+   ```
+4. **`INNGEST_DEV=1`** — only in `.env.local` for local dev; never on Vercel
+5. **Inngest Cloud sync URL:** `https://nivedan-ai.vercel.app/api/inngest` — re-sync after every deploy
 
 ### Utilities
 
