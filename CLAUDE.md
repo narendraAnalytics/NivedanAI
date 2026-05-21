@@ -55,7 +55,7 @@ Critical schema rules:
 
 ### Auth — `src/middleware.ts` + `src/lib/auth.ts`
 
-- Middleware is `src/middleware.ts` (not `src/proxy.ts`) — public routes: `/`, `/sign-in(.*)`, `/sign-up(.*)`, `/api/inngest`
+- Middleware is `src/middleware.ts` (not `src/proxy.ts`) — public routes: `/`, `/sign-in(.*)`, `/sign-up(.*)`, `/api/inngest`, `/api/uploadthing`
 - `src/lib/auth.ts` exports `getOrCreateUser()` — call at the top of every protected API route. It lazy-creates the `users` row on first login using `currentUser()` (not `sessionClaims` — Clerk v7 JWT excludes email by default), and syncs the Clerk billing plan on every call via `has({ plan })`.
 - `src/app/api/auth/sync/route.ts` — protected GET route Clerk redirects to after sign-in/sign-up. Calls `getOrCreateUser()` then redirects to `/`.
 
@@ -71,26 +71,56 @@ Critical schema rules:
 | Agent 01 — Orchestrator | Complete — `src/agents/orchestrator.ts` |
 | Agent 02 — RFP Parser | Complete — `src/agents/rfp-parser.ts` |
 | Agent 03 — Client Research | Complete — `src/agents/client-research.ts` + `src/agents/search-agent.ts` |
-| Agents 04–06 | Not yet built |
-| UploadThing RFP upload | Not yet built |
+| Agent 04 — Requirements Matcher | Complete — `src/agents/requirements-matcher.ts` |
+| Agent 05 — Proposal Writer | Complete — `src/agents/proposal-writer.ts` |
+| Agent 06 — Quality Review | Complete — `src/agents/quality-review.ts` |
+| HITL Gate (Stage 7) | Complete — approve + changes API routes + `handle-hitl-changes.ts` |
+| PDF Export & Delivery (Stage 8) | Complete — `@react-pdf/renderer` + UploadThing server upload + Resend |
+| UploadThing RFP upload | Complete — `src/lib/uploadthing.ts` + `src/utils/uploadthing.ts` |
 
 ### Infrastructure — `src/inngest/` + `src/lib/adk/` + `src/db/helpers/` + `src/agents/`
 
 ```
 src/inngest/
   client.ts                          — Inngest client: new Inngest({ id: 'nivedanai' })
-                                       Also exports NivedanEvents type for all 5 event shapes
+                                       Also exports NivedanEvents type for all 6 event shapes
   functions/
-    generate-proposal.ts             — Pipeline: steps 1–3 wired, steps 4–6 still placeholder
-                                       + waitForEvent HITL gate (7d timeout)
+    generate-proposal.ts             — Pipeline: all 8 steps wired
+                                       Steps 1-6: agents; step 7: waitForEvent HITL (7d timeout); step 8: PDF export + email
+    handle-hitl-changes.ts           — Separate function triggered by nivedan/hitl.changes.requested
+                                       Rewrites flagged sections via LLM → re-runs quality review
+                                       Main pipeline stays paused until user re-approves
 
 src/app/api/inngest/route.ts         — Inngest serve route (GET/POST/PUT); public in middleware
+src/app/api/proposals/
+  [jobId]/approve/route.ts           — POST: inserts hitlReviews (approved), fires nivedan/hitl.approved
+  [jobId]/changes/route.ts           — POST: inserts hitlReviews (changes_requested), fires nivedan/hitl.changes.requested
+src/app/api/uploadthing/route.ts     — GET/POST: UploadThing route handler; public in middleware
 
 src/agents/                          — One file per agent; called from Inngest step.run()
   orchestrator.ts                    — Agent 1: validates inputs, LLM directive, createSession
   rfp-parser.ts                      — Agent 2: fetch PDF → pdf-parse → LLM → parsedRfpData
   search-agent.ts                    — Search sub-agent (LlmAgent + GOOGLE_SEARCH tool); used only by client-research
   client-research.ts                 — Agent 3: LlmAgent + Runner; delegates web lookups to search-agent → clientResearchData
+  requirements-matcher.ts            — Agent 4: queries knowledge_base_items, per-requirement LLM match,
+                                       bulk inserts capability_matches with confidenceScore (String(), not number)
+  proposal-writer.ts                 — Agent 5: gemini-3.1-pro, temperature 0.7, 8-section JSON output,
+                                       inserts proposals row, writes proposalDraftId to session
+  quality-review.ts                  — Agent 6: gemini-3.1-flash-lite, temperature 0.1, 5 quality checks,
+                                       updates proposals row, calls updateJobStatus(jobId, 'awaiting_review')
+
+src/lib/
+  uploadthing.ts                     — FileRouter: rfpDocument endpoint (32MB PDF); middleware: getOrCreateUser;
+                                       onUploadComplete: creates rfpJobs + rfpDocuments + fires nivedan/rfp.submitted
+                                       Returns { jobId } as serverData
+  pdf/
+    generate.tsx                     — generateProposalPdf(): @react-pdf/renderer JSX → renderToBuffer()
+                                       Cover page + TOC + 8 section pages; buildStyles(primary, secondary) for branding
+                                       Footer with fixed prop + render={({ pageNumber, totalPages }) => ...}
+
+src/utils/
+  uploadthing.ts                     — Client-side: generateReactHelpers<OurFileRouter>() → exports useUploadThing
+                                       (NOT generateUploadHook — that doesn't exist in @uploadthing/react v7)
 
 src/lib/adk/
   session.ts                         — InMemorySessionService singleton (shared by ALL agents)
@@ -104,7 +134,7 @@ src/db/helpers/
 
 **ADK singleton rule:** Import `sessionService` from `@/lib/adk/session` — never `new InMemorySessionService()` inside an agent. Direct state mutation: `Object.assign(session.state, { ... })` — `InMemorySessionService` has no `updateSession` method.
 
-**`memoryService` usage:** NOT used in Agents 1 & 2 (no Runner). Only wired into Agent 3+ via `createRunner()`. Call `memoryService.addSessionToMemory(session)` once after Agent 6 completes in `generate-proposal.ts`.
+**`memoryService` usage:** NOT used in Agents 1, 2, 4, 5, 6 (no Runner). Only wired into Agent 3 via `createRunner()`. Call `memoryService.addSessionToMemory(session)` once after all agents complete in `generate-proposal.ts`.
 
 ### ADK Implementation Pattern per Agent Type
 
@@ -185,6 +215,73 @@ These bit us during build — do not repeat:
    ```
 4. **`INNGEST_DEV=1`** — only in `.env.local` for local dev; never on Vercel
 5. **Inngest Cloud sync URL:** `https://nivedan-ai.vercel.app/api/inngest` — re-sync after every deploy
+
+### UploadThing v7 API — Critical Patterns
+
+Package versions: `uploadthing@^7.7.4`, `@uploadthing/react@^7.3.3`.
+
+**Server-side (FileRouter):**
+```typescript
+import { createUploadthing, type FileRouter } from 'uploadthing/next'
+const f = createUploadthing()
+export const ourFileRouter = { ... } satisfies FileRouter
+export type OurFileRouter = typeof ourFileRouter
+```
+
+**Route handler** (`src/app/api/uploadthing/route.ts`):
+```typescript
+import { createRouteHandler } from 'uploadthing/next'
+export const { GET, POST } = createRouteHandler({ router: ourFileRouter })
+```
+
+**Client-side hook** — use `generateReactHelpers`, NOT `generateUploadHook` (doesn't exist in v7):
+```typescript
+import { generateReactHelpers } from '@uploadthing/react'
+export const { useUploadThing } = generateReactHelpers<OurFileRouter>()
+```
+
+**In components:**
+```typescript
+const { startUpload } = useUploadThing('rfpDocument', {
+  onClientUploadComplete: (files) => { const jobId = files[0]?.serverData?.jobId },
+  onUploadError: () => { ... },
+})
+```
+
+**Server-side upload (PDF export):**
+```typescript
+import { UTApi } from 'uploadthing/server'
+const utapi = new UTApi()
+const file = new File([new Uint8Array(pdfBuffer)], fileName, { type: 'application/pdf' })
+// ⚠️ Must use new Uint8Array(buffer), NOT raw Buffer — TypeScript BlobPart incompatibility
+const result = await utapi.uploadFiles(file)
+```
+
+**File URL property:** `file.ufsUrl` (not `file.url`) in v7 `onUploadComplete` handler.
+
+### generateContent config — all agents
+
+Use `config:` not `generationConfig:`:
+```typescript
+const result = await model.generateContent({
+  contents: [{ role: 'user', parts: [{ text: prompt }] }],
+  config: { temperature: 0.7, maxOutputTokens: 8192 },
+})
+```
+
+### @react-pdf/renderer — serverExternalPackages
+
+Add to `next.config.ts` to prevent bundling issues:
+```typescript
+serverExternalPackages: ['@react-pdf/renderer']
+```
+
+### capability_matches.confidenceScore — numeric column
+
+Drizzle `numeric(3,2)` requires string input. Always pass `String(score)`:
+```typescript
+confidenceScore: String(m.confidenceScore)  // not the raw number
+```
 
 ### Utilities
 
@@ -366,7 +463,7 @@ The public-facing landing page at `/` is fully implemented. It is a premium cine
 ### Files Created
 
 ```
-src/middleware.ts             — Clerk auth middleware; public routes: /, /sign-in, /sign-up, /api/inngest
+src/middleware.ts             — Clerk auth middleware; public routes: /, /sign-in, /sign-up, /api/inngest, /api/uploadthing
 
 src/app/layout.tsx            — Sora + Inter via next/font/google; ClerkProvider; metadata
 src/app/globals.css           — Brand CSS vars, animation keyframes, utility classes
@@ -517,7 +614,7 @@ Single `'use client'` file: `src/app/dashboard/page.tsx`. All sub-components are
 | `DashLogo` | Logo + "Workspace" label — clicks navigate to `/` |
 | `UserPill` | Avatar initials + name + "Free Plan" badge (from `useUser()`) |
 | `ProcessingPipeline` | 6-stage animated pipeline — simulated via `setInterval`; calls `onComplete` when done |
-| `UploadZone` | Drag-drop / click-to-upload PDF area; sets `fileName` state in Dashboard |
+| `UploadZone` | Drag-drop / click-to-upload PDF area; calls `useUploadThing('rfpDocument')` → `onFile(name, jobId)` |
 | `StatCard` | Single stat tile with icon, value, hint |
 | `RecentList` | Proposals table — `userProposals` (state, top) + `sampleProposals` (constant, bottom) |
 | `AgentRoster` | 6 agent list with colored rings |
@@ -527,6 +624,7 @@ Single `'use client'` file: `src/app/dashboard/page.tsx`. All sub-components are
 ### State in Dashboard component
 ```ts
 fileName        — currently selected PDF name (null = show UploadZone)
+jobId           — Inngest job ID returned from UploadThing serverData after real upload
 completed       — pipeline finished flag
 userProposals   — ProposalEntry[] grows on each onComplete
 proposalCount   — increments on each onComplete; drives StatCard values

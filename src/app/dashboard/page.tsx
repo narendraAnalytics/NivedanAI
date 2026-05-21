@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useUploadThing } from "@/utils/uploadthing";
 import { useRouter } from "next/navigation";
 import { useUser, UserButton } from "@clerk/nextjs";
 
@@ -275,13 +276,25 @@ function ProcessingPipeline({ fileName, onComplete }: { fileName: string; onComp
   );
 }
 
-function UploadZone({ onFile }: { onFile: (name: string) => void }) {
+function UploadZone({ onFile }: { onFile: (name: string, jobId: string) => void }) {
   const [drag, setDrag] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const { startUpload } = useUploadThing("rfpDocument", {
+    onClientUploadComplete: (files: { serverData: unknown; name: string }[]) => {
+      const jobId = (files[0]?.serverData as { jobId?: string } | null)?.jobId ?? "";
+      const name = files[0]?.name ?? "document.pdf";
+      setUploading(false);
+      onFile(name, jobId);
+    },
+    onUploadError: () => setUploading(false),
+  });
+
   const handle = (file: File | null | undefined) => {
-    if (!file) return;
-    onFile(file.name || "Hospital_RFP.pdf");
+    if (!file || uploading) return;
+    setUploading(true);
+    startUpload([file]);
   };
 
   return (
@@ -343,7 +356,7 @@ function UploadZone({ onFile }: { onFile: (name: string) => void }) {
           fontFamily: "var(--f-display)", fontSize: 26, fontWeight: 600,
           color: "var(--forest-deep)", letterSpacing: "-0.02em", marginBottom: 8,
         }}>
-          {drag ? "Drop your RFP to begin" : "Drag & drop your RFP here"}
+          {uploading ? "Uploading…" : drag ? "Drop your RFP to begin" : "Drag & drop your RFP here"}
         </div>
         <div style={{ fontSize: 15, color: "var(--ink-soft)", marginBottom: 24 }}>
           or <span style={{ color: "var(--gold-deep)", fontWeight: 600 }}>browse files</span> from your computer
@@ -620,6 +633,7 @@ export default function Dashboard() {
   const firstName = user?.firstName ?? "there";
 
   const [fileName, setFileName]         = useState<string | null>(null);
+  const [jobId, setJobId]               = useState<string>('');
   const [completed, setCompleted]       = useState(false);
   const [userProposals, setUserProposals] = useState<ProposalEntry[]>([]);
   const [proposalCount, setProposalCount] = useState(0);
@@ -780,7 +794,7 @@ export default function Dashboard() {
               </div>
 
               {!fileName ? (
-                <UploadZone onFile={(name) => { setFileName(name); setCompleted(false); }} />
+                <UploadZone onFile={(name, jid) => { setFileName(name); setJobId(jid); setCompleted(false); }} />
               ) : (
                 <ProcessingPipeline fileName={fileName} onComplete={() => {
                   setCompleted(true);

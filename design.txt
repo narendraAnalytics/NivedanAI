@@ -1,7 +1,7 @@
 NIVEDAN AI — BUILD WORKFLOW REFERENCE
 ======================================
 Stack: Next.js 15 · Google ADK TypeScript (@google/adk@1.1.0) · Inngest@4.4.0 · Neon · Clerk · Drizzle
-Status: Landing ✅ · Auth ✅ · DB Schema (12 tables) ✅ · Dashboard ✅ · Inngest ✅ · Agents ❌
+Status: Landing ✅ · Auth ✅ · DB Schema (12 tables) ✅ · Dashboard ✅ · Inngest ✅ · Agents ✅
 
 BUILD ORDER: Stage 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 Never skip a stage. Each depends on the one before.
@@ -206,7 +206,7 @@ Proceed to Stage 3.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STAGE 3 — AGENT 3: CLIENT RESEARCH
+✅ STAGE 3 — AGENT 3: CLIENT RESEARCH
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FILES:
   src/agents/search-agent.ts       → Sub-agent (Google Search tool only)
@@ -277,7 +277,7 @@ Proceed to Stage 4.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STAGE 4 — AGENT 4: REQUIREMENTS MATCHER
+✅ STAGE 4 — AGENT 4: REQUIREMENTS MATCHER
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FILE: src/agents/requirements-matcher.ts
 Model: gemini-3.1-flash-lite
@@ -320,7 +320,7 @@ Proceed to Stage 5.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STAGE 5 — AGENT 5: PROPOSAL WRITER
+✅ STAGE 5 — AGENT 5: PROPOSAL WRITER
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FILE: src/agents/proposal-writer.ts
 Model: gemini-3.1-pro
@@ -368,7 +368,7 @@ Proceed to Stage 6.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STAGE 6 — AGENT 6: QUALITY REVIEW
+✅ STAGE 6 — AGENT 6: QUALITY REVIEW
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FILE: src/agents/quality-review.ts
 Model: gemini-3.1-flash-lite
@@ -405,7 +405,7 @@ Proceed to Stage 7.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STAGE 7 — HITL GATE (Human-in-the-Loop)
+✅ STAGE 7 — HITL GATE (Human-in-the-Loop)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FILES TO CREATE:
   src/app/api/proposals/[jobId]/approve/route.ts    → sends nivedan/hitl.approved
@@ -449,7 +449,7 @@ Proceed to Stage 8.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STAGE 8 — PDF EXPORT & DELIVERY
+✅ STAGE 8 — PDF EXPORT & DELIVERY
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FILE: src/lib/pdf/generate.ts
 Library: @react-pdf/renderer (already in package.json)

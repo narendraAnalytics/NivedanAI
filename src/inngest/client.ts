@@ -28,6 +28,7 @@ export type NivedanEvents = {
       proposalId: string
       flaggedSections: string[]
       feedbackText: string
+      userId: string
     }
   }
   'nivedan/hitl.timeout': {

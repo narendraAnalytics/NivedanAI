@@ -1,7 +1,16 @@
+import { eq } from 'drizzle-orm'
 import { inngest } from '@/inngest/client'
 import { runOrchestrator } from '@/agents/orchestrator'
 import { runRfpParser } from '@/agents/rfp-parser'
 import { runClientResearch } from '@/agents/client-research'
+import { runRequirementsMatcher } from '@/agents/requirements-matcher'
+import { runProposalWriter } from '@/agents/proposal-writer'
+import { runQualityReview } from '@/agents/quality-review'
+import { updateJobStatus } from '@/db/helpers/job-status'
+import { db } from '@/db'
+import { proposals, proposalExports, rfpJobs } from '@/db/schema'
+import { companyProfiles } from '@/db/schema'
+import { users } from '@/db/schema'
 
 export const generateProposal = inngest.createFunction(
   {
@@ -24,18 +33,15 @@ export const generateProposal = inngest.createFunction(
     })
 
     await step.run('step-4-requirements-matcher', async () => {
-      // TODO: Stage 4 — Requirements Matcher Agent
-      console.log('[step-4-requirements-matcher] placeholder', { jobId })
+      await runRequirementsMatcher({ jobId, userId })
     })
 
     await step.run('step-5-proposal-writer', async () => {
-      // TODO: Stage 5 — Proposal Writer Agent
-      console.log('[step-5-proposal-writer] placeholder', { jobId })
+      await runProposalWriter({ jobId, userId })
     })
 
     await step.run('step-6-quality-review', async () => {
-      // TODO: Stage 6 — Quality Review Agent
-      console.log('[step-6-quality-review] placeholder', { jobId })
+      await runQualityReview({ jobId, userId })
     })
 
     // Pipeline pauses here — waits up to 7 days for human approval
@@ -46,14 +52,72 @@ export const generateProposal = inngest.createFunction(
     })
 
     if (!review) {
-      // Timeout path — mark job expired
-      console.log('[hitl] timeout reached for job', jobId)
+      await step.run('mark-expired', async () => {
+        await updateJobStatus(jobId, 'expired')
+      })
       return { status: 'expired' }
     }
 
     await step.run('step-8-pdf-export', async () => {
-      // TODO: Stage 8 — PDF Export
-      console.log('[step-8-pdf-export] placeholder', { jobId })
+      const [proposalRows, companyRows, userRows, jobRows] = await Promise.all([
+        db.select().from(proposals).where(eq(proposals.rfpJobId, jobId)).limit(1),
+        db.select().from(companyProfiles).where(eq(companyProfiles.id, companyProfileId)).limit(1),
+        db.select().from(users).where(eq(users.id, userId)).limit(1),
+        db.select({ clientName: rfpJobs.clientName }).from(rfpJobs).where(eq(rfpJobs.id, jobId)).limit(1),
+      ])
+
+      if (!proposalRows[0]) throw new Error('No approved proposal found for PDF export')
+
+      const proposal = proposalRows[0]
+      const company = companyRows[0]
+      const user = userRows[0]
+      const clientName = jobRows[0]?.clientName ?? 'Client'
+
+      const { generateProposalPdf } = await import('@/lib/pdf/generate')
+      const pdfBuffer = await generateProposalPdf({
+        proposal,
+        companyProfile: company ?? { companyName: 'Company', logoUrl: null, brandColorPrimary: null, brandColorSecondary: null },
+        clientName,
+      })
+
+      const { UTApi } = await import('uploadthing/server')
+      const utapi = new UTApi()
+      const fileName = `proposal-${jobId}-v${proposal.version}.pdf`
+      const file = new File([new Uint8Array(pdfBuffer)], fileName, { type: 'application/pdf' })
+      const uploadResult = await utapi.uploadFiles(file)
+      const pdfUrl = (uploadResult as { data?: { url?: string } }).data?.url ?? ''
+
+      let resendMessageId: string | null = null
+      let emailSentAt: Date | null = null
+
+      if (user?.email) {
+        const { Resend } = await import('resend')
+        const resend = new Resend(process.env.RESEND_API_KEY)
+        const emailResult = await resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL!,
+          to: user.email,
+          subject: `Your proposal for ${clientName} is ready`,
+          html: `<p>Hi ${user.fullName ?? 'there'},</p><p>Your proposal has been approved and is ready to download.</p><p><a href="${pdfUrl}" style="background:#2F5D50;color:#fff;padding:10px 20px;border-radius:4px;text-decoration:none">Download Proposal PDF</a></p><p>Prepared by Nivedan AI</p>`,
+        })
+        resendMessageId = (emailResult as { data?: { id?: string } }).data?.id ?? null
+        emailSentAt = resendMessageId ? new Date() : null
+      }
+
+      await db.insert(proposalExports).values({
+        proposalId: proposal.id,
+        version: proposal.version,
+        pdfUrl,
+        fileName,
+        fileSizeBytes: pdfBuffer.length,
+        emailSentTo: user?.email ?? null,
+        emailSentAt,
+        resendMessageId,
+      })
+
+      await db.update(rfpJobs).set({
+        status: 'completed',
+        completedAt: new Date(),
+      }).where(eq(rfpJobs.id, jobId))
     })
 
     return { status: 'completed' }
