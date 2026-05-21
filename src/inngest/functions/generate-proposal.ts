@@ -1,8 +1,10 @@
 import { inngest } from '@/inngest/client'
 
 export const generateProposal = inngest.createFunction(
-  { id: 'generate-proposal' },
-  { event: 'nivedan/rfp.submitted' },
+  {
+    id: 'generate-proposal',
+    triggers: [{ event: 'nivedan/rfp.submitted' }],
+  },
   async ({ event, step }) => {
     const { jobId, userId, rfpDocumentUrl, companyProfileId } = event.data
 
@@ -40,7 +42,7 @@ export const generateProposal = inngest.createFunction(
     const review = await step.waitForEvent('wait-for-hitl', {
       event: 'nivedan/hitl.approved',
       timeout: '7d',
-      match: 'data.jobId',
+      if: 'event.data.jobId == async.data.jobId',
     })
 
     if (!review) {

@@ -1,5 +1,6 @@
 The change: removed EventSchemas (doesn't exist in Inngest v4) — the client is now just new Inngest({ id: 'nivedanai' }). The event
    types are exported as NivedanEvents for TypeScript use elsewhere.
+ --- createFunction now takes 2 args: config with triggers: [{ event: '...' }], then handler   
 
 --------------------https://adk.dev/integrations/
 
