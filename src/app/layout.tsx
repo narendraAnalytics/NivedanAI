@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Sora, Inter } from "next/font/google";
+import { Sora, Inter, Playfair_Display, JetBrains_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
@@ -13,6 +13,21 @@ const sora = Sora({
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-playfair",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains",
   display: "swap",
   weight: ["400", "500", "600", "700"],
 });
@@ -31,7 +46,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${sora.variable} ${inter.variable} h-full antialiased`}
+      className={`${sora.variable} ${inter.variable} ${playfair.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <ClerkProvider>

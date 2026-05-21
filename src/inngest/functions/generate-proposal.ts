@@ -90,12 +90,13 @@ export const generateProposal = inngest.createFunction(
       let resendMessageId: string | null = null
       let emailSentAt: Date | null = null
 
-      if (user?.email) {
+      const toEmail = event.data.recipientEmail ?? user?.email
+      if (toEmail) {
         const { Resend } = await import('resend')
         const resend = new Resend(process.env.RESEND_API_KEY)
         const emailResult = await resend.emails.send({
           from: process.env.RESEND_FROM_EMAIL!,
-          to: user.email,
+          to: toEmail,
           subject: `Your proposal for ${clientName} is ready`,
           html: `<p>Hi ${user.fullName ?? 'there'},</p><p>Your proposal has been approved and is ready to download.</p><p><a href="${pdfUrl}" style="background:#2F5D50;color:#fff;padding:10px 20px;border-radius:4px;text-decoration:none">Download Proposal PDF</a></p><p>Prepared by Nivedan AI</p>`,
         })
@@ -109,7 +110,7 @@ export const generateProposal = inngest.createFunction(
         pdfUrl,
         fileName,
         fileSizeBytes: pdfBuffer.length,
-        emailSentTo: user?.email ?? null,
+        emailSentTo: toEmail ?? null,
         emailSentAt,
         resendMessageId,
       })

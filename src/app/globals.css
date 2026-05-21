@@ -103,8 +103,9 @@
 
   /* Type */
   --f-display: var(--font-sora), "Inter", system-ui, sans-serif;
+  --f-display-serif: var(--font-playfair), "Georgia", serif;
   --f-body: var(--font-inter), system-ui, sans-serif;
-  --f-mono: "JetBrains Mono", ui-monospace, monospace;
+  --f-mono: var(--font-jetbrains), "JetBrains Mono", ui-monospace, monospace;
 
   /* Radii */
   --ni-radius-sm: 8px;
@@ -201,6 +202,10 @@
 @keyframes pulseGold {
   0%, 100% { box-shadow: 0 0 0 4px rgba(212,168,79,0.18), 0 0 12px rgba(212,168,79,0.6); transform: scale(1); }
   50%       { box-shadow: 0 0 0 8px rgba(212,168,79,0.08), 0 0 16px rgba(212,168,79,0.8); transform: scale(1.18); }
+}
+@keyframes pulseGoldRing {
+  0%, 100% { box-shadow: 0 0 0 5px rgba(247,231,193,0.55), 0 0 18px rgba(212,168,79,0.5); }
+  50%       { box-shadow: 0 0 0 9px rgba(247,231,193,0.30), 0 0 26px rgba(212,168,79,0.7); }
 }
 @keyframes twinkle {
   0%, 100% { opacity: 0.25; transform: scale(0.85); }

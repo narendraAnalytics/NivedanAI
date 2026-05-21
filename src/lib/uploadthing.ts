@@ -1,4 +1,5 @@
 import { createUploadthing, type FileRouter } from 'uploadthing/next'
+import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 import { db } from '@/db'
 import { rfpJobs, rfpDocuments, companyProfiles } from '@/db/schema'
@@ -23,10 +24,11 @@ async function getOrCreateProfile(userId: string) {
 
 export const ourFileRouter = {
   rfpDocument: f({ pdf: { maxFileSize: '32MB', maxFileCount: 1 } })
-    .middleware(async () => {
+    .input(z.object({ recipientEmail: z.string().optional() }))
+    .middleware(async ({ input }) => {
       const user = await getOrCreateUser()
       const profile = await getOrCreateProfile(user.id)
-      return { userId: user.id, companyProfileId: profile.id }
+      return { userId: user.id, companyProfileId: profile.id, recipientEmail: input?.recipientEmail ?? null }
     })
     .onUploadComplete(async ({ metadata, file }) => {
       const [job] = await db
@@ -35,6 +37,7 @@ export const ourFileRouter = {
           userId: metadata.userId,
           status: 'pending',
           startedAt: new Date(),
+          recipientEmail: metadata.recipientEmail,
         })
         .returning({ id: rfpJobs.id })
 
@@ -52,6 +55,7 @@ export const ourFileRouter = {
           userId: metadata.userId,
           rfpDocumentUrl: file.ufsUrl,
           companyProfileId: metadata.companyProfileId,
+          recipientEmail: metadata.recipientEmail ?? undefined,
         },
       })
 

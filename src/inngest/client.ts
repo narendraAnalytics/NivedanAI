@@ -7,6 +7,7 @@ export type NivedanEvents = {
       userId: string
       rfpDocumentUrl: string
       companyProfileId: string
+      recipientEmail?: string
     }
   }
   'nivedan/agent.completed': {

@@ -276,7 +276,7 @@ function ProcessingPipeline({ fileName, onComplete }: { fileName: string; onComp
   );
 }
 
-function UploadZone({ onFile }: { onFile: (name: string, jobId: string) => void }) {
+function UploadZone({ onFile, recipientEmail }: { onFile: (name: string, jobId: string) => void; recipientEmail: string }) {
   const [drag, setDrag] = useState(false);
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -294,7 +294,7 @@ function UploadZone({ onFile }: { onFile: (name: string, jobId: string) => void 
   const handle = (file: File | null | undefined) => {
     if (!file || uploading) return;
     setUploading(true);
-    startUpload([file]);
+    startUpload([file], { recipientEmail: recipientEmail.trim() || undefined });
   };
 
   return (
@@ -633,9 +633,10 @@ export default function Dashboard() {
   const router = useRouter();
   const firstName = user?.firstName ?? "there";
 
-  const [fileName, setFileName]         = useState<string | null>(null);
+  const [fileName, setFileName]           = useState<string | null>(null);
   const [userProposals, setUserProposals] = useState<ProposalEntry[]>([]);
   const [proposalCount, setProposalCount] = useState(0);
+  const [recipientEmail, setRecipientEmail] = useState("");
 
   return (
     <div className="ni-page-enter" style={{ position: "relative", minHeight: "100vh", overflow: "hidden" }}>
@@ -779,7 +780,40 @@ export default function Dashboard() {
 
               {!fileName ? (
                 <>
-                  <UploadZone onFile={(name, jid) => {
+                  {/* Send-to email */}
+                  <div style={{ marginBottom: 18 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
+                      <svg width="14" height="14" viewBox="0 0 22 22" fill="none">
+                        <path d="M3 6l8 6 8-6 M3 6v10h16V6" stroke="#4A5550" strokeWidth="1.4" strokeLinejoin="round" />
+                      </svg>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-soft)" }}>
+                        Send completed proposal to
+                      </span>
+                    </div>
+                    <input
+                      type="email"
+                      value={recipientEmail}
+                      onChange={e => setRecipientEmail(e.target.value)}
+                      placeholder="arjunmehta@acmesolutions.com"
+                      style={{
+                        width: "100%", padding: "10px 14px",
+                        fontFamily: "var(--f-mono)", fontSize: 13,
+                        color: "var(--ink)",
+                        background: "rgba(255,255,255,0.85)",
+                        border: "1px solid var(--line-strong)",
+                        borderRadius: 10, outline: "none",
+                        boxSizing: "border-box",
+                        transition: "border-color .2s",
+                      }}
+                      onFocus={e => (e.currentTarget.style.borderColor = "rgba(212,168,79,0.60)")}
+                      onBlur={e => (e.currentTarget.style.borderColor = "var(--line-strong)")}
+                    />
+                    <div style={{ fontSize: 11.5, color: "var(--ni-muted)", marginTop: 5 }}>
+                      The finished PDF will be emailed to this address once all agents complete
+                    </div>
+                  </div>
+
+                  <UploadZone recipientEmail={recipientEmail} onFile={(name, jid) => {
                     setFileName(name);
                     setTimeout(() => router.push(`/workflow/${jid}`), 1800);
                   }} />

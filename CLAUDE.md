@@ -41,7 +41,7 @@ Schema is split into 5 domain files, all re-exported from `src/db/schema/index.t
 |---|---|
 | `users.ts` | `users` — Clerk user sync target |
 | `company.ts` | `company_profiles`, `knowledge_base_items` |
-| `jobs.ts` | `rfp_jobs`, `rfp_documents`, `agent_runs` |
+| `jobs.ts` | `rfp_jobs` (includes `recipient_email text` nullable), `rfp_documents`, `agent_runs` |
 | `agent-outputs.ts` | `parsed_rfp_data`, `client_research_data`, `capability_matches` |
 | `proposals.ts` | `proposals`, `proposal_exports`, `hitl_reviews` |
 
@@ -77,7 +77,7 @@ Critical schema rules:
 | HITL Gate (Stage 7) | Complete — approve + changes API routes + `handle-hitl-changes.ts` |
 | PDF Export & Delivery (Stage 8) | Complete — `@react-pdf/renderer` + UploadThing server upload + Resend |
 | UploadThing RFP upload | Complete — `src/lib/uploadthing.ts` + `src/utils/uploadthing.ts` |
-| Workflow page (`/workflow/[jobId]`) | Complete — live 6-agent timeline, polls `/api/jobs/[jobId]` every 3s, HITL panel |
+| Workflow page (`/workflow/[jobId]`) | Complete — redesigned single-column, 2×3 agent grid, circular progress, QualityFooter shows recipient email |
 | Knowledge Base (`/knowledge-base`) | Complete — company profile editor, PDF upload with AI extraction, manual form, item list |
 
 ### Infrastructure — `src/inngest/` + `src/lib/adk/` + `src/db/helpers/` + `src/agents/`
@@ -100,14 +100,18 @@ src/app/api/proposals/
 src/app/api/uploadthing/route.ts     — GET/POST: UploadThing route handler; public in middleware
 src/app/api/jobs/
   [jobId]/route.ts                   — GET: left-joins rfp_documents; returns status, currentAgent, currentActivity,
-                                       clientName, fileName for workflow page polling
+                                       clientName, fileName, recipientEmail for workflow page polling
 src/app/api/kb/
   profile/route.ts                   — GET + PATCH company profile (companyName, industry, website, tagline)
   items/route.ts                     — GET all KB items; POST new item (PDF → pdf-parse → LLM extraction)
   items/[itemId]/route.ts            — DELETE KB item
 
-src/app/workflow/[jobId]/page.tsx    — Live pipeline page: polls /api/jobs/[jobId] every 3s, 6-stage vertical
-                                       timeline, live activity bar below active stage (currentActivity), HITL panel
+src/app/workflow/[jobId]/page.tsx    — Live pipeline page: polls /api/jobs/[jobId] every 3s, single-column layout
+                                       Components: PageHeader, CircularProgress (overall %), RfpBanner, StatusBadge,
+                                       AgentRow (2×3 grid, pulseGoldRing on active), QualityFooter, QuoteBlock, HitlPanel
+                                       JobStatus type includes: recipientEmail, fileName, clientName, currentActivity
+                                       userEmail = job.recipientEmail ?? clerk primary email ?? fallback string
+                                       Fonts: --f-display-serif (agent titles), --f-mono (badges)
 src/app/knowledge-base/page.tsx      — KB management: company profile editor, PDF upload (AI auto-extracts
                                        title/description/tags via gemini-3.1-flash-lite), manual form, item list
 
@@ -125,7 +129,8 @@ src/agents/                          — One file per agent; called from Inngest
 
 src/lib/
   uploadthing.ts                     — FileRouter: rfpDocument endpoint (32MB PDF); middleware: getOrCreateUser;
-                                       onUploadComplete: creates rfpJobs + rfpDocuments + fires nivedan/rfp.submitted
+                                       .input(z.object({ recipientEmail: z.string().optional() })) — passes email from client
+                                       onUploadComplete: creates rfpJobs (with recipientEmail) + rfpDocuments + fires nivedan/rfp.submitted
                                        Returns { jobId } as serverData
   pdf/
     generate.tsx                     — generateProposalPdf(): @react-pdf/renderer JSX → renderToBuffer()
@@ -276,8 +281,10 @@ const result = await utapi.uploadFiles(file)
 **File URL property:** `file.ufsUrl` (not `file.url`) in v7 `onUploadComplete` handler.
 
 **Two endpoints in `src/lib/uploadthing.ts`:**
-- `rfpDocument` — 32 MB PDF; middleware calls `getOrCreateProfile(userId)` (auto-creates company profile if none exists), passes `companyProfileId` to Inngest event; `onUploadComplete` creates `rfpJobs` + `rfpDocuments` rows, fires `nivedan/rfp.submitted`
+- `rfpDocument` — 32 MB PDF; uses `.input(z.object({ recipientEmail: z.string().optional() }))` to receive email from `startUpload(files, { recipientEmail })`; middleware returns `{ userId, companyProfileId, recipientEmail }`; `onUploadComplete` stores `recipientEmail` in `rfpJobs` and threads it into the Inngest event
 - `kbDocument` — 16 MB PDF; middleware calls same `getOrCreateProfile`; `onUploadComplete` returns `{ fileUrl, companyProfileId }` — text extraction happens in `/api/kb/items` route (not here, to avoid timeout)
+
+**Recipient email thread:** `startUpload(files, { recipientEmail })` → UploadThing `.input()` → `rfpJobs.recipient_email` DB column → `nivedan/rfp.submitted` event `data.recipientEmail` → Inngest step 8 `event.data.recipientEmail ?? user?.email` → Resend `to:` address. If user leaves field empty, falls back to Clerk sign-up email.
 
 **`getOrCreateProfile(userId)`** — shared helper inside `src/lib/uploadthing.ts`: SELECT → INSERT on miss. Both endpoints use it. Never pass empty string as `companyProfileId`.
 
@@ -487,7 +494,8 @@ The public-facing landing page at `/` is fully implemented. It is a premium cine
 ```
 src/middleware.ts             — Clerk auth middleware; public routes: /, /sign-in, /sign-up, /api/inngest, /api/uploadthing
 
-src/app/layout.tsx            — Sora + Inter via next/font/google; ClerkProvider; metadata
+src/app/layout.tsx            — Sora + Inter + Playfair Display + JetBrains Mono via next/font/google; ClerkProvider; metadata
+                               Variables: --font-playfair, --font-jetbrains exposed on <html> element
 src/app/globals.css           — Brand CSS vars, animation keyframes, utility classes
 src/app/page.tsx              — Section composition (imports all landing components)
 src/app/sign-in/
@@ -526,12 +534,13 @@ src/components/landing/
 | `--champagne` | `#F7E7C1` |
 | `--sage-soft` | `#EBF1E7` |
 | `--f-display` | `Sora` (headings) |
+| `--f-display-serif` | `Playfair Display` (serif headings, workflow page titles) |
 | `--f-body` | `Inter` (body) |
-| `--f-mono` | `JetBrains Mono` (badges, model names) |
+| `--f-mono` | `JetBrains Mono` (badges, model names) — loaded via next/font, uses `var(--font-jetbrains)` |
 
 Key classes: `.ni-glass` (glassmorphism), `.ni-section`, `.ni-container`, `.ni-eyebrow`, `.ni-section-head`, `.ni-text-gradient-gold`, `.btn-primary`, `.btn-gold`
 
-Animations: `drift 8s ease-in-out infinite` (WorkflowViz float), `pulseGold`, `twinkle`, `floatParticle`
+Animations: `drift 8s ease-in-out infinite` (WorkflowViz float), `pulseGold`, `twinkle`, `floatParticle`, `pulseGoldRing` (active agent card ring on workflow page)
 
 ### WorkflowViz — Grid Snake Layout
 
@@ -646,11 +655,14 @@ Single `'use client'` file: `src/app/dashboard/page.tsx`. All sub-components are
 ### State in Dashboard component
 ```ts
 fileName        — set on upload; triggers transition card → router.push('/workflow/[jobId]') after 1.8s
+recipientEmail  — string, starts empty (""); user types any email address
 userProposals   — ProposalEntry[] (kept for future history use)
 proposalCount   — drives StatCard values
 ```
 
-**Upload flow:** User drops PDF → `useUploadThing('rfpDocument')` → `onFile(name, jid)` sets `fileName`, schedules `router.push('/workflow/${jid}')` after 1800ms → transition card shown briefly → redirect. `ProcessingPipeline` remains in code as a demo preview shown below the upload zone (labeled "Pipeline preview / Demo") so users understand the flow before uploading.
+**Upload flow:** User types email in input above `UploadZone` → User drops PDF → `startUpload([file], { recipientEmail: recipientEmail.trim() || undefined })` → `onFile(name, jid)` sets `fileName`, schedules `router.push('/workflow/${jid}')` after 1800ms → redirect. `ProcessingPipeline` remains as a demo preview labeled "Pipeline preview / Demo".
+
+**Email input design:** Placed above the upload drop zone. Placeholder: `arjunmehta@acmesolutions.com`. NOT pre-filled with Clerk email. Helper text: "The finished PDF will be emailed to this address once all agents complete".
 
 ### Dynamic stat logic (on each `onComplete`)
 - **Proposals this month** → `proposalCount`

@@ -19,6 +19,7 @@ export async function GET(
       errorMessage: rfpJobs.errorMessage,
       completedAt: rfpJobs.completedAt,
       clientName: rfpJobs.clientName,
+      recipientEmail: rfpJobs.recipientEmail,
       userId: rfpJobs.userId,
       fileName: rfpDocuments.fileName,
     })
@@ -38,6 +39,7 @@ export async function GET(
     errorMessage: job.errorMessage,
     completedAt: job.completedAt,
     clientName: job.clientName,
+    recipientEmail: job.recipientEmail,
     fileName: job.fileName,
   })
 }

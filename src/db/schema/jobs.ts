@@ -11,6 +11,7 @@ export const rfpJobs = pgTable('rfp_jobs', {
   rfpTitle: text('rfp_title'),
   budgetCeiling: text('budget_ceiling'),
   deadline: text('deadline'),
+  recipientEmail: text('recipient_email'),
   currentAgent: integer('current_agent'),
   currentActivity: text('current_activity'),
   errorMessage: text('error_message'),

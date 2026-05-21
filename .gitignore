@@ -40,5 +40,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# sample / design reference files
+# sample / design reference files 
 /samplecode
