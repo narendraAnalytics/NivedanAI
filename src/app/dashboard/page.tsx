@@ -630,11 +630,10 @@ function BgLayer() {
 ───────────────────────────────────────────── */
 export default function Dashboard() {
   const { user } = useUser();
+  const router = useRouter();
   const firstName = user?.firstName ?? "there";
 
   const [fileName, setFileName]         = useState<string | null>(null);
-  const [jobId, setJobId]               = useState<string>('');
-  const [completed, setCompleted]       = useState(false);
   const [userProposals, setUserProposals] = useState<ProposalEntry[]>([]);
   const [proposalCount, setProposalCount] = useState(0);
 
@@ -768,83 +767,87 @@ export default function Dashboard() {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22, position: "relative" }}>
                 <div>
                   <div style={{ fontFamily: "var(--f-display)", fontWeight: 600, fontSize: 22, color: "var(--ink)" }}>
-                    {!fileName ? "New proposal" : completed ? "Proposal ready" : "Generating proposal"}
+                    {!fileName ? "New proposal" : "Launching pipeline"}
                   </div>
                   <div style={{ fontSize: 13.5, color: "var(--ink-soft)", marginTop: 4 }}>
                     {!fileName
                       ? "Drop an RFP to kick off the pipeline"
-                      : completed
-                      ? "Your branded PDF is in your inbox — and saved to the library below."
-                      : "Six agents are working through your RFP. ETA 18 minutes."}
+                      : "Uploading complete — redirecting to your live workflow now."}
                   </div>
                 </div>
-                {fileName && (
-                  <button
-                    onClick={() => { setFileName(null); setCompleted(false); }}
-                    style={{
-                      padding: "8px 14px", fontSize: 12.5, fontWeight: 600,
-                      background: "rgba(255,255,255,0.7)",
-                      border: "1px solid var(--line-strong)",
-                      borderRadius: 8, color: "var(--ink-soft)", cursor: "pointer",
-                    }}
-                  >
-                    New upload
-                  </button>
-                )}
               </div>
 
               {!fileName ? (
-                <UploadZone onFile={(name, jid) => { setFileName(name); setJobId(jid); setCompleted(false); }} />
-              ) : (
-                <ProcessingPipeline fileName={fileName} onComplete={() => {
-                  setCompleted(true);
-                  setProposalCount(prev => prev + 1);
-                  setUserProposals(prev => [{
-                    name: fileName?.replace(/\.[^.]+$/, "") ?? "Proposal",
-                    status: "Draft Ready",
-                    score: 96,
-                    date: "Just now",
-                    isOwn: true,
-                  }, ...prev]);
-                }} />
-              )}
-
-              {completed && (
-                <div style={{
-                  marginTop: 24, padding: "18px 22px",
-                  background: "linear-gradient(120deg, var(--forest-deep), var(--forest))",
-                  color: "#fff", borderRadius: 14,
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                  boxShadow: "0 12px 30px rgba(35,69,57,0.25)",
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <>
+                  <UploadZone onFile={(name, jid) => {
+                    setFileName(name);
+                    setTimeout(() => router.push(`/workflow/${jid}`), 1800);
+                  }} />
+                  {/* Pipeline preview — shows users the flow before they upload */}
+                  <div style={{ marginTop: 28 }}>
                     <div style={{
-                      width: 38, height: 38, borderRadius: 10,
-                      background: "linear-gradient(180deg, #FBF1D8, #E0B663)",
-                      display: "grid", placeItems: "center",
+                      display: "flex", alignItems: "center", gap: 8, marginBottom: 16,
                     }}>
-                      <svg width="20" height="20" viewBox="0 0 20 20"><path d="M5 10l3 3 7-7" stroke="#2A1E08" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      <span style={{
+                        fontFamily: "var(--f-mono)", fontSize: 10, fontWeight: 600,
+                        color: "var(--ni-muted)", letterSpacing: "0.12em", textTransform: "uppercase",
+                      }}>Pipeline preview</span>
+                      <div style={{ flex: 1, height: 1, background: "var(--line-strong)" }} />
+                      <span style={{
+                        padding: "2px 8px", borderRadius: 999, fontSize: 10, fontWeight: 600,
+                        background: "rgba(212,168,79,0.15)", color: "var(--gold-deep)",
+                      }}>Demo</span>
                     </div>
-                    <div>
-                      <div style={{ fontFamily: "var(--f-display)", fontWeight: 600, fontSize: 15 }}>Proposal_Apollo_v1.pdf · 32 pages</div>
-                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>Quality score: 96 / 100 · All 24 requirements addressed</div>
-                    </div>
+                    <ProcessingPipeline fileName="Sample_RFP.pdf" onComplete={() => {}} />
                   </div>
-                  <div style={{ display: "flex", gap: 10 }}>
-                    <button className="btn btn-gold" style={{ padding: "10px 18px", fontSize: 13 }}>
-                      Download PDF
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2v6 M3 5l3 3 3-3 M2 10h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                    </button>
-                    <button style={{
-                      padding: "10px 18px", fontSize: 13, fontWeight: 600,
-                      background: "rgba(255,255,255,0.10)", color: "#fff",
-                      border: "1px solid rgba(255,255,255,0.20)", borderRadius: 10, cursor: "pointer",
-                    }}>
-                      Open in editor
-                    </button>
+                </>
+              ) : (
+                /* Transition card — shown briefly before redirect to /workflow/[jobId] */
+                <div style={{
+                  padding: "52px 32px",
+                  borderRadius: 22,
+                  background: "linear-gradient(180deg, #FFFCF4 0%, #FFFFFF 100%)",
+                  border: "1.5px solid rgba(47,93,80,0.25)",
+                  textAlign: "center",
+                  boxShadow: "0 0 0 6px rgba(235,241,231,0.6), 0 16px 40px rgba(35,69,57,0.12)",
+                }}>
+                  <div style={{
+                    width: 80, height: 80, margin: "0 auto 24px",
+                    borderRadius: "50%",
+                    background: "linear-gradient(135deg, #EBF1E7, #DDE7D8)",
+                    border: "2.5px solid var(--forest)",
+                    display: "grid", placeItems: "center",
+                    boxShadow: "0 0 0 8px rgba(47,93,80,0.12), 0 12px 30px rgba(35,69,57,0.18)",
+                  }}>
+                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                      <path d="M8 18l7 7 13-13" stroke="var(--forest)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <div style={{
+                    fontFamily: "var(--f-display)", fontWeight: 600, fontSize: 22,
+                    color: "var(--forest-deep)", marginBottom: 8,
+                  }}>
+                    PDF uploaded successfully
+                  </div>
+                  <div style={{ fontSize: 15, color: "var(--ink-soft)", marginBottom: 28 }}>
+                    Preparing your agents workflow&hellip;
+                  </div>
+                  <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
+                    {[0, 1, 2].map(i => (
+                      <span key={i} style={{
+                        width: 8, height: 8, borderRadius: "50%",
+                        background: "var(--forest)",
+                        opacity: 0.9,
+                        animation: `pulseGold ${1 + i * 0.2}s ease-in-out ${i * 0.18}s infinite`,
+                      }} />
+                    ))}
+                  </div>
+                  <div style={{ marginTop: 16, fontSize: 12.5, color: "var(--ni-muted)" }}>
+                    Redirecting to your live workflow&hellip;
                   </div>
                 </div>
               )}
+
             </div>
 
             {/* Recent proposals */}
@@ -923,12 +926,15 @@ export default function Dashboard() {
                   Upload past proposals, case studies, and team bios.
                   The Requirements Matcher Agent uses this to find proof points automatically.
                 </p>
-                <button style={{
-                  padding: "10px 16px", fontSize: 13, fontWeight: 600,
-                  background: "var(--forest)", color: "#fff",
-                  borderRadius: 10, cursor: "pointer", border: "none",
-                  boxShadow: "0 4px 12px rgba(47,93,80,0.25)",
-                }}>
+                <button
+                  onClick={() => router.push("/knowledge-base")}
+                  style={{
+                    padding: "10px 16px", fontSize: 13, fontWeight: 600,
+                    background: "var(--forest)", color: "#fff",
+                    borderRadius: 10, cursor: "pointer", border: "none",
+                    boxShadow: "0 4px 12px rgba(47,93,80,0.25)",
+                  }}
+                >
                   Manage knowledge base →
                 </button>
               </div>

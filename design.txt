@@ -456,7 +456,6 @@ Library: @react-pdf/renderer (already in package.json)
 Inngest step: 'step-8-pdf-export'
 
 ONLY RUNS AFTER HITL APPROVAL.
-
 WHAT IT DOES:
   1. Read approved proposal sections from Neon
   2. Read company_profiles: logo_url, brand_color_primary, brand_color_secondary, company_name

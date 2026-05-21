@@ -7,16 +7,26 @@ import { getOrCreateUser } from '@/lib/auth'
 
 const f = createUploadthing()
 
+async function getOrCreateProfile(userId: string) {
+  const [existing] = await db
+    .select({ id: companyProfiles.id })
+    .from(companyProfiles)
+    .where(eq(companyProfiles.userId, userId))
+    .limit(1)
+  if (existing) return existing
+  const [created] = await db
+    .insert(companyProfiles)
+    .values({ userId, companyName: 'My Company' })
+    .returning({ id: companyProfiles.id })
+  return created
+}
+
 export const ourFileRouter = {
   rfpDocument: f({ pdf: { maxFileSize: '32MB', maxFileCount: 1 } })
     .middleware(async () => {
       const user = await getOrCreateUser()
-      const [profile] = await db
-        .select({ id: companyProfiles.id })
-        .from(companyProfiles)
-        .where(eq(companyProfiles.userId, user.id))
-        .limit(1)
-      return { userId: user.id, companyProfileId: profile?.id ?? '' }
+      const profile = await getOrCreateProfile(user.id)
+      return { userId: user.id, companyProfileId: profile.id }
     })
     .onUploadComplete(async ({ metadata, file }) => {
       const [job] = await db
@@ -46,6 +56,16 @@ export const ourFileRouter = {
       })
 
       return { jobId: job.id }
+    }),
+
+  kbDocument: f({ pdf: { maxFileSize: '16MB', maxFileCount: 1 } })
+    .middleware(async () => {
+      const user = await getOrCreateUser()
+      const profile = await getOrCreateProfile(user.id)
+      return { userId: user.id, companyProfileId: profile.id }
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      return { fileUrl: file.ufsUrl, companyProfileId: metadata.companyProfileId }
     }),
 } satisfies FileRouter
 

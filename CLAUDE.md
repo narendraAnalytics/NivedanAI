@@ -66,7 +66,7 @@ Critical schema rules:
 | Landing page (`/`) | Complete — 11 components in `src/components/landing/` |
 | Clerk auth (sign-in, sign-up, sync) | Complete |
 | Neon DB schema (all 12 tables) | Created via Neon MCP |
-| Dashboard (`/dashboard`) | Complete — UI only (simulated pipeline, no real agents yet) |
+| Dashboard (`/dashboard`) | Complete — upload triggers redirect to `/workflow/[jobId]`; pipeline preview shown as demo |
 | Inngest foundation (Stage 0) | Complete — pipeline shell wired, verified on Inngest Cloud |
 | Agent 01 — Orchestrator | Complete — `src/agents/orchestrator.ts` |
 | Agent 02 — RFP Parser | Complete — `src/agents/rfp-parser.ts` |
@@ -77,6 +77,8 @@ Critical schema rules:
 | HITL Gate (Stage 7) | Complete — approve + changes API routes + `handle-hitl-changes.ts` |
 | PDF Export & Delivery (Stage 8) | Complete — `@react-pdf/renderer` + UploadThing server upload + Resend |
 | UploadThing RFP upload | Complete — `src/lib/uploadthing.ts` + `src/utils/uploadthing.ts` |
+| Workflow page (`/workflow/[jobId]`) | Complete — live 6-agent timeline, polls `/api/jobs/[jobId]` every 3s, HITL panel |
+| Knowledge Base (`/knowledge-base`) | Complete — company profile editor, PDF upload with AI extraction, manual form, item list |
 
 ### Infrastructure — `src/inngest/` + `src/lib/adk/` + `src/db/helpers/` + `src/agents/`
 
@@ -96,6 +98,17 @@ src/app/api/proposals/
   [jobId]/approve/route.ts           — POST: inserts hitlReviews (approved), fires nivedan/hitl.approved
   [jobId]/changes/route.ts           — POST: inserts hitlReviews (changes_requested), fires nivedan/hitl.changes.requested
 src/app/api/uploadthing/route.ts     — GET/POST: UploadThing route handler; public in middleware
+src/app/api/jobs/
+  [jobId]/route.ts                   — GET: returns rfp_jobs status + currentAgent for workflow page polling
+src/app/api/kb/
+  profile/route.ts                   — GET + PATCH company profile (companyName, industry, website, tagline)
+  items/route.ts                     — GET all KB items; POST new item (PDF → pdf-parse → LLM extraction)
+  items/[itemId]/route.ts            — DELETE KB item
+
+src/app/workflow/[jobId]/page.tsx    — Live pipeline page: polls /api/jobs/[jobId] every 3s, 6-stage vertical
+                                       timeline, HITL approve/changes panel, completion banner
+src/app/knowledge-base/page.tsx      — KB management: company profile editor, PDF upload (AI auto-extracts
+                                       title/description/tags via gemini-3.1-flash-lite), manual form, item list
 
 src/agents/                          — One file per agent; called from Inngest step.run()
   orchestrator.ts                    — Agent 1: validates inputs, LLM directive, createSession
@@ -258,6 +271,12 @@ const result = await utapi.uploadFiles(file)
 ```
 
 **File URL property:** `file.ufsUrl` (not `file.url`) in v7 `onUploadComplete` handler.
+
+**Two endpoints in `src/lib/uploadthing.ts`:**
+- `rfpDocument` — 32 MB PDF; middleware calls `getOrCreateProfile(userId)` (auto-creates company profile if none exists), passes `companyProfileId` to Inngest event; `onUploadComplete` creates `rfpJobs` + `rfpDocuments` rows, fires `nivedan/rfp.submitted`
+- `kbDocument` — 16 MB PDF; middleware calls same `getOrCreateProfile`; `onUploadComplete` returns `{ fileUrl, companyProfileId }` — text extraction happens in `/api/kb/items` route (not here, to avoid timeout)
+
+**`getOrCreateProfile(userId)`** — shared helper inside `src/lib/uploadthing.ts`: SELECT → INSERT on miss. Both endpoints use it. Never pass empty string as `companyProfileId`.
 
 ### generateContent config — all agents
 
@@ -623,12 +642,12 @@ Single `'use client'` file: `src/app/dashboard/page.tsx`. All sub-components are
 
 ### State in Dashboard component
 ```ts
-fileName        — currently selected PDF name (null = show UploadZone)
-jobId           — Inngest job ID returned from UploadThing serverData after real upload
-completed       — pipeline finished flag
-userProposals   — ProposalEntry[] grows on each onComplete
-proposalCount   — increments on each onComplete; drives StatCard values
+fileName        — set on upload; triggers transition card → router.push('/workflow/[jobId]') after 1.8s
+userProposals   — ProposalEntry[] (kept for future history use)
+proposalCount   — drives StatCard values
 ```
+
+**Upload flow:** User drops PDF → `useUploadThing('rfpDocument')` → `onFile(name, jid)` sets `fileName`, schedules `router.push('/workflow/${jid}')` after 1800ms → transition card shown briefly → redirect. `ProcessingPipeline` remains in code as a demo preview shown below the upload zone (labeled "Pipeline preview / Demo") so users understand the flow before uploading.
 
 ### Dynamic stat logic (on each `onComplete`)
 - **Proposals this month** → `proposalCount`
