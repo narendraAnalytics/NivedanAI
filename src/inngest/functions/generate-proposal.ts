@@ -1,21 +1,21 @@
 import { inngest } from '@/inngest/client'
+import { runOrchestrator } from '@/agents/orchestrator'
+import { runRfpParser } from '@/agents/rfp-parser'
 
 export const generateProposal = inngest.createFunction(
   {
     id: 'generate-proposal',
     triggers: [{ event: 'nivedan/rfp.submitted' }],
   },
-  async ({ event, step }) => {
+  async ({ event, step, runId }) => {
     const { jobId, userId, rfpDocumentUrl, companyProfileId } = event.data
 
     await step.run('step-1-orchestrator', async () => {
-      // TODO: Stage 1 — Orchestrator Agent
-      console.log('[step-1-orchestrator] placeholder', { jobId, userId })
+      await runOrchestrator({ jobId, userId, rfpDocumentUrl, companyProfileId, inngestRunId: runId })
     })
 
     await step.run('step-2-rfp-parser', async () => {
-      // TODO: Stage 2 — RFP Parser Agent
-      console.log('[step-2-rfp-parser] placeholder', { jobId })
+      await runRfpParser({ jobId, userId })
     })
 
     await step.run('step-3-client-research', async () => {

@@ -1,40 +1,359 @@
-08:00:40.344 Running build in Washington, D.C., USA (East) – iad1
-08:00:40.345 Build machine configuration: 2 cores, 8 GB
-08:00:40.533 Cloning github.com/narendraAnalytics/NivedanAI (Branch: main, Commit: 7cd3abe)
-08:00:41.658 Cloning completed: 1.123s
-08:00:43.871 Restored build cache from previous deployment (9wNLhzMyVQdNSBFE8kuq6186cii1)
-08:00:44.108 Running "vercel build"
-08:00:44.128 Vercel CLI 54.2.0
-08:00:44.322 Installing dependencies...
-08:00:48.745 
-08:00:48.746 up to date in 4s
-08:00:48.746 
-08:00:48.747 191 packages are looking for funding
-08:00:48.748   run `npm fund` for details
-08:00:48.784 Detected Next.js version: 16.2.6
-08:00:48.792 Running "npm run build"
-08:00:48.895 
-08:00:48.896 > nivedanai@0.1.0 build
-08:00:48.896 > next build
-08:00:48.896 
-08:00:49.610   Applying modifyConfig from Vercel
-08:00:49.625 ▲ Next.js 16.2.6 (Turbopack)
-08:00:49.626 
-08:00:49.629 ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-08:00:49.661   Creating an optimized production build ...
-08:01:01.190 ✓ Compiled successfully in 11.2s
-08:01:01.197   Running TypeScript ...
-08:01:09.371 Failed to type check.
-08:01:09.371 
-08:01:09.372 ./src/inngest/functions/generate-proposal.ts:6:3
-08:01:09.372 Type error: Expected 2 arguments, but got 3.
-08:01:09.372 
-08:01:09.372   4 |   { id: 'generate-proposal' },
-08:01:09.372   5 |   { event: 'nivedan/rfp.submitted' },
-08:01:09.372 > 6 |   async ({ event, step }) => {
-08:01:09.372     |   ^
-08:01:09.373   7 |     const { jobId, userId, rfpDocumentUrl, companyProfileId } = event.data
-08:01:09.373   8 |
-08:01:09.373   9 |     await step.run('step-1-orchestrator', async () => {
-08:01:09.419 Next.js build worker exited with code: 1 and signal: null
-08:01:09.472 Error: Command "npm run build" exited with 1
+import { eq } from 'drizzle-orm'
+import { GoogleGenAI } from '@google/genai'
+
+import { db } from '@/db'
+import { rfpJobs } from '@/db/schema'
+
+import { sessionService } from '@/lib/adk/session'
+
+import {
+  createAgentRun,
+  completeAgentRun,
+  failAgentRun,
+  updateCurrentAgent,
+} from '@/db/helpers/job-status'
+
+const ai = new GoogleGenAI({
+  apiKey: process.env.GOOGLE_API_KEY!,
+  apiVersion: 'v1alpha',
+})
+
+const RFP_PARSER_DESCRIPTION = `
+Document Intelligence Engine and Requirement Extraction Agent.
+
+Responsible for transforming large, messy, enterprise RFP documents
+into structured machine-readable intelligence.
+
+Capabilities:
+
+- Requirement extraction
+- Budget detection
+- Timeline identification
+- Compliance discovery
+- Vendor qualification extraction
+- Risk identification
+- Evaluation criteria parsing
+- Mandatory vs optional classification
+- Section understanding
+- Document complexity assessment
+
+Your output becomes the execution foundation
+for every downstream Nivedan AI agent.
+`
+
+const RFP_PARSER_INSTRUCTION = `
+You are the RFP Parser Agent.
+
+Your responsibility is NOT proposal writing.
+
+Your responsibility is deep document intelligence.
+
+You read uploaded RFP documents and convert them into
+clean structured procurement intelligence.
+
+OBJECTIVES:
+
+1. Extract ALL mandatory requirements.
+
+Examples:
+
+- certifications
+- compliance obligations
+- technical requirements
+- vendor experience requirements
+- staffing requirements
+- infrastructure requirements
+- integrations
+- reporting obligations
+
+2. Extract OPTIONAL requirements.
+
+Identify:
+
+- preferred qualifications
+- nice-to-have capabilities
+- bonus scoring opportunities
+
+3. Extract budget intelligence.
+
+Detect:
+
+- budget ceiling
+- fixed pricing
+- pricing model
+- milestones
+- penalties
+- payment terms
+
+4. Extract timeline intelligence.
+
+Find:
+
+- submission deadline
+- project duration
+- milestones
+- implementation timeline
+- go-live expectations
+
+5. Extract evaluation methodology.
+
+Find:
+
+- evaluation weights
+- scoring systems
+- technical score %
+- pricing score %
+- experience score %
+- interview requirements
+
+6. Extract vendor qualification rules.
+
+Examples:
+
+- ISO certifications
+- HIPAA
+- SOC2
+- GDPR
+- Government certifications
+- years of experience
+- team size expectations
+
+7. Extract risks.
+
+Examples:
+
+- aggressive deadline
+- compliance heavy
+- multi-location rollout
+- government procurement
+- security sensitive
+- high documentation burden
+
+8. Extract client intelligence clues.
+
+Find:
+
+- company name
+- industry
+- business goals
+- strategic priorities
+- transformation initiatives
+
+RULES:
+
+- NEVER hallucinate
+- NEVER infer missing budget values
+- NEVER invent certifications
+- If unavailable → null
+- Preserve original wording where critical
+- Normalize dates
+- Normalize currencies
+- Mark confidence score
+
+PRIORITY:
+
+mandatory > compliance > timeline > budget > evaluation > optional
+
+OUTPUT ONLY VALID JSON.
+
+NO MARKDOWN.
+
+NO EXPLANATION.
+
+SCHEMA:
+
+{
+ "clientName":"",
+ "industry":"",
+ "rfpTitle":"",
+ "submissionDeadline":"",
+ "projectDuration":"",
+ "budget":{
+   "amount":null,
+   "currency":"",
+   "pricingModel":""
+ },
+ "mandatoryRequirements":[
+   {
+     "requirement":"",
+     "page":0,
+     "priority":"critical",
+     "confidence":0
+   }
+ ],
+ "optionalRequirements":[],
+ "complianceRequirements":[],
+ "vendorQualifications":[],
+ "technicalRequirements":[],
+ "timelineMilestones":[],
+ "evaluationCriteria":[
+   {
+      "criterion":"",
+      "weight":0
+   }
+ ],
+ "priorityFlags":[],
+ "risks":[],
+ "clientSignals":[],
+ "complexity":"low|medium|high",
+ "documentSummary":"",
+ "parserNotes":""
+}
+`
+
+export interface RfpParserInput {
+  jobId: string
+  userId: string
+}
+
+export async function runRfpParser(
+  input: RfpParserInput
+): Promise<void> {
+
+  const startTime = Date.now()
+
+  const runId = await createAgentRun(
+    input.jobId,
+    2,
+    'rfp_parser',
+    'gemini-3-flash-preview'
+  )
+
+  try {
+
+    await updateCurrentAgent(
+      input.jobId,
+      2
+    )
+
+    const session =
+      await sessionService.getSession({
+        appName: 'nivedanai',
+        userId: input.userId,
+        sessionId: input.jobId,
+      })
+
+    if (!session?.state) {
+      throw new Error(
+        'Pipeline session missing'
+      )
+    }
+
+    const {
+      rfpDocumentText,
+      companyName,
+      pipelineDirective
+    } = session.state
+
+    if (!rfpDocumentText) {
+      throw new Error(
+        'RFP document text missing'
+      )
+    }
+
+    const prompt = `
+${RFP_PARSER_DESCRIPTION}
+
+${RFP_PARSER_INSTRUCTION}
+
+PIPELINE CONTEXT:
+
+Company:
+${companyName}
+
+Sector Hint:
+${pipelineDirective?.sectorHint}
+
+Priority Signals:
+${JSON.stringify(
+  pipelineDirective?.priorityFlags
+)}
+
+DOCUMENT:
+
+${rfpDocumentText}
+`
+
+    const result =
+      await ai.models.generateContent({
+
+      model: 'gemini-3.1-flash-lite',
+
+      contents: [{
+        role:'user',
+        parts:[
+          { text: prompt }
+        ]
+      }],
+
+      config:{
+        temperature:0.1,
+        maxOutputTokens:4096
+      }
+
+    })
+
+    const raw =
+      result.candidates?.[0]
+      ?.content?.parts?.[0]
+      ?.text ?? '{}'
+
+    const cleaned =
+      raw
+      .replace(/```json/g,'')
+      .replace(/```/g,'')
+      .trim()
+
+    const blueprint =
+      JSON.parse(cleaned)
+
+    await sessionService.updateSession({
+
+      appName:'nivedanai',
+
+      userId:input.userId,
+
+      sessionId:input.jobId,
+
+      state:{
+        ...session.state,
+        rfpBlueprint: blueprint
+      }
+
+    })
+
+    await db
+      .update(rfpJobs)
+      .set({
+        updatedAt:new Date()
+      })
+      .where(
+        eq(rfpJobs.id,input.jobId)
+      )
+
+    await completeAgentRun(
+
+      runId,
+
+      result.usageMetadata
+        ?.promptTokenCount ?? 0,
+
+      result.usageMetadata
+        ?.candidatesTokenCount ?? 0,
+
+      Date.now()-startTime
+
+    )
+
+  } catch(error){
+
+    await failAgentRun(
+      runId,
+      String(error)
+    )
+
+    throw error
+
+  }
+
+}
