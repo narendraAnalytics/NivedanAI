@@ -55,7 +55,11 @@ ${hintType ? `Hint: the user selected type "${hintType}" — prefer it unless cl
   })
   const raw = result.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}'
   const cleaned = raw.replace(/```json\n?|```/g, '').trim()
-  return JSON.parse(cleaned) as { title: string; description: string; tags: string[]; type: string }
+  try {
+    return JSON.parse(cleaned) as { title: string; description: string; tags: string[]; type: string }
+  } catch {
+    return { title: '', description: '', tags: [], type: hintType ?? 'past_proposal' }
+  }
 }
 
 export async function GET() {

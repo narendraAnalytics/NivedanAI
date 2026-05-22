@@ -1,0 +1,612 @@
+- generic [ref=e3]:
+  - banner:
+    - generic [ref=e4]:
+      - link "Home" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img [ref=e7]
+        - img [ref=e10]
+      - generic [ref=e13]:
+        - button "Find something... K" [ref=e15] [cursor=pointer]:
+          - img [ref=e16]
+          - text: Find something...
+          - generic [ref=e18]: K
+        - generic [ref=e19]:
+          - navigation [ref=e20]:
+            - list [ref=e21]:
+              - listitem [ref=e22]:
+                - link "Documentation" [ref=e23] [cursor=pointer]:
+                  - /url: /
+              - listitem [ref=e24]:
+                - link "Blog" [ref=e25] [cursor=pointer]:
+                  - /url: /blog
+              - listitem [ref=e26]:
+                - link "Support" [ref=e27] [cursor=pointer]:
+                  - /url: https://discord.gg/UCXkw6xj2K
+          - button "Toggle theme" [ref=e30] [cursor=pointer]:
+            - img [ref=e31]
+          - link "Dashboard" [ref=e34] [cursor=pointer]:
+            - /url: https://uploadthing.com/dashboard
+      - navigation [ref=e35]:
+        - list [ref=e36]:
+          - listitem [ref=e37]:
+            - heading "Introduction" [level=2] [ref=e38]
+            - list [ref=e41]:
+              - listitem [ref=e42]:
+                - link "Introduction" [ref=e43] [cursor=pointer]:
+                  - /url: /
+                  - generic [ref=e44]: Introduction
+              - listitem [ref=e45]:
+                - link "File Routes" [ref=e46] [cursor=pointer]:
+                  - /url: /file-routes
+                  - generic [ref=e47]: File Routes
+              - listitem [ref=e48]:
+                - link "Uploading Files" [ref=e49] [cursor=pointer]:
+                  - /url: /uploading-files
+                  - generic [ref=e50]: Uploading Files
+              - listitem [ref=e51]:
+                - link "Working with Files" [ref=e52] [cursor=pointer]:
+                  - /url: /working-with-files
+                  - generic [ref=e53]: Working with Files
+          - listitem [ref=e54]:
+            - heading "Getting Started" [level=2] [ref=e55]
+            - list [ref=e60]:
+              - listitem [ref=e61]:
+                - link "Astro (with React)" [ref=e62] [cursor=pointer]:
+                  - /url: /getting-started/astro
+                  - generic [ref=e63]: Astro (with React)
+              - listitem [ref=e64]:
+                - link "Expo" [ref=e65] [cursor=pointer]:
+                  - /url: /getting-started/expo
+                  - generic [ref=e66]: Expo
+              - listitem [ref=e67]:
+                - link "Next.js App Router" [ref=e68] [cursor=pointer]:
+                  - /url: /getting-started/appdir
+                  - generic [ref=e69]: Next.js App Router
+                - list [ref=e70]:
+                  - listitem [ref=e71]:
+                    - link "Setting up your environment" [ref=e72] [cursor=pointer]:
+                      - /url: /getting-started/appdir#setting-up-your-environment
+                      - generic [ref=e73]: Setting up your environment
+                  - listitem [ref=e74]:
+                    - link "Set Up A FileRouter" [ref=e75] [cursor=pointer]:
+                      - /url: /getting-started/appdir#set-up-a-file-router
+                      - generic [ref=e76]: Set Up A FileRouter
+                  - listitem [ref=e77]:
+                    - link "Create The UploadThing Components" [ref=e78] [cursor=pointer]:
+                      - /url: /getting-started/appdir#create-the-upload-thing-components
+                      - generic [ref=e79]: Create The UploadThing Components
+                  - listitem [ref=e80]:
+                    - link "Mount A Button And Upload!" [ref=e81] [cursor=pointer]:
+                      - /url: /getting-started/appdir#mount-a-button-and-upload
+                      - generic [ref=e82]: Mount A Button And Upload!
+                  - listitem [ref=e83]:
+                    - link "Improving SSR" [ref=e84] [cursor=pointer]:
+                      - /url: /getting-started/appdir#improving-ssr
+                      - generic [ref=e85]: Improving SSR
+              - listitem [ref=e86]:
+                - link "Next.js Pages Router" [ref=e87] [cursor=pointer]:
+                  - /url: /getting-started/pagedir
+                  - generic [ref=e88]: Next.js Pages Router
+              - listitem [ref=e89]:
+                - link "Remix / React Router" [ref=e90] [cursor=pointer]:
+                  - /url: /getting-started/remix
+                  - generic [ref=e91]: Remix / React Router
+              - listitem [ref=e92]:
+                - link "SolidStart" [ref=e93] [cursor=pointer]:
+                  - /url: /getting-started/solid
+                  - generic [ref=e94]: SolidStart
+              - listitem [ref=e95]:
+                - link "SvelteKit" [ref=e96] [cursor=pointer]:
+                  - /url: /getting-started/svelte
+                  - generic [ref=e97]: SvelteKit
+              - listitem [ref=e98]:
+                - link "Tanstack/Start" [ref=e99] [cursor=pointer]:
+                  - /url: /getting-started/tanstack-start
+                  - generic [ref=e100]: Tanstack/Start
+              - listitem [ref=e101]:
+                - link "Vue with Nuxt" [ref=e102] [cursor=pointer]:
+                  - /url: /getting-started/nuxt
+                  - generic [ref=e103]: Vue with Nuxt
+          - listitem [ref=e104]:
+            - heading "Backend Adapters" [level=2] [ref=e105]
+            - list [ref=e108]:
+              - listitem [ref=e109]:
+                - link "Express" [ref=e110] [cursor=pointer]:
+                  - /url: /backend-adapters/express
+                  - generic [ref=e111]: Express
+              - listitem [ref=e112]:
+                - link "Fastify" [ref=e113] [cursor=pointer]:
+                  - /url: /backend-adapters/fastify
+                  - generic [ref=e114]: Fastify
+              - listitem [ref=e115]:
+                - link "H3" [ref=e116] [cursor=pointer]:
+                  - /url: /backend-adapters/h3
+                  - generic [ref=e117]: H3
+              - listitem [ref=e118]:
+                - link "WinterCG Fetch" [ref=e119] [cursor=pointer]:
+                  - /url: /backend-adapters/fetch
+                  - generic [ref=e120]: WinterCG Fetch
+              - listitem [ref=e121]:
+                - link "Custom adapters" [ref=e122] [cursor=pointer]:
+                  - /url: /backend-adapters/custom
+                  - generic [ref=e123]: Custom adapters
+          - listitem [ref=e124]:
+            - heading "Guides" [level=2] [ref=e125]
+            - list [ref=e128]:
+              - listitem [ref=e129]:
+                - link "Authentication & Security" [ref=e130] [cursor=pointer]:
+                  - /url: /concepts/auth-security
+                  - generic [ref=e131]: Authentication & Security
+              - listitem [ref=e132]:
+                - link "Error Handling" [ref=e133] [cursor=pointer]:
+                  - /url: /concepts/error-handling
+                  - generic [ref=e134]: Error Handling
+              - listitem [ref=e135]:
+                - link "Regions and ACLs" [ref=e136] [cursor=pointer]:
+                  - /url: /concepts/regions-acl
+                  - generic [ref=e137]: Regions and ACLs
+              - listitem [ref=e138]:
+                - link "Theming" [ref=e139] [cursor=pointer]:
+                  - /url: /concepts/theming
+                  - generic [ref=e140]: Theming
+          - listitem [ref=e141]:
+            - heading "API Reference" [level=2] [ref=e142]
+            - list [ref=e145]:
+              - listitem [ref=e146]:
+                - link "uploadthing/client" [ref=e147] [cursor=pointer]:
+                  - /url: /api-reference/client
+                  - generic [ref=e148]: uploadthing/client
+              - listitem [ref=e149]:
+                - link "uploadthing/server" [ref=e150] [cursor=pointer]:
+                  - /url: /api-reference/server
+                  - generic [ref=e151]: uploadthing/server
+              - listitem [ref=e152]:
+                - link "@uploadthing/react" [ref=e153] [cursor=pointer]:
+                  - /url: /api-reference/react
+                  - generic [ref=e154]: "@uploadthing/react"
+              - listitem [ref=e155]:
+                - link "@uploadthing/expo" [ref=e156] [cursor=pointer]:
+                  - /url: /api-reference/expo
+                  - generic [ref=e157]: "@uploadthing/expo"
+              - listitem [ref=e158]:
+                - link "@uploadthing/solid" [ref=e159] [cursor=pointer]:
+                  - /url: /api-reference/solid
+                  - generic [ref=e160]: "@uploadthing/solid"
+              - listitem [ref=e161]:
+                - link "@uploadthing/svelte" [ref=e162] [cursor=pointer]:
+                  - /url: /api-reference/svelte
+                  - generic [ref=e163]: "@uploadthing/svelte"
+              - listitem [ref=e164]:
+                - link "@uploadthing/vue" [ref=e165] [cursor=pointer]:
+                  - /url: /api-reference/vue
+                  - generic [ref=e166]: "@uploadthing/vue"
+              - listitem [ref=e167]:
+                - link "REST API" [ref=e168] [cursor=pointer]:
+                  - /url: /api-reference/openapi-spec
+                  - generic [ref=e169]: REST API
+              - listitem [ref=e170]:
+                - link "UTApi" [ref=e171] [cursor=pointer]:
+                  - /url: /api-reference/ut-api
+                  - generic [ref=e172]: UTApi
+          - listitem [ref=e173]:
+            - heading "Migration Guides" [level=2] [ref=e174]
+            - list [ref=e177]:
+              - listitem [ref=e178]:
+                - link "Migrate from v6 to v7" [ref=e179] [cursor=pointer]:
+                  - /url: /v7
+                  - generic [ref=e180]: Migrate from v6 to v7
+          - listitem [ref=e181]:
+            - heading "Resources" [level=2] [ref=e182]
+            - list [ref=e185]:
+              - listitem [ref=e186]:
+                - link "Frequently Asked Questions" [ref=e187] [cursor=pointer]:
+                  - /url: /faq
+                  - generic [ref=e188]: Frequently Asked Questions
+              - listitem [ref=e189]:
+                - link "Roadmap" [ref=e190] [cursor=pointer]:
+                  - /url: https://t3-tools.notion.site/776334c06d814dd08d450975bb983085?v=a04ee69d18a047859717b279df504a6b
+                  - generic [ref=e191]: Roadmap
+  - generic [ref=e192]:
+    - main [ref=e193]:
+      - article [ref=e194]:
+        - generic [ref=e195]:
+          - heading "Next.js App Router Setup" [level=1] [ref=e196]
+          - paragraph [ref=e197]:
+            - text: Oh, a little bleeding edge are we? We're big fans of
+            - code [ref=e198]: app/
+            - text: and server components, and we think you'll love what we've built 🙏
+          - heading "Setting up your environment" [level=2] [ref=e199]:
+            - link "Setting up your environment" [ref=e200] [cursor=pointer]:
+              - /url: "#setting-up-your-environment"
+          - heading "Install the packages" [level=3] [ref=e201]:
+            - link "Install the packages" [ref=e202] [cursor=pointer]:
+              - /url: "#install-the-packages"
+          - generic [ref=e204]:
+            - tablist [ref=e206]:
+              - tab "npm" [selected] [ref=e207] [cursor=pointer]
+              - tab "pnpm" [ref=e208] [cursor=pointer]
+              - tab "yarn" [ref=e209] [cursor=pointer]
+              - tab "bun" [ref=e210] [cursor=pointer]
+            - tabpanel [ref=e212]:
+              - generic [ref=e214]:
+                - code [ref=e216]:
+                  - code [ref=e218]:
+                    - generic [ref=e219]: npm install uploadthing @uploadthing/react
+                - button "Copy" [ref=e220] [cursor=pointer]:
+                  - generic:
+                    - img
+                    - text: Copy
+                  - generic: Copied!
+          - heading "Add env variables" [level=3] [ref=e221]:
+            - link "Add env variables" [ref=e222] [cursor=pointer]:
+              - /url: "#add-env-variables"
+          - generic [ref=e224]:
+            - heading ".env" [level=3] [ref=e226]
+            - generic [ref=e228]:
+              - code [ref=e230]:
+                - code [ref=e232]:
+                  - generic [ref=e233]: "UPLOADTHING_TOKEN=... # A token for interacting with the SDK"
+              - button "Copy" [ref=e234] [cursor=pointer]:
+                - generic:
+                  - img
+                  - text: Copy
+                - generic: Copied!
+          - generic [ref=e235]:
+            - img [ref=e236]
+            - paragraph [ref=e239]:
+              - text: If you don't already have a uploadthing secret key,
+              - link "sign up ↗" [ref=e240] [cursor=pointer]:
+                - /url: https://uploadthing.com/sign-in
+              - text: and create one from the
+              - link "dashboard! ↗" [ref=e241] [cursor=pointer]:
+                - /url: https://uploadthing.com/dashboard
+          - heading "Set Up A FileRouter" [level=2] [ref=e242]:
+            - link "Set Up A FileRouter" [ref=e243] [cursor=pointer]:
+              - /url: "#set-up-a-file-router"
+          - heading "Creating your first FileRoute" [level=3] [ref=e244]:
+            - link "Creating your first FileRoute" [ref=e245] [cursor=pointer]:
+              - /url: "#creating-your-first-file-route"
+          - paragraph [ref=e246]: "All files uploaded to uploadthing are associated with a FileRoute. The following is a very minimalistic example, with a single FileRoute \"imageUploader\". Think of a FileRoute similar to an endpoint, it has:"
+          - list [ref=e247]:
+            - listitem [ref=e248]: Permitted types ["image", "video", etc]
+            - listitem [ref=e249]: Max file size
+            - listitem [ref=e250]: How many files are allowed to be uploaded
+            - listitem [ref=e251]:
+              - text: (Optional)
+              - code [ref=e252]: input
+              - text: validation to validate client-side data sent to the route
+            - listitem [ref=e253]:
+              - text: (Optional)
+              - code [ref=e254]: middleware
+              - text: to authenticate and tag requests
+            - listitem [ref=e255]:
+              - code [ref=e256]: onUploadComplete
+              - text: callback for when uploads are completed
+          - paragraph [ref=e257]:
+            - text: To get full insight into what you can do with the FileRoutes, please refer to the
+            - link "File Router API" [ref=e258] [cursor=pointer]:
+              - /url: /file-routes
+            - text: .
+          - generic [ref=e260]:
+            - heading "app/api/uploadthing/core.ts" [level=3] [ref=e262]
+            - generic [ref=e264]:
+              - code [ref=e266]:
+                - code [ref=e268]:
+                  - generic [ref=e269]: "import { createUploadthing, type FileRouter } from \"uploadthing/next\";"
+                  - generic [ref=e270]: "import { UploadThingError } from \"uploadthing/server\";"
+                  - generic [ref=e272]: const f = createUploadthing();
+                  - generic [ref=e274]: "const auth = (req: Request) => ({ id: \"fakeId\" }); // Fake auth function"
+                  - generic [ref=e276]: // FileRouter for your app, can contain multiple FileRoutes
+                  - generic [ref=e277]: "export const ourFileRouter = {"
+                  - generic [ref=e278]: // Define as many FileRoutes as you like, each with a unique routeSlug
+                  - generic [ref=e279]: "imageUploader: f({"
+                  - generic [ref=e280]: "image: {"
+                  - generic [ref=e281]: /**
+                  - generic [ref=e282]: "* For full list of options and defaults, see the File Route API reference"
+                  - generic [ref=e283]: "* @see https://docs.uploadthing.com/file-routes#route-config"
+                  - generic [ref=e284]: "*/"
+                  - generic [ref=e285]: "maxFileSize: \"4MB\","
+                  - generic [ref=e286]: "maxFileCount: 1,"
+                  - generic [ref=e287]: "},"
+                  - generic [ref=e288]: "})"
+                  - generic [ref=e289]: // Set permissions and file types for this FileRoute
+                  - generic [ref=e290]: ".middleware(async ({ req }) => {"
+                  - generic [ref=e291]: // This code runs on your server before upload
+                  - generic [ref=e292]: const user = await auth(req);
+                  - generic [ref=e294]: // If you throw, the user will not be able to upload
+                  - generic [ref=e295]: if (!user) throw new UploadThingError("Unauthorized");
+                  - generic [ref=e297]: "// Whatever is returned here is accessible in onUploadComplete as `metadata`"
+                  - generic [ref=e298]: "return { userId: user.id };"
+                  - generic [ref=e299]: "})"
+                  - generic [ref=e300]: ".onUploadComplete(async ({ metadata, file }) => {"
+                  - generic [ref=e301]: // This code RUNS ON YOUR SERVER after upload
+                  - generic [ref=e302]: console.log("Upload complete for userId:", metadata.userId);
+                  - generic [ref=e304]: console.log("file url", file.ufsUrl);
+                  - generic [ref=e306]: "// !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback"
+                  - generic [ref=e307]: "return { uploadedBy: metadata.userId };"
+                  - generic [ref=e308]: "}),"
+                  - generic [ref=e309]: "} satisfies FileRouter;"
+                  - generic [ref=e311]: export type OurFileRouter = typeof ourFileRouter;
+              - button "Copy" [ref=e312] [cursor=pointer]:
+                - generic:
+                  - img
+                  - text: Copy
+                - generic: Copied!
+          - heading "Create a Next.js API route using the FileRouter" [level=3] [ref=e313]:
+            - link "Create a Next.js API route using the FileRouter" [ref=e314] [cursor=pointer]:
+              - /url: "#create-a-next-js-api-route-using-the-file-router"
+          - generic [ref=e315]:
+            - img [ref=e316]
+            - paragraph [ref=e319]:
+              - text: File path here doesn't matter, you can serve this from any route. We recommend serving it from
+              - code [ref=e320]: /api/uploadthing
+              - text: .
+          - generic [ref=e322]:
+            - heading "app/api/uploadthing/route.ts" [level=3] [ref=e324]
+            - generic [ref=e326]:
+              - code [ref=e328]:
+                - code [ref=e330]:
+                  - generic [ref=e331]: "import { createRouteHandler } from \"uploadthing/next\";"
+                  - generic [ref=e333]: "import { ourFileRouter } from \"./core\";"
+                  - generic [ref=e335]: // Export routes for Next App Router
+                  - generic [ref=e336]: "export const { GET, POST } = createRouteHandler({"
+                  - generic [ref=e337]: "router: ourFileRouter,"
+                  - generic [ref=e339]: "// Apply an (optional) custom config:"
+                  - generic [ref=e340]: "// config: { ... },"
+                  - generic [ref=e341]: "});"
+              - button "Copy" [ref=e342] [cursor=pointer]:
+                - generic:
+                  - img
+                  - text: Copy
+                - generic: Copied!
+          - blockquote [ref=e343]:
+            - paragraph [ref=e344]:
+              - text: See configuration options in
+              - link "server API reference" [ref=e345] [cursor=pointer]:
+                - /url: /api-reference/server#create-route-handler
+          - heading "Create The UploadThing Components" [level=2] [ref=e346]:
+            - link "Create The UploadThing Components" [ref=e347] [cursor=pointer]:
+              - /url: "#create-the-upload-thing-components"
+          - paragraph [ref=e348]:
+            - text: We provide components to make uploading easier. We
+            - strong [ref=e349]: highly recommend re-exporting them with the types assigned
+            - text: ", but you CAN import the components individually from"
+            - code [ref=e350]: "@uploadthing/react"
+            - text: instead.
+          - generic [ref=e352]:
+            - heading "src/utils/uploadthing.ts" [level=3] [ref=e354]
+            - generic [ref=e356]:
+              - code [ref=e358]:
+                - code [ref=e360]:
+                  - generic [ref=e361]: "import {"
+                  - generic [ref=e362]: generateUploadButton,
+                  - generic [ref=e363]: generateUploadDropzone,
+                  - generic [ref=e364]: "} from \"@uploadthing/react\";"
+                  - generic [ref=e366]: "import type { OurFileRouter } from \"~/app/api/uploadthing/core\";"
+                  - generic [ref=e368]: export const UploadButton = generateUploadButton<OurFileRouter>();
+                  - generic [ref=e369]: export const UploadDropzone = generateUploadDropzone<OurFileRouter>();
+              - button "Copy" [ref=e370] [cursor=pointer]:
+                - generic:
+                  - img
+                  - text: Copy
+                - generic: Copied!
+          - heading "Add UploadThing's Styles" [level=3] [ref=e371]:
+            - link "Add UploadThing's Styles" [ref=e372] [cursor=pointer]:
+              - /url: "#add-upload-things-styles"
+          - generic [ref=e373]:
+            - tablist [ref=e374]:
+              - tab "Tailwind v3" [selected] [ref=e375] [cursor=pointer]
+              - tab "Tailwind v4" [ref=e376] [cursor=pointer]
+              - tab "Not Tailwind" [ref=e377] [cursor=pointer]
+            - tabpanel [ref=e379]:
+              - generic [ref=e380]:
+                - paragraph [ref=e381]:
+                  - text: Wrap your Tailwind config with the
+                  - code [ref=e382]: withUt
+                  - text: helper. You can learn more about our Tailwind helper in the
+                  - link "\"Theming\" page" [ref=e383] [cursor=pointer]:
+                    - /url: /concepts/theming#theming-with-tailwind-css
+                - generic [ref=e387]:
+                  - code [ref=e389]:
+                    - code [ref=e391]:
+                      - generic [ref=e392]: "import { withUt } from \"uploadthing/tw\";"
+                      - generic [ref=e394]: "export default withUt({"
+                      - generic [ref=e395]: // Your existing Tailwind config
+                      - generic [ref=e396]: "content: [\"./src/**/*.{ts,tsx,mdx}\"],"
+                      - generic [ref=e397]: ...
+                      - generic [ref=e398]: "});"
+                  - button "Copy" [ref=e399] [cursor=pointer]:
+                    - generic:
+                      - img
+                      - text: Copy
+                    - generic: Copied!
+          - heading "Mount A Button And Upload!" [level=2] [ref=e400]:
+            - link "Mount A Button And Upload!" [ref=e401] [cursor=pointer]:
+              - /url: "#mount-a-button-and-upload"
+          - generic [ref=e402]:
+            - img [ref=e403]
+            - paragraph [ref=e406]:
+              - text: Don't forget to add the
+              - code [ref=e407]: "\"use client\";"
+              - text: directive at the top of your file, since the
+              - code [ref=e408]: UploadButton
+              - text: component needs to run on the client-side.
+          - generic [ref=e410]:
+            - heading "app/example-uploader/page.tsx" [level=3] [ref=e412]
+            - generic [ref=e414]:
+              - code [ref=e416]:
+                - code [ref=e418]:
+                  - generic [ref=e419]: "\"use client\";"
+                  - generic [ref=e421]: "import { UploadButton } from \"~/utils/uploadthing\";"
+                  - generic [ref=e423]: "export default function Home() {"
+                  - generic [ref=e424]: return (
+                  - generic [ref=e425]: <main className="flex min-h-screen flex-col items-center justify-between p-24">
+                  - generic [ref=e426]: <UploadButton
+                  - generic [ref=e427]: endpoint="imageUploader"
+                  - generic [ref=e428]: "onClientUploadComplete={(res) => {"
+                  - generic [ref=e429]: // Do something with the response
+                  - generic [ref=e430]: "console.log(\"Files: \", res);"
+                  - generic [ref=e431]: alert("Upload Completed");
+                  - generic [ref=e432]: "}}"
+                  - generic [ref=e433]: "onUploadError={(error: Error) => {"
+                  - generic [ref=e434]: // Do something with the error.
+                  - generic [ref=e435]: "alert(`ERROR! ${error.message}`);"
+                  - generic [ref=e436]: "}}"
+                  - generic [ref=e437]: />
+                  - generic [ref=e438]: </main>
+                  - generic [ref=e439]: );
+                  - generic [ref=e440]: "}"
+              - button "Copy" [ref=e441] [cursor=pointer]:
+                - generic:
+                  - img
+                  - text: Copy
+                - generic: Copied!
+          - generic [ref=e444]: 💡 Optional
+          - heading "Improving SSR" [level=2] [ref=e445]:
+            - link "Improving SSR" [ref=e446] [cursor=pointer]:
+              - /url: "#improving-ssr"
+          - paragraph [ref=e447]: UploadThing needs to get info from your server to get permissions info. Normally this means a loading state. We built an optional plugin to prevent that
+          - generic [ref=e448]:
+            - generic [ref=e449]:
+              - generic [ref=e450]: Without SSR Plugin
+              - generic [ref=e452]:
+                - button "Loading..." [disabled] [ref=e453]
+                - text: Loading...
+            - generic [ref=e454]:
+              - generic [ref=e455]: With SSR Plugin
+              - generic [ref=e456]:
+                - generic [ref=e457] [cursor=pointer]:
+                  - button "Ready" [disabled] [ref=e458]
+                  - text: Ready
+                - generic [ref=e459]: Allowed content
+          - paragraph [ref=e460]:
+            - text: To add SSR hydration and avoid that loading state, simply render the
+            - code [ref=e461]: <NextSSRPlugin />
+            - text: hydration helper in the body of your root layout
+            - strong [ref=e462]: before
+            - text: the children.
+          - generic [ref=e464]:
+            - heading "app/layout.tsx" [level=3] [ref=e466]
+            - generic [ref=e468]:
+              - code [ref=e470]:
+                - code [ref=e472]:
+                  - generic [ref=e473]: "import { NextSSRPlugin } from \"@uploadthing/react/next-ssr-plugin\";"
+                  - generic [ref=e474]: "import { extractRouterConfig } from \"uploadthing/server\";"
+                  - generic [ref=e476]: "import { ourFileRouter } from \"~/app/api/uploadthing/core\";"
+                  - generic [ref=e478]: "export default function RootLayout({"
+                  - generic [ref=e479]: children,
+                  - generic [ref=e480]: "}: {"
+                  - generic [ref=e481]: "children: React.ReactNode;"
+                  - generic [ref=e482]: "}) {"
+                  - generic [ref=e483]: return (
+                  - generic [ref=e484]: <html lang="en">
+                  - generic [ref=e485]: <body>
+                  - generic [ref=e486]: <NextSSRPlugin
+                  - generic [ref=e487]: /**
+                  - generic [ref=e488]: "* The `extractRouterConfig` will extract **only** the route configs"
+                  - generic [ref=e489]: "* from the router to prevent additional information from being"
+                  - generic [ref=e490]: "* leaked to the client. The data passed to the client is the same"
+                  - generic [ref=e491]: "* as if you were to fetch `/api/uploadthing` directly."
+                  - generic [ref=e492]: "*/"
+                  - generic [ref=e493]: "routerConfig={extractRouterConfig(ourFileRouter)}"
+                  - generic [ref=e494]: />
+                  - generic [ref=e495]: "{children}"
+                  - generic [ref=e496]: </body>
+                  - generic [ref=e497]: </html>
+                  - generic [ref=e498]: );
+                  - generic [ref=e499]: "}"
+              - button "Copy" [ref=e500] [cursor=pointer]:
+                - generic:
+                  - img
+                  - text: Copy
+                - generic: Copied!
+          - generic [ref=e501]:
+            - img [ref=e502]
+            - generic [ref=e504]:
+              - paragraph [ref=e505]:
+                - text: If using the experimental
+                - code [ref=e506]: ppr
+                - text: or
+                - code [ref=e507]: dynamicIO
+                - text: features in Next.js 15, wrap the
+                - code [ref=e508]: <NextSSRPlugin />
+                - text: in suspense and call
+                - code [ref=e509]: await connection()
+                - text: before rendering the component.
+              - generic [ref=e511]:
+                - heading "app/layout.tsx" [level=3] [ref=e513]
+                - generic [ref=e515]:
+                  - code [ref=e517]:
+                    - code [ref=e519]:
+                      - generic [ref=e520]: "import { connection } from \"next/server\";"
+                      - generic [ref=e521]: "import { Suspense } from \"react\";"
+                      - generic [ref=e523]: "async function UTSSR() {"
+                      - generic [ref=e524]: await connection();
+                      - generic [ref=e526]: "return <NextSSRPlugin routerConfig={extractRouterConfig(ourFileRouter)} />"
+                      - generic [ref=e527]: "}"
+                      - generic [ref=e529]: "export default function RootLayout(props) {"
+                      - generic [ref=e530]: return (
+                      - generic [ref=e531]: <html>
+                      - generic [ref=e532]: "{...}"
+                      - generic [ref=e533]: <Suspense> // [!code ++]
+                      - generic [ref=e534]: <UTSSR />
+                      - generic [ref=e535]: </Suspense> // [!code ++]
+                      - generic [ref=e536]: "{...}"
+                      - generic [ref=e537]: </html>
+                      - generic [ref=e538]: )
+                      - generic [ref=e539]: "}"
+                  - button "Copy" [ref=e540] [cursor=pointer]:
+                    - generic:
+                      - img
+                      - text: Copy
+                    - generic: Copied!
+          - separator [ref=e541]
+          - heading "🎉 You're Done!" [level=3] [ref=e542]:
+            - link "🎉 You're Done!" [ref=e543] [cursor=pointer]:
+              - /url: "#you-re-done"
+          - paragraph [ref=e544]:
+            - text: Want to customize the components? Check out the
+            - link "\"Theming\" page" [ref=e545] [cursor=pointer]:
+              - /url: /concepts/theming
+          - paragraph [ref=e546]:
+            - text: Want to make your own components? Check out our
+            - link "useUploadThing hook" [ref=e547] [cursor=pointer]:
+              - /url: /api-reference/react#use-upload-thing
+        - generic [ref=e550]:
+          - paragraph [ref=e551]: Was this page helpful?
+          - generic [ref=e552]:
+            - button "Yes" [ref=e553] [cursor=pointer]
+            - button "No" [ref=e555] [cursor=pointer]
+    - contentinfo [ref=e556]:
+      - generic [ref=e557]:
+        - generic [ref=e558]:
+          - 'link "Previous: Expo" [ref=e559] [cursor=pointer]':
+            - /url: /getting-started/expo
+            - img [ref=e560]
+            - text: Previous
+          - link [ref=e562] [cursor=pointer]:
+            - /url: /getting-started/expo
+            - text: Expo
+        - generic [ref=e563]:
+          - 'link "Next: Next.js Pages Router" [ref=e564] [cursor=pointer]':
+            - /url: /getting-started/pagedir
+            - text: Next
+            - img [ref=e565]
+          - link [ref=e567] [cursor=pointer]:
+            - /url: /getting-started/pagedir
+            - text: Next.js Pages Router
+      - generic [ref=e568]:
+        - paragraph [ref=e569]: © Copyright 2026 Ping Labs. All rights reserved.
+        - generic [ref=e570]:
+          - link "Follow us on X" [ref=e571] [cursor=pointer]:
+            - /url: https://x.com/pingdotgg
+            - generic [ref=e572]: Follow us on X
+            - img [ref=e573]
+          - link "Follow us on GitHub" [ref=e575] [cursor=pointer]:
+            - /url: https://github.com/pingdotgg/uploadthing
+            - generic [ref=e576]: Follow us on GitHub
+            - img [ref=e577]
+          - link "Join our Discord server" [ref=e579] [cursor=pointer]:
+            - /url: https://discord.gg/UCXkw6xj2K
+            - generic [ref=e580]: Join our Discord server
+            - img [ref=e581]

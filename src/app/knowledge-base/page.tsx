@@ -203,7 +203,7 @@ function UploadZone({ onUploaded }: { onUploaded: (fileUrl: string) => void }) {
       onDrop={e => { e.preventDefault(); setDrag(false); handle(e.dataTransfer.files?.[0]) }}
       onClick={() => inputRef.current?.click()}
       style={{
-        padding: '36px 24px', borderRadius: 16, textAlign: 'center',
+        padding: '48px 24px', borderRadius: 16, textAlign: 'center',
         background: drag ? 'linear-gradient(180deg, #FFF9E6 0%, #FFFCF4 100%)' : 'linear-gradient(180deg, #FFFCF4 0%, #fff 100%)',
         border: `1.5px dashed ${drag ? '#D4A84F' : 'rgba(212,168,79,0.45)'}`,
         cursor: 'pointer', transition: 'all .25s ease',
@@ -472,11 +472,11 @@ export default function KnowledgeBasePage() {
 
       <div style={{
         position: 'relative', zIndex: 1,
-        maxWidth: 1100, margin: '0 auto',
+        maxWidth: 1280, margin: '0 auto',
         padding: '90px 48px 80px',
         display: 'grid',
-        gridTemplateColumns: '1.3fr 1fr',
-        gap: 36,
+        gridTemplateColumns: '1.6fr 1fr',
+        gap: 40,
         alignItems: 'start',
       }}>
 

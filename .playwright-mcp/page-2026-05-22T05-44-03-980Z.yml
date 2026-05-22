@@ -1,0 +1,766 @@
+- generic [ref=e3]:
+  - banner:
+    - generic [ref=e4]:
+      - link "Home" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img [ref=e7]
+        - img [ref=e10]
+      - generic [ref=e13]:
+        - button "Find something... K" [ref=e15] [cursor=pointer]:
+          - img [ref=e16]
+          - text: Find something...
+          - generic [ref=e18]: K
+        - generic [ref=e19]:
+          - navigation [ref=e20]:
+            - list [ref=e21]:
+              - listitem [ref=e22]:
+                - link "Documentation" [ref=e23] [cursor=pointer]:
+                  - /url: /
+              - listitem [ref=e24]:
+                - link "Blog" [ref=e25] [cursor=pointer]:
+                  - /url: /blog
+              - listitem [ref=e26]:
+                - link "Support" [ref=e27] [cursor=pointer]:
+                  - /url: https://discord.gg/UCXkw6xj2K
+          - button "Toggle theme" [ref=e30] [cursor=pointer]:
+            - img [ref=e31]
+          - link "Dashboard" [ref=e34] [cursor=pointer]:
+            - /url: https://uploadthing.com/dashboard
+      - navigation [ref=e35]:
+        - list [ref=e36]:
+          - listitem [ref=e37]:
+            - heading "Introduction" [level=2] [ref=e38]
+            - list [ref=e41]:
+              - listitem [ref=e42]:
+                - link "Introduction" [ref=e43] [cursor=pointer]:
+                  - /url: /
+                  - generic [ref=e44]: Introduction
+              - listitem [ref=e45]:
+                - link "File Routes" [ref=e46] [cursor=pointer]:
+                  - /url: /file-routes
+                  - generic [ref=e47]: File Routes
+              - listitem [ref=e48]:
+                - link "Uploading Files" [ref=e49] [cursor=pointer]:
+                  - /url: /uploading-files
+                  - generic [ref=e50]: Uploading Files
+              - listitem [ref=e51]:
+                - link "Working with Files" [ref=e52] [cursor=pointer]:
+                  - /url: /working-with-files
+                  - generic [ref=e53]: Working with Files
+          - listitem [ref=e54]:
+            - heading "Getting Started" [level=2] [ref=e55]
+            - list [ref=e58]:
+              - listitem [ref=e59]:
+                - link "Astro (with React)" [ref=e60] [cursor=pointer]:
+                  - /url: /getting-started/astro
+                  - generic [ref=e61]: Astro (with React)
+              - listitem [ref=e62]:
+                - link "Expo" [ref=e63] [cursor=pointer]:
+                  - /url: /getting-started/expo
+                  - generic [ref=e64]: Expo
+              - listitem [ref=e65]:
+                - link "Next.js App Router" [ref=e66] [cursor=pointer]:
+                  - /url: /getting-started/appdir
+                  - generic [ref=e67]: Next.js App Router
+              - listitem [ref=e68]:
+                - link "Next.js Pages Router" [ref=e69] [cursor=pointer]:
+                  - /url: /getting-started/pagedir
+                  - generic [ref=e70]: Next.js Pages Router
+              - listitem [ref=e71]:
+                - link "Remix / React Router" [ref=e72] [cursor=pointer]:
+                  - /url: /getting-started/remix
+                  - generic [ref=e73]: Remix / React Router
+              - listitem [ref=e74]:
+                - link "SolidStart" [ref=e75] [cursor=pointer]:
+                  - /url: /getting-started/solid
+                  - generic [ref=e76]: SolidStart
+              - listitem [ref=e77]:
+                - link "SvelteKit" [ref=e78] [cursor=pointer]:
+                  - /url: /getting-started/svelte
+                  - generic [ref=e79]: SvelteKit
+              - listitem [ref=e80]:
+                - link "Tanstack/Start" [ref=e81] [cursor=pointer]:
+                  - /url: /getting-started/tanstack-start
+                  - generic [ref=e82]: Tanstack/Start
+              - listitem [ref=e83]:
+                - link "Vue with Nuxt" [ref=e84] [cursor=pointer]:
+                  - /url: /getting-started/nuxt
+                  - generic [ref=e85]: Vue with Nuxt
+          - listitem [ref=e86]:
+            - heading "Backend Adapters" [level=2] [ref=e87]
+            - list [ref=e90]:
+              - listitem [ref=e91]:
+                - link "Express" [ref=e92] [cursor=pointer]:
+                  - /url: /backend-adapters/express
+                  - generic [ref=e93]: Express
+              - listitem [ref=e94]:
+                - link "Fastify" [ref=e95] [cursor=pointer]:
+                  - /url: /backend-adapters/fastify
+                  - generic [ref=e96]: Fastify
+              - listitem [ref=e97]:
+                - link "H3" [ref=e98] [cursor=pointer]:
+                  - /url: /backend-adapters/h3
+                  - generic [ref=e99]: H3
+              - listitem [ref=e100]:
+                - link "WinterCG Fetch" [ref=e101] [cursor=pointer]:
+                  - /url: /backend-adapters/fetch
+                  - generic [ref=e102]: WinterCG Fetch
+              - listitem [ref=e103]:
+                - link "Custom adapters" [ref=e104] [cursor=pointer]:
+                  - /url: /backend-adapters/custom
+                  - generic [ref=e105]: Custom adapters
+          - listitem [ref=e106]:
+            - heading "Guides" [level=2] [ref=e107]
+            - list [ref=e110]:
+              - listitem [ref=e111]:
+                - link "Authentication & Security" [ref=e112] [cursor=pointer]:
+                  - /url: /concepts/auth-security
+                  - generic [ref=e113]: Authentication & Security
+              - listitem [ref=e114]:
+                - link "Error Handling" [ref=e115] [cursor=pointer]:
+                  - /url: /concepts/error-handling
+                  - generic [ref=e116]: Error Handling
+              - listitem [ref=e117]:
+                - link "Regions and ACLs" [ref=e118] [cursor=pointer]:
+                  - /url: /concepts/regions-acl
+                  - generic [ref=e119]: Regions and ACLs
+              - listitem [ref=e120]:
+                - link "Theming" [ref=e121] [cursor=pointer]:
+                  - /url: /concepts/theming
+                  - generic [ref=e122]: Theming
+          - listitem [ref=e123]:
+            - heading "API Reference" [level=2] [ref=e124]
+            - list [ref=e127]:
+              - listitem [ref=e128]:
+                - link "uploadthing/client" [ref=e129] [cursor=pointer]:
+                  - /url: /api-reference/client
+                  - generic [ref=e130]: uploadthing/client
+              - listitem [ref=e131]:
+                - link "uploadthing/server" [ref=e132] [cursor=pointer]:
+                  - /url: /api-reference/server
+                  - generic [ref=e133]: uploadthing/server
+              - listitem [ref=e134]:
+                - link "@uploadthing/react" [ref=e135] [cursor=pointer]:
+                  - /url: /api-reference/react
+                  - generic [ref=e136]: "@uploadthing/react"
+              - listitem [ref=e137]:
+                - link "@uploadthing/expo" [ref=e138] [cursor=pointer]:
+                  - /url: /api-reference/expo
+                  - generic [ref=e139]: "@uploadthing/expo"
+              - listitem [ref=e140]:
+                - link "@uploadthing/solid" [ref=e141] [cursor=pointer]:
+                  - /url: /api-reference/solid
+                  - generic [ref=e142]: "@uploadthing/solid"
+              - listitem [ref=e143]:
+                - link "@uploadthing/svelte" [ref=e144] [cursor=pointer]:
+                  - /url: /api-reference/svelte
+                  - generic [ref=e145]: "@uploadthing/svelte"
+              - listitem [ref=e146]:
+                - link "@uploadthing/vue" [ref=e147] [cursor=pointer]:
+                  - /url: /api-reference/vue
+                  - generic [ref=e148]: "@uploadthing/vue"
+              - listitem [ref=e149]:
+                - link "REST API" [ref=e150] [cursor=pointer]:
+                  - /url: /api-reference/openapi-spec
+                  - generic [ref=e151]: REST API
+              - listitem [ref=e152]:
+                - link "UTApi" [ref=e153] [cursor=pointer]:
+                  - /url: /api-reference/ut-api
+                  - generic [ref=e154]: UTApi
+          - listitem [ref=e155]:
+            - heading "Migration Guides" [level=2] [ref=e156]
+            - list [ref=e161]:
+              - listitem [ref=e162]:
+                - link "Migrate from v6 to v7" [ref=e163] [cursor=pointer]:
+                  - /url: /v7
+                  - generic [ref=e164]: Migrate from v6 to v7
+                - list [ref=e165]:
+                  - listitem [ref=e166]:
+                    - link "UPLOADTHING_SECRET is now UPLOADTHING_TOKEN BREAKING" [ref=e167] [cursor=pointer]:
+                      - /url: /v7#uploadthing-secret-is-now-uploadthing-token
+                      - generic [ref=e168]: UPLOADTHING_SECRET is now UPLOADTHING_TOKEN
+                      - generic [ref=e169]: BREAKING
+                  - listitem [ref=e170]:
+                    - link "createRouteHandler from uploadthing/server now returns a single handler BREAKING" [ref=e171] [cursor=pointer]:
+                      - /url: /v7#create-route-handler-from-uploadthing-server-now-returns-a-single-handler
+                      - generic [ref=e172]: createRouteHandler from uploadthing/server now returns a single handler
+                      - generic [ref=e173]: BREAKING
+                  - listitem [ref=e174]:
+                    - link "genUploader now returns an object BREAKING" [ref=e175] [cursor=pointer]:
+                      - /url: /v7#gen-uploader-now-returns-an-object
+                      - generic [ref=e176]: genUploader now returns an object
+                      - generic [ref=e177]: BREAKING
+                  - listitem [ref=e178]:
+                    - link "Log levels has changed BREAKING" [ref=e179] [cursor=pointer]:
+                      - /url: /v7#log-levels-has-changed
+                      - generic [ref=e180]: Log levels has changed
+                      - generic [ref=e181]: BREAKING
+                  - listitem [ref=e182]:
+                    - link "skipPolling has been moved BREAKING" [ref=e183] [cursor=pointer]:
+                      - /url: /v7#skip-polling-has-been-moved
+                      - generic [ref=e184]: skipPolling has been moved
+                      - generic [ref=e185]: BREAKING
+                  - listitem [ref=e186]:
+                    - link "Deprecations have been removed BREAKING" [ref=e187] [cursor=pointer]:
+                      - /url: /v7#deprecations-have-been-removed
+                      - generic [ref=e188]: Deprecations have been removed
+                      - generic [ref=e189]: BREAKING
+                  - listitem [ref=e190]:
+                    - link "Remove dependency tailwind-merge BREAKING" [ref=e191] [cursor=pointer]:
+                      - /url: /v7#remove-dependency-tailwind-merge
+                      - generic [ref=e192]: Remove dependency tailwind-merge
+                      - generic [ref=e193]: BREAKING
+                  - listitem [ref=e194]:
+                    - link "New configuration provider FEATURE" [ref=e195] [cursor=pointer]:
+                      - /url: /v7#new-configuration-provider
+                      - generic [ref=e196]: New configuration provider
+                      - generic [ref=e197]: FEATURE
+                  - listitem [ref=e198]:
+                    - link "Resumable uploads FEATURE" [ref=e199] [cursor=pointer]:
+                      - /url: /v7#resumable-uploads
+                      - generic [ref=e200]: Resumable uploads
+                      - generic [ref=e201]: FEATURE
+                  - listitem [ref=e202]:
+                    - link "The UploadThing REST API has moved MISC" [ref=e203] [cursor=pointer]:
+                      - /url: /v7#the-upload-thing-rest-api-has-moved
+                      - generic [ref=e204]: The UploadThing REST API has moved
+                      - generic [ref=e205]: MISC
+          - listitem [ref=e206]:
+            - heading "Resources" [level=2] [ref=e207]
+            - list [ref=e210]:
+              - listitem [ref=e211]:
+                - link "Frequently Asked Questions" [ref=e212] [cursor=pointer]:
+                  - /url: /faq
+                  - generic [ref=e213]: Frequently Asked Questions
+              - listitem [ref=e214]:
+                - link "Roadmap" [ref=e215] [cursor=pointer]:
+                  - /url: https://t3-tools.notion.site/776334c06d814dd08d450975bb983085?v=a04ee69d18a047859717b279df504a6b
+                  - generic [ref=e216]: Roadmap
+  - generic [ref=e217]:
+    - main [ref=e218]:
+      - article [ref=e219]:
+        - generic [ref=e220]:
+          - heading "Migrate from v6 to v7" [level=1] [ref=e221]
+          - paragraph [ref=e222]: Version 7 of UploadThing is a big release backed by all new infrastructure along with a nearly full rewrite of the internals.
+          - list [ref=e223]:
+            - listitem [ref=e224]:
+              - text: We've reduced the client-side bundle size by 35%. This is in addition to the 70% reduction in a recent minor release.
+              - code [ref=e225]: uploadthing/client
+              - text: now loads just over 25kB of JavaScript.
+            - listitem [ref=e226]: Resumable uploads are now supported
+            - listitem [ref=e227]: We've re-architected the backend to require less round-trips to the UploadThing server, take advantage of modern web advancements, and removed all polling logic. All of these changes results in a much faster upload experience.
+            - listitem [ref=e228]: We've begun work on a self-hosted version of UploadThing (more info coming soon)
+          - paragraph [ref=e229]: In this guide, we'll walk you through the steps to migrate from v6 to v7 and list all the breaking changes and the new features.
+          - generic [ref=e232]: BREAKING
+          - heading "UPLOADTHING_SECRET is now UPLOADTHING_TOKEN" [level=2] [ref=e233]:
+            - link "UPLOADTHING_SECRET is now UPLOADTHING_TOKEN" [ref=e234] [cursor=pointer]:
+              - /url: "#uploadthing-secret-is-now-uploadthing-token"
+              - code [ref=e235]: UPLOADTHING_SECRET
+              - text: is now
+              - code [ref=e236]: UPLOADTHING_TOKEN
+          - paragraph [ref=e237]: In prior versions of Uploadthing, presigned urls were generated on our servers, and fetched from your backend using authenticated API calls. With v7, we have moved the generation of presigned urls to your server, meaning you can there is no need for the extra API call.
+          - paragraph [ref=e238]:
+            - text: With this change, however, your server needs to know more about your app in order to generate presigned URLs; such as the app id and region. We didn't want to require additional environment variables, so we've decided to merge the required information into a single
+            - code [ref=e239]: UPLOADTHING_TOKEN
+            - text: environment variable.
+          - paragraph [ref=e240]:
+            - text: The token is a base64 encoded JSON object that contains information such as your app id, the app region as well as the API key. The token is available in the
+            - link "UploadThing Dashboard ↗" [ref=e241] [cursor=pointer]:
+              - /url: https://uploadthing.com/dashboard
+            - text: under
+            - code [ref=e242]: API Keys
+            - text: and selecting the
+            - code [ref=e243]: V7
+            - text: "tab:"
+          - img "Token" [ref=e245]
+          - paragraph [ref=e246]: "If you previously passed in the API key as a configuration object, the keys in the `config object have changed to reflect the new token structure."
+          - generic [ref=e250]:
+            - code [ref=e252]:
+              - code [ref=e254]:
+                - generic [ref=e255]: "import { createRouteHandler } from \"uploadthing/server\";"
+                - generic [ref=e257]: "createRouteHandler({"
+                - generic [ref=e258]: router,
+                - generic [ref=e259]: "config: {"
+                - generic [ref=e260]: "uploadthingSecret: \"\","
+                - generic [ref=e261]: "uploadthingAppId: \"\","
+                - generic [ref=e262]: "token: \"\","
+                - generic [ref=e263]: "},"
+                - generic [ref=e264]: "});"
+            - button "Copy" [ref=e265] [cursor=pointer]:
+              - generic:
+                - img
+                - text: Copy
+              - generic: Copied!
+          - generic [ref=e268]: BREAKING
+          - heading "createRouteHandler from uploadthing/server now returns a single handler" [level=2] [ref=e269]:
+            - link "createRouteHandler from uploadthing/server now returns a single handler" [ref=e270] [cursor=pointer]:
+              - /url: "#create-route-handler-from-uploadthing-server-now-returns-a-single-handler"
+              - code [ref=e271]: createRouteHandler
+              - text: from
+              - code [ref=e272]: uploadthing/server
+              - text: now returns a single handler
+          - paragraph [ref=e273]:
+            - text: Previously,
+            - code [ref=e274]: createRouteHandler
+            - text: from
+            - code [ref=e275]: uploadthing/server
+            - text: returned separate named functions for
+            - code [ref=e276]: GET
+            - text: and
+            - code [ref=e277]: POST
+            - text: methods. The routing logic has been moved to the internals, meaning we now return a single handler for all methods.
+          - generic [ref=e281]:
+            - code [ref=e283]:
+              - code [ref=e285]:
+                - generic [ref=e286]: "import { createRouteHandler } from \"uploadthing/server\";"
+                - generic [ref=e288]: "import { uploadRouter } from \"~/uploadthing/router\";"
+                - generic [ref=e290]: "const { GET, POST } = createRouteHandler({ router });"
+                - generic [ref=e291]: "const handler = createRouteHandler({ router });"
+            - button "Copy" [ref=e292] [cursor=pointer]:
+              - generic:
+                - img
+                - text: Copy
+              - generic: Copied!
+          - paragraph [ref=e293]: "If your framework expects named exports for each method, you can re-export the handler as such:"
+          - generic [ref=e297]:
+            - code [ref=e299]:
+              - code [ref=e301]:
+                - generic [ref=e302]: "import { createRouteHandler } from \"uploadthing/server\";"
+                - generic [ref=e304]: "import { uploadRouter } from \"~/uploadthing/router\";"
+                - generic [ref=e306]: "const handler = createRouteHandler({ router, config });"
+                - generic [ref=e307]: "export { handler as GET, handler as POST };"
+            - button "Copy" [ref=e308] [cursor=pointer]:
+              - generic:
+                - img
+                - text: Copy
+              - generic: Copied!
+          - generic [ref=e309]:
+            - img [ref=e310]
+            - generic [ref=e312]:
+              - paragraph [ref=e313]:
+                - text: The Next.js adapter still returns named exports for
+                - code [ref=e314]: GET
+                - text: and
+                - code [ref=e315]: POST
+                - text: methods.
+              - generic [ref=e319]:
+                - code [ref=e321]:
+                  - code [ref=e323]:
+                    - generic [ref=e324]: "import { createRouteHandler } from \"uploadthing/next\";"
+                    - generic [ref=e326]: "import { uploadRouter } from \"~/uploadthing/router\";"
+                    - generic [ref=e328]: "export const { GET, POST } = createRouteHandler({ router });"
+                - button "Copy" [ref=e329] [cursor=pointer]:
+                  - generic:
+                    - img
+                    - text: Copy
+                  - generic: Copied!
+          - generic [ref=e332]: BREAKING
+          - heading "genUploader now returns an object" [level=2] [ref=e333]:
+            - link "genUploader now returns an object" [ref=e334] [cursor=pointer]:
+              - /url: "#gen-uploader-now-returns-an-object"
+              - code [ref=e335]: genUploader
+              - text: now returns an object
+          - paragraph [ref=e336]:
+            - text: Along with the introduction of
+            - link "resumable uploads" [ref=e337] [cursor=pointer]:
+              - /url: "#resumable-uploads"
+            - text: ", we've introduced a new"
+            - code [ref=e338]: createUpload
+            - text: function that allows you to create a new upload.
+          - paragraph [ref=e339]:
+            - text: The
+            - code [ref=e340]: genUploader
+            - text: function now returns an object with two functions,
+            - code [ref=e341]: uploadFiles
+            - text: and
+            - code [ref=e342]: createUpload
+            - text: ". To migrate:"
+          - generic [ref=e346]:
+            - code [ref=e348]:
+              - code [ref=e350]:
+                - generic [ref=e351]: "import { genUploader } from 'uploadthing/client'"
+                - generic [ref=e352]: "import type { UploadRouter } from '~/uploadthing/router'"
+                - generic [ref=e354]: const uploadFiles = genUploader<UploadRouter>()
+                - generic [ref=e355]: "const { uploadFiles, createUpload } = genUploader<UploadRouter>()"
+            - button "Copy" [ref=e356] [cursor=pointer]:
+              - generic:
+                - img
+                - text: Copy
+              - generic: Copied!
+          - generic [ref=e359]: BREAKING
+          - heading "Log levels has changed" [level=2] [ref=e360]:
+            - link "Log levels has changed" [ref=e361] [cursor=pointer]:
+              - /url: "#log-levels-has-changed"
+          - paragraph [ref=e362]:
+            - text: Internally, we've changed the logging from using
+            - code [ref=e363]: Consola
+            - text: "to `effect/Logger. In alignment with that change, the log level naming has changed."
+          - generic [ref=e367]:
+            - code [ref=e369]:
+              - code [ref=e371]:
+                - generic [ref=e372]: "import { createRouteHandler } from \"uploadthing/server\";"
+                - generic [ref=e374]: "import { uploadRouter } from \"~/uploadthing/router\";"
+                - generic [ref=e376]: "const handler = createRouteHandler({"
+                - generic [ref=e377]: router,
+                - generic [ref=e378]: "config: {"
+                - generic [ref=e379]: "logLevel: \"error\" | \"warn\" | \"info\" | \"debug\" | \"trace\","
+                - generic [ref=e380]: "logLevel: \"Fatal\" | \"Error\" | \"Warning\" | \"Info\" | \"Debug\" | \"Trace\","
+                - generic [ref=e381]: "},"
+                - generic [ref=e382]: "});"
+            - button "Copy" [ref=e383] [cursor=pointer]:
+              - generic:
+                - img
+                - text: Copy
+              - generic: Copied!
+          - paragraph [ref=e384]:
+            - text: The same change applies to
+            - link "UTApi's constructor options" [ref=e385] [cursor=pointer]:
+              - /url: /api-reference/ut-api#constructor
+              - code [ref=e386]: UTApi
+              - text: "'s constructor options"
+            - text: .
+          - generic [ref=e389]: BREAKING
+          - heading "skipPolling has been moved" [level=2] [ref=e390]:
+            - link "skipPolling has been moved" [ref=e391] [cursor=pointer]:
+              - /url: "#skip-polling-has-been-moved"
+              - code [ref=e392]: skipPolling
+              - text: has been moved
+          - paragraph [ref=e393]:
+            - text: In v6 we introduced the ability to return data from your server-side
+            - code [ref=e394]: onUploadComplete
+            - text: callback that would be sent along to the client-side
+            - code [ref=e395]: onClientUploadComplete
+            - text: callback. This required the client to wait for extra round-trips as your server callback ran and eventually finished, sent back the data to the uploadthing server which then would respond with the data to the client. If you got "unlucky" with the polling, this could take a long time. Additionally, we found that this feature was not used by many people, essentially just delaying the client-side callback for no benefit in the majority of cases.
+          - paragraph [ref=e396]:
+            - text: In 6.5, we attempted to address this by
+            - link "introducing a client-side option skipPolling ↗" [ref=e397] [cursor=pointer]:
+              - /url: https://github.com/pingdotgg/uploadthing/pull/642
+              - text: introducing a client-side option
+              - code [ref=e398]: skipPolling
+              - text: ↗
+            - text: that allowed you to opt-out of this behaviour for a faster upload experience. This was a non-breaking change that the majority could enable without any downside, but in order to be non-breaking, could not not be default, and thus was not an ideal solution.
+          - paragraph [ref=e399]: In v7, we're moving this option to the server-side route configuration so that you have all the configuration for a given file route in one place.
+          - generic [ref=e403]:
+            - code [ref=e405]:
+              - code [ref=e407]:
+                - generic [ref=e408]: // On the client
+                - generic [ref=e409]: "await uploadFiles(\"myUploader\", {"
+                - generic [ref=e410]: "files: [ ... ],"
+                - generic [ref=e411]: // Opt-out of waiting for server data
+                - generic [ref=e412]: "skipPolling: true"
+                - generic [ref=e413]: "})"
+            - button "Copy" [ref=e414] [cursor=pointer]:
+              - generic:
+                - img
+                - text: Copy
+              - generic: Copied!
+          - generic [ref=e418]:
+            - code [ref=e420]:
+              - code [ref=e422]:
+                - generic [ref=e423]: // On the server
+                - generic [ref=e424]: "import { createUploadThing } from \"uploadthing/server\";"
+                - generic [ref=e426]: const f = createUploadThing();
+                - generic [ref=e428]: "export const uploadRouter = {"
+                - generic [ref=e429]: "myUploader: f("
+                - generic [ref=e430]: "{ image: { maxFileSize: \"16MB\" } },"
+                - generic [ref=e431]: // Opt-out of waiting for server data
+                - generic [ref=e432]: "{ awaitServerData: false },"
+                - generic [ref=e433]: ),
+                - generic [ref=e434]: "};"
+            - button "Copy" [ref=e435] [cursor=pointer]:
+              - generic:
+                - img
+                - text: Copy
+              - generic: Copied!
+          - generic [ref=e438]: BREAKING
+          - heading "Deprecations have been removed" [level=2] [ref=e439]:
+            - link "Deprecations have been removed" [ref=e440] [cursor=pointer]:
+              - /url: "#deprecations-have-been-removed"
+          - paragraph [ref=e441]: "The following were previously deprecated and have now been removed:"
+          - list [ref=e442]:
+            - listitem [ref=e443]:
+              - paragraph [ref=e444]:
+                - code [ref=e445]: "@uploadthing/react"
+                - text: no longer exports
+                - code [ref=e446]: generateComponent
+                - text: . Use
+                - code [ref=e447]: generateUploadButton
+                - text: and
+                - code [ref=e448]: generateUploadDropzone
+                - text: instead.
+              - generic [ref=e452]:
+                - code [ref=e454]:
+                  - code [ref=e456]:
+                    - generic [ref=e457]: "import { generateComponent } from '@uploadthing/react'"
+                    - generic [ref=e458]: "const { UploadButton } = generateComponent()"
+                    - generic [ref=e459]: "import { generateUploadButton } from '@uploadthing/react'"
+                    - generic [ref=e460]: const UploadButton = generateUploadButton()
+                - button "Copy" [ref=e461] [cursor=pointer]:
+                  - generic:
+                    - img
+                    - text: Copy
+                  - generic: Copied!
+            - listitem [ref=e462]:
+              - paragraph [ref=e463]:
+                - code [ref=e464]: "@uploadthing/react/hooks"
+                - text: entrypoint has been removed. Use the main entrypoint instead.
+              - generic [ref=e468]:
+                - code [ref=e470]:
+                  - code [ref=e472]:
+                    - generic [ref=e473]: "import { generateReactHelpers } from '@uploadthing/react/hooks'"
+                    - generic [ref=e474]: "import { generateReactHelpers } from '@uploadthing/react'"
+                - button "Copy" [ref=e475] [cursor=pointer]:
+                  - generic:
+                    - img
+                    - text: Copy
+                  - generic: Copied!
+            - listitem [ref=e476]:
+              - paragraph [ref=e477]:
+                - code [ref=e478]: useUploadThing
+                - text: hook result no longer returns
+                - code [ref=e479]: permittedFileInfo
+                - text: . Use
+                - code [ref=e480]: routeConfig
+                - text: instead.
+              - generic [ref=e484]:
+                - code [ref=e486]:
+                  - code [ref=e488]:
+                    - generic [ref=e489]: "const { permittedFileInfo } = useUploadThing(...)"
+                    - generic [ref=e490]: "// ^? { config: RouteConfig; slug: string } //"
+                    - generic [ref=e491]: "const { routeConfig } = useUploadThing(...)"
+                    - generic [ref=e492]: // ^? RouteConfig
+                - button "Copy" [ref=e493] [cursor=pointer]:
+                  - generic:
+                    - img
+                    - text: Copy
+                  - generic: Copied!
+            - listitem [ref=e494]:
+              - paragraph [ref=e495]:
+                - text: Adapter-specific named exports (e.g.
+                - code [ref=e496]: createUploadthingExpressHandler
+                - text: ) have been removed. All adapters exports
+                - code [ref=e497]: createRouteHandler
+                - text: as a unified naming convention.
+              - generic [ref=e501]:
+                - code [ref=e503]:
+                  - code [ref=e505]:
+                    - generic [ref=e506]: "import {"
+                    - generic [ref=e507]: createRouteHandler,
+                    - generic [ref=e508]: createUploadthingExpressHandler,
+                    - generic [ref=e509]: "} from \"uploadthing/express\";"
+                - button "Copy" [ref=e510] [cursor=pointer]:
+                  - generic:
+                    - img
+                    - text: Copy
+                  - generic: Copied!
+              - generic [ref=e514]:
+                - code [ref=e516]:
+                  - code [ref=e518]:
+                    - generic [ref=e519]: "import {"
+                    - generic [ref=e520]: createRouteHandler,
+                    - generic [ref=e521]: createUploadthingFastifyHandler,
+                    - generic [ref=e522]: "} from \"uploadthing/fastify\";"
+                - button "Copy" [ref=e523] [cursor=pointer]:
+                  - generic:
+                    - img
+                    - text: Copy
+                  - generic: Copied!
+              - generic [ref=e527]:
+                - code [ref=e529]:
+                  - code [ref=e531]:
+                    - generic [ref=e532]: "import {"
+                    - generic [ref=e533]: createH3EventHandler,
+                    - generic [ref=e534]: createRouteHandler,
+                    - generic [ref=e535]: "} from \"uploadthing/h3\";"
+                - button "Copy" [ref=e536] [cursor=pointer]:
+                  - generic:
+                    - img
+                    - text: Copy
+                  - generic: Copied!
+              - generic [ref=e540]:
+                - code [ref=e542]:
+                  - code [ref=e544]:
+                    - generic [ref=e545]: "import {"
+                    - generic [ref=e546]: createNextPageApiHandler,
+                    - generic [ref=e547]: createRouteHandler,
+                    - generic [ref=e548]: "} from \"uploadthing/next-legacy\";"
+                - button "Copy" [ref=e549] [cursor=pointer]:
+                  - generic:
+                    - img
+                    - text: Copy
+                  - generic: Copied!
+              - generic [ref=e553]:
+                - code [ref=e555]:
+                  - code [ref=e557]:
+                    - generic [ref=e558]: "import {"
+                    - generic [ref=e559]: createNextRouteHandler,
+                    - generic [ref=e560]: createRouteHandler,
+                    - generic [ref=e561]: "} from \"uploadthing/next\";"
+                - button "Copy" [ref=e562] [cursor=pointer]:
+                  - generic:
+                    - img
+                    - text: Copy
+                  - generic: Copied!
+              - generic [ref=e566]:
+                - code [ref=e568]:
+                  - code [ref=e570]:
+                    - generic [ref=e571]: "import {"
+                    - generic [ref=e572]: createRouteHandler,
+                    - generic [ref=e573]: createServerHandler,
+                    - generic [ref=e574]: "} from \"uploadthing/server\";"
+                - button "Copy" [ref=e575] [cursor=pointer]:
+                  - generic:
+                    - img
+                    - text: Copy
+                  - generic: Copied!
+          - generic [ref=e578]: BREAKING
+          - heading "Remove dependency tailwind-merge" [level=2] [ref=e579]:
+            - link "Remove dependency tailwind-merge" [ref=e580] [cursor=pointer]:
+              - /url: "#remove-dependency-tailwind-merge"
+              - text: Remove dependency
+              - code [ref=e581]: tailwind-merge
+          - paragraph [ref=e582]:
+            - text: We have removed the dependency
+            - code [ref=e583]: tailwind-merge
+            - text: from the core client libs. Some users may still require
+            - code [ref=e584]: tailwind-merge
+            - text: if you
+            - link "are theming components with TailwindCSS" [ref=e585] [cursor=pointer]:
+              - /url: /concepts/theming#theming-with-tailwind-css
+            - text: ", in which case you can use the"
+            - code [ref=e586]: config
+            - text: prop to override the default class merger to use something like
+            - code [ref=e587]: tailwind-merge
+            - text: instead of the default class merger (which is a simple
+            - code [ref=e588]: classes.join(' ')
+            - text: "):"
+          - generic [ref=e592]:
+            - code [ref=e594]:
+              - code [ref=e596]:
+                - generic [ref=e597]: "import { twMerge } from 'tailwind-merge'"
+                - generic [ref=e598]: "import { UploadButton } from '~/lib/uploadthing'"
+                - generic [ref=e600]: "export function Page() {"
+                - generic [ref=e601]: return (
+                - generic [ref=e602]: <UploadButton
+                - generic [ref=e603]: ...
+                - generic [ref=e604]: "config={{ cn: twMerge }}"
+                - generic [ref=e605]: />
+                - generic [ref=e606]: )
+                - generic [ref=e607]: "}"
+            - button "Copy" [ref=e608] [cursor=pointer]:
+              - generic:
+                - img
+                - text: Copy
+              - generic: Copied!
+          - generic [ref=e611]: FEATURE
+          - heading "New configuration provider" [level=2] [ref=e612]:
+            - link "New configuration provider" [ref=e613] [cursor=pointer]:
+              - /url: "#new-configuration-provider"
+          - paragraph [ref=e614]:
+            - text: In v7, we've introduced a new configuration provider that allows you to configure UploadThing more easily. All the options that can be passed in as a configuration object (e.g.
+            - code [ref=e615]: createRouterHandler#config
+            - text: ) can now also be passed as an environment variable in constant case prefixed with
+            - code [ref=e616]: UPLOADTHING
+            - text: .
+          - generic [ref=e620]:
+            - code [ref=e622]:
+              - code [ref=e624]:
+                - generic [ref=e625]: "const api = new UTApi({"
+                - generic [ref=e626]: "logLevel: 'Info',"
+                - generic [ref=e627]: "})"
+                - generic [ref=e629]: // is the same as
+                - generic [ref=e630]: process.env.UPLOADTHING_LOG_LEVEL = 'Info'
+                - generic [ref=e631]: const api = new UTApi()
+            - button "Copy" [ref=e632] [cursor=pointer]:
+              - generic:
+                - img
+                - text: Copy
+              - generic: Copied!
+          - generic [ref=e633]:
+            - img [ref=e634]
+            - paragraph [ref=e637]: If both configuration methods are passed, the options object will always take precedence.
+          - generic [ref=e640]: FEATURE
+          - heading "Resumable uploads" [level=2] [ref=e641]:
+            - link "Resumable uploads" [ref=e642] [cursor=pointer]:
+              - /url: "#resumable-uploads"
+          - paragraph [ref=e643]:
+            - text: You can now build resumable upload flows using the
+            - code [ref=e644]: createUpload
+            - text: function from
+            - code [ref=e645]: uploadthing/client
+            - text: . Resumable uploads can be paused and resumed at any time as long as the presigned URL is still valid.
+          - paragraph [ref=e646]:
+            - text: 📚 Read more about resumable uploads
+            - link "here (TODO)" [ref=e647] [cursor=pointer]:
+              - /url: "#resumable-uploads"
+            - text: .
+          - generic [ref=e650]: MISC
+          - heading "The UploadThing REST API has moved" [level=2] [ref=e651]:
+            - link "The UploadThing REST API has moved" [ref=e652] [cursor=pointer]:
+              - /url: "#the-upload-thing-rest-api-has-moved"
+          - paragraph [ref=e653]:
+            - text: The UploadThing REST API has been moved to a separate domain,
+            - code [ref=e654]: api.uploadthing.com
+            - text: . The old API at
+            - code [ref=e655]: uploadthing.com/api
+            - text: now redirects to the new API. Check out the
+            - link "API Reference" [ref=e656] [cursor=pointer]:
+              - /url: /api-reference/openapi-spec
+            - text: for more information.
+          - paragraph [ref=e657]:
+            - text: Please note that previously we required the SDK version to be passed as a header. The new API has explicit path-based versioning, meaning the
+            - code [ref=e658]: x-uploadthing-version
+            - text: header is no longer required.
+          - generic [ref=e662]:
+            - code [ref=e664]:
+              - code [ref=e666]:
+                - generic [ref=e667]: // Old API
+                - generic [ref=e668]: curl -X POST https://uploadthing.com/api/listFiles \
+                - generic [ref=e669]: "-H 'x-uploadthing-version: 6.12.0' \\"
+                - generic [ref=e670]: ...
+                - generic [ref=e672]: // New API
+                - generic [ref=e673]: curl -X POST https://api.uploadthing.com/v6/listFiles \
+                - generic [ref=e674]: ...
+            - button "Copy" [ref=e675] [cursor=pointer]:
+              - generic:
+                - img
+                - text: Copy
+              - generic: Copied!
+        - generic [ref=e678]:
+          - paragraph [ref=e679]: Was this page helpful?
+          - generic [ref=e680]:
+            - button "Yes" [ref=e681] [cursor=pointer]
+            - button "No" [ref=e683] [cursor=pointer]
+    - contentinfo [ref=e684]:
+      - generic [ref=e685]:
+        - generic [ref=e686]:
+          - 'link "Previous: UTApi" [ref=e687] [cursor=pointer]':
+            - /url: /api-reference/ut-api
+            - img [ref=e688]
+            - text: Previous
+          - link [ref=e690] [cursor=pointer]:
+            - /url: /api-reference/ut-api
+            - text: UTApi
+        - generic [ref=e691]:
+          - 'link "Next: Frequently Asked Questions" [ref=e692] [cursor=pointer]':
+            - /url: /faq
+            - text: Next
+            - img [ref=e693]
+          - link [ref=e695] [cursor=pointer]:
+            - /url: /faq
+            - text: Frequently Asked Questions
+      - generic [ref=e696]:
+        - paragraph [ref=e697]: © Copyright 2026 Ping Labs. All rights reserved.
+        - generic [ref=e698]:
+          - link "Follow us on X" [ref=e699] [cursor=pointer]:
+            - /url: https://x.com/pingdotgg
+            - generic [ref=e700]: Follow us on X
+            - img [ref=e701]
+          - link "Follow us on GitHub" [ref=e703] [cursor=pointer]:
+            - /url: https://github.com/pingdotgg/uploadthing
+            - generic [ref=e704]: Follow us on GitHub
+            - img [ref=e705]
+          - link "Join our Discord server" [ref=e707] [cursor=pointer]:
+            - /url: https://discord.gg/UCXkw6xj2K
+            - generic [ref=e708]: Join our Discord server
+            - img [ref=e709]

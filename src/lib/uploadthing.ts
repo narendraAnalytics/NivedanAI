@@ -64,12 +64,10 @@ export const ourFileRouter = {
 
   kbDocument: f({ pdf: { maxFileSize: '16MB', maxFileCount: 1 } })
     .middleware(async () => {
-      const user = await getOrCreateUser()
-      const profile = await getOrCreateProfile(user.id)
-      return { userId: user.id, companyProfileId: profile.id }
+      return {}
     })
-    .onUploadComplete(async ({ metadata, file }) => {
-      return { fileUrl: file.ufsUrl, companyProfileId: metadata.companyProfileId }
+    .onUploadComplete(async ({ file }) => {
+      return { fileUrl: file.ufsUrl }
     }),
 } satisfies FileRouter
 
