@@ -105,6 +105,8 @@ src/app/api/kb/
   profile/route.ts                   — GET + PATCH company profile (companyName, industry, website, tagline)
   items/route.ts                     — GET all KB items; POST new item (PDF → pdf-parse → LLM extraction)
   items/[itemId]/route.ts            — DELETE KB item
+src/app/api/stats/route.ts           — GET: counts rfp_jobs for current user this calendar month
+                                       Returns { jobsThisMonth: number }; used by dashboard StatCards
 
 src/app/workflow/[jobId]/page.tsx    — Live pipeline page: polls /api/jobs/[jobId] every 3s, single-column layout
                                        Components: PageHeader, CircularProgress (overall %), RfpBanner, StatusBadge,
@@ -645,7 +647,7 @@ Single `'use client'` file: `src/app/dashboard/page.tsx`. All sub-components are
 | `DashLogo` | Logo + "Workspace" label — clicks navigate to `/` |
 | `UserPill` | Avatar initials + name + "Free Plan" badge (from `useUser()`) |
 | `ProcessingPipeline` | 6-stage animated pipeline — simulated via `setInterval`; calls `onComplete` when done |
-| `UploadZone` | Drag-drop / click-to-upload PDF area; calls `useUploadThing('rfpDocument')` → `onFile(name, jobId)` |
+| `UploadZone` | Drag-drop / click-to-upload PDF area; validates email before upload (`onEmailRequired` callback if invalid); calls `useUploadThing('rfpDocument')` → `onFile(name, jobId)` |
 | `StatCard` | Single stat tile with icon, value, hint |
 | `RecentList` | Proposals table — `userProposals` (state, top) + `sampleProposals` (constant, bottom) |
 | `AgentRoster` | 6 agent list with colored rings |
@@ -656,19 +658,25 @@ Single `'use client'` file: `src/app/dashboard/page.tsx`. All sub-components are
 ```ts
 fileName        — set on upload; triggers transition card → router.push('/workflow/[jobId]') after 1.8s
 recipientEmail  — string, starts empty (""); user types any email address
+emailError      — string, set when upload attempted with empty/invalid email; cleared on typing
+proposalCount   — fetched from /api/stats on mount (real DB count, not local state)
+kbCount         — number | null; fetched from /api/kb/items on mount; drives KB StatCard + nudge banner
 userProposals   — ProposalEntry[] (kept for future history use)
-proposalCount   — drives StatCard values
 ```
 
-**Upload flow:** User types email in input above `UploadZone` → User drops PDF → `startUpload([file], { recipientEmail: recipientEmail.trim() || undefined })` → `onFile(name, jid)` sets `fileName`, schedules `router.push('/workflow/${jid}')` after 1800ms → redirect. `ProcessingPipeline` remains as a demo preview labeled "Pipeline preview / Demo".
+**On mount:** Single `useEffect` with `Promise.all([fetch('/api/kb/items'), fetch('/api/stats')])` sets both `kbCount` and `proposalCount` from DB. Counts are real and persist across page visits.
 
-**Email input design:** Placed above the upload drop zone. Placeholder: `arjunmehta@acmesolutions.com`. NOT pre-filled with Clerk email. Helper text: "The finished PDF will be emailed to this address once all agents complete".
+**Upload flow:** User types email → drops PDF → `UploadZone.handle()` validates email with `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`; if invalid calls `onEmailRequired` (sets `emailError`, shows red border + message, blocks upload); if valid calls `startUpload([file], { recipientEmail })` → `onFile(name, jid)` → redirect to `/workflow/[jobId]` after 1800ms.
 
-### Dynamic stat logic (on each `onComplete`)
-- **Proposals this month** → `proposalCount`
-- **Avg. time saved** → `proposalCount × 19h` (19h = midpoint of 8–20h saved per proposal)
-- **Win rate** → always `—` (no outcome data yet)
-- **Knowledge base** → always `0 docs` (KB upload not built yet)
+**Email input design:** Label shows red `*` asterisk (required). Placeholder: `arjunmehta@acmesolutions.com`. NOT pre-filled. Border turns red on error; hint text replaced by error message; clears on keystroke.
+
+**KB nudge banner:** Shown above email input when `kbCount === 0`. Gold warning style, links to `/knowledge-base`. Disappears on next mount after user adds KB items. Text says "Requirements Matcher" (not "Agent 4").
+
+### Dynamic stat logic (fetched from DB on mount)
+- **Proposals this month** → `proposalCount` from `GET /api/stats` (counts `rfp_jobs` for user this calendar month)
+- **Avg. time saved** → `proposalCount × 19h`
+- **Win rate** → always `—` (outcome data not tracked)
+- **Knowledge base** → `kbCount` docs — live count from `/api/kb/items`; shows `"—"` while loading
 
 ### `ProposalEntry` type
 ```ts

@@ -276,7 +276,7 @@ function ProcessingPipeline({ fileName, onComplete }: { fileName: string; onComp
   );
 }
 
-function UploadZone({ onFile, recipientEmail }: { onFile: (name: string, jobId: string) => void; recipientEmail: string }) {
+function UploadZone({ onFile, recipientEmail, onEmailRequired }: { onFile: (name: string, jobId: string) => void; recipientEmail: string; onEmailRequired: () => void }) {
   const [drag, setDrag] = useState(false);
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -293,8 +293,10 @@ function UploadZone({ onFile, recipientEmail }: { onFile: (name: string, jobId: 
 
   const handle = (file: File | null | undefined) => {
     if (!file || uploading) return;
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail.trim());
+    if (!emailOk) { onEmailRequired(); return; }
     setUploading(true);
-    startUpload([file], { recipientEmail: recipientEmail.trim() || undefined });
+    startUpload([file], { recipientEmail: recipientEmail.trim() });
   };
 
   return (
@@ -637,6 +639,20 @@ export default function Dashboard() {
   const [userProposals, setUserProposals] = useState<ProposalEntry[]>([]);
   const [proposalCount, setProposalCount] = useState(0);
   const [recipientEmail, setRecipientEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [kbCount, setKbCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/kb/items').then(r => r.json()),
+      fetch('/api/stats').then(r => r.json()),
+    ]).then(([items, stats]) => {
+      setKbCount(Array.isArray(items) ? items.length : 0)
+      setProposalCount(stats?.jobsThisMonth ?? 0)
+    }).catch(() => {
+      setKbCount(0)
+    })
+  }, [])
 
   return (
     <div className="ni-page-enter" style={{ position: "relative", minHeight: "100vh", overflow: "hidden" }}>
@@ -726,7 +742,7 @@ export default function Dashboard() {
             icon={<svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 13V3h10v10H3Z M5 6h6 M5 9h6 M5 11h3" stroke="#2A1E08" strokeWidth="1.4" fill="none" strokeLinecap="round" /></svg>}
           />
           <StatCard
-            label="Win rate" value="—" hint="Calculated after first proposal"
+            label="Win rate" value="—" hint="Outcome data not tracked yet"
             accent="linear-gradient(135deg, #DDE7D8, #2F5D50)"
             icon={<svg width="16" height="16" viewBox="0 0 16 16"><path d="M5 3h6v4a3 3 0 1 1-6 0V3Z" stroke="#fff" strokeWidth="1.4" fill="none" strokeLinejoin="round" /><path d="M5 5H3 a2 2 0 0 0 2 3M11 5h2 a2 2 0 0 1-2 3" stroke="#fff" strokeWidth="1.4" fill="none" /><path d="M6 13h4 M8 10v3" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" /></svg>}
           />
@@ -738,7 +754,9 @@ export default function Dashboard() {
             icon={<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke="#2A1E08" strokeWidth="1.4" fill="none" /><path d="M8 5v3l2 1" stroke="#2A1E08" strokeWidth="1.4" fill="none" strokeLinecap="round" /></svg>}
           />
           <StatCard
-            label="Knowledge base" value="0 docs" hint="Add docs to power the Matcher Agent"
+            label="Knowledge base"
+                  value={kbCount === null ? "—" : `${kbCount} doc${kbCount !== 1 ? "s" : ""}`}
+                  hint={kbCount === null ? "Loading…" : kbCount === 0 ? "Add docs to power the Requirements Matcher" : `${kbCount} document${kbCount !== 1 ? "s" : ""} in your knowledge base`}
             accent="linear-gradient(135deg, #DDE7D8, #2F5D50)"
             icon={<svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 4a1 1 0 0 1 1-1h3l1 1h4a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4Z" stroke="#fff" strokeWidth="1.4" fill="none" /></svg>}
           />
@@ -780,6 +798,37 @@ export default function Dashboard() {
 
               {!fileName ? (
                 <>
+                  {/* KB nudge — shown only when knowledge base is empty */}
+                  {kbCount === 0 && (
+                    <div style={{
+                      display: 'flex', alignItems: 'flex-start', gap: 10,
+                      padding: '11px 14px', marginBottom: 14,
+                      background: 'rgba(212,168,79,0.10)',
+                      border: '1px solid rgba(212,168,79,0.35)',
+                      borderRadius: 10,
+                    }}>
+                      <svg width="16" height="16" viewBox="0 0 22 22" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+                        <path d="M11 3L2 19h18L11 3z" stroke="#D4A84F" strokeWidth="1.5" strokeLinejoin="round"/>
+                        <line x1="11" y1="10" x2="11" y2="14" stroke="#D4A84F" strokeWidth="1.5" strokeLinecap="round"/>
+                        <circle cx="11" cy="16.5" r="0.8" fill="#D4A84F"/>
+                      </svg>
+                      <div>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--gold-deep)', marginBottom: 3 }}>
+                          Knowledge base is empty
+                        </div>
+                        <div style={{ fontSize: 11.5, color: 'var(--ink-soft)', lineHeight: 1.5 }}>
+                          Add case studies, capabilities and certifications so the Requirements Matcher Agent can tailor your proposal.{' '}
+                          <span
+                            onClick={() => router.push('/knowledge-base')}
+                            style={{ color: 'var(--forest)', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline', whiteSpace: 'nowrap' }}
+                          >
+                            Set up Knowledge Base →
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Send-to email */}
                   <div style={{ marginBottom: 18 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
@@ -788,35 +837,40 @@ export default function Dashboard() {
                       </svg>
                       <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-soft)" }}>
                         Send completed proposal to
+                        <span style={{ color: '#E05252', marginLeft: 3 }}>*</span>
                       </span>
                     </div>
                     <input
                       type="email"
                       value={recipientEmail}
-                      onChange={e => setRecipientEmail(e.target.value)}
+                      onChange={e => { setRecipientEmail(e.target.value); if (emailError) setEmailError(""); }}
                       placeholder="arjunmehta@acmesolutions.com"
                       style={{
                         width: "100%", padding: "10px 14px",
                         fontFamily: "var(--f-mono)", fontSize: 13,
                         color: "var(--ink)",
                         background: "rgba(255,255,255,0.85)",
-                        border: "1px solid var(--line-strong)",
+                        border: `1px solid ${emailError ? '#E05252' : 'var(--line-strong)'}`,
                         borderRadius: 10, outline: "none",
                         boxSizing: "border-box",
                         transition: "border-color .2s",
                       }}
-                      onFocus={e => (e.currentTarget.style.borderColor = "rgba(212,168,79,0.60)")}
-                      onBlur={e => (e.currentTarget.style.borderColor = "var(--line-strong)")}
+                      onFocus={e => (e.currentTarget.style.borderColor = emailError ? '#E05252' : 'rgba(212,168,79,0.60)')}
+                      onBlur={e => (e.currentTarget.style.borderColor = emailError ? '#E05252' : 'var(--line-strong)')}
                     />
-                    <div style={{ fontSize: 11.5, color: "var(--ni-muted)", marginTop: 5 }}>
-                      The finished PDF will be emailed to this address once all agents complete
+                    <div style={{ fontSize: 11.5, marginTop: 5, color: emailError ? '#E05252' : 'var(--ni-muted)' }}>
+                      {emailError || "The finished PDF will be emailed to this address once all agents complete"}
                     </div>
                   </div>
 
-                  <UploadZone recipientEmail={recipientEmail} onFile={(name, jid) => {
-                    setFileName(name);
-                    setTimeout(() => router.push(`/workflow/${jid}`), 1800);
-                  }} />
+                  <UploadZone
+                    recipientEmail={recipientEmail}
+                    onEmailRequired={() => setEmailError("Please enter a valid email address to receive the proposal PDF")}
+                    onFile={(name, jid) => {
+                      setFileName(name);
+                      setTimeout(() => router.push(`/workflow/${jid}`), 1800);
+                    }}
+                  />
                   {/* Pipeline preview — shows users the flow before they upload */}
                   <div style={{ marginTop: 28 }}>
                     <div style={{
