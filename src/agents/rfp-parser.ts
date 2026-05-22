@@ -1,9 +1,8 @@
-import { PDFParse } from 'pdf-parse'
 import { eq } from 'drizzle-orm'
 import { GoogleGenAI } from '@google/genai'
 
 import { db } from '@/db'
-import { rfpJobs, rfpDocuments, parsedRfpData } from '@/db/schema'
+import { rfpJobs, parsedRfpData } from '@/db/schema'
 
 import { sessionService } from '@/lib/adk/session'
 
@@ -232,74 +231,32 @@ export async function runRfpParser(
       throw new Error('RFP document URL missing from session')
     }
 
-    // Fetch PDF from UploadThing URL
+    // Fetch PDF and pass directly to Gemini as inline base64 (no pdf-parse)
     const pdfResponse = await fetch(rfpDocumentUrl as string)
     if (!pdfResponse.ok) {
-      throw new Error(
-        `Failed to fetch PDF: ${pdfResponse.status} ${pdfResponse.statusText}`
-      )
+      throw new Error(`Failed to fetch PDF: ${pdfResponse.status} ${pdfResponse.statusText}`)
     }
-    const pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer())
-    await updateJobActivity(input.jobId, 'Parsing PDF — detecting structure…')
-
-    // Extract text + page count
-    const parser = new PDFParse({ data: pdfBuffer })
-    const [textResult, infoResult] = await Promise.all([
-      parser.getText(),
-      parser.getInfo(),
-    ])
-    const rfpDocumentText = textResult.pages
-      .map((p: { text: string }) => p.text)
-      .join('\n')
-    const pageCount = infoResult.total ?? 0
-    await parser.destroy()
-    await updateJobActivity(input.jobId, `Sending ${pageCount}-page document for AI extraction…`)
-
-    const prompt = `
-${RFP_PARSER_DESCRIPTION}
-
-${RFP_PARSER_INSTRUCTION}
-
-PIPELINE CONTEXT:
-
-Company:
-${companyName}
-
-Sector Hint:
-${(pipelineDirective as { sectorHint?: string })?.sectorHint ?? 'unknown'}
-
-Priority Signals:
-${JSON.stringify((pipelineDirective as { priorityFlags?: string[] })?.priorityFlags ?? [])}
-
-DOCUMENT:
-
-${rfpDocumentText}
-`
+    const pdfBase64 = Buffer.from(await pdfResponse.arrayBuffer()).toString('base64')
+    await updateJobActivity(input.jobId, 'Sending RFP document to AI for extraction…')
 
     const result = await ai.models.generateContent({
       model: 'gemini-3.1-flash-lite',
       contents: [{
         role: 'user',
-        parts: [{ text: prompt }],
+        parts: [
+          { inlineData: { mimeType: 'application/pdf', data: pdfBase64 } },
+          { text: `${RFP_PARSER_DESCRIPTION}\n\n${RFP_PARSER_INSTRUCTION}\n\nPIPELINE CONTEXT:\n\nCompany:\n${companyName}\n\nSector Hint:\n${(pipelineDirective as { sectorHint?: string })?.sectorHint ?? 'unknown'}\n\nPriority Signals:\n${JSON.stringify((pipelineDirective as { priorityFlags?: string[] })?.priorityFlags ?? [])}` },
+        ],
       }],
-      config: {
-        temperature: 0.1,
-        maxOutputTokens: 4096,
-      },
+      config: { temperature: 0.1, maxOutputTokens: 4096, responseMimeType: 'application/json' },
     })
 
-    const raw =
-      result.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}'
-
-    const cleaned = raw
-      .replace(/```json/g, '')
-      .replace(/```/g, '')
-      .trim()
-
+    const raw = result.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}'
+    const cleaned = raw.replace(/```json/g, '').replace(/```/g, '').trim() || '{}'
     const blueprint = JSON.parse(cleaned)
     await updateJobActivity(input.jobId, `Extracted ${(blueprint.mandatoryRequirements ?? []).length} mandatory + ${(blueprint.optionalRequirements ?? []).length} optional requirements`)
 
-    // Neon writes — run in parallel, rfpDocuments update is best-effort
+    // Neon writes — run in parallel
     await Promise.all([
       db.insert(parsedRfpData).values({
         rfpJobId: input.jobId,
@@ -326,11 +283,6 @@ ${rfpDocumentText}
         })
         .where(eq(rfpJobs.id, input.jobId)),
 
-      // rfp_documents row may not exist yet (UploadThing not built)
-      db.update(rfpDocuments)
-        .set({ pageCount })
-        .where(eq(rfpDocuments.rfpJobId, input.jobId))
-        .catch(() => { /* no-op if row missing */ }),
     ])
 
     Object.assign(session.state, {
