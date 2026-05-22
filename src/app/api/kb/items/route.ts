@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+export const maxDuration = 60
 import { eq } from 'drizzle-orm'
 import { db } from '@/db'
 import { knowledgeBaseItems, companyProfiles } from '@/db/schema'
@@ -63,48 +65,56 @@ ${hintType ? `Hint: the user selected type "${hintType}" — prefer it unless cl
 }
 
 export async function GET() {
-  const user = await getOrCreateUser()
-  const profile = await getOrCreateProfile(user.id)
-  const items = await db
-    .select()
-    .from(knowledgeBaseItems)
-    .where(eq(knowledgeBaseItems.companyProfileId, profile.id))
-    .orderBy(knowledgeBaseItems.createdAt)
-  return NextResponse.json(items)
+  try {
+    const user = await getOrCreateUser()
+    const profile = await getOrCreateProfile(user.id)
+    const items = await db
+      .select()
+      .from(knowledgeBaseItems)
+      .where(eq(knowledgeBaseItems.companyProfileId, profile.id))
+      .orderBy(knowledgeBaseItems.createdAt)
+    return NextResponse.json(items)
+  } catch {
+    return NextResponse.json({ error: 'failed' }, { status: 500 })
+  }
 }
 
 export async function POST(req: NextRequest) {
-  const user = await getOrCreateUser()
-  const profile = await getOrCreateProfile(user.id)
-  const body = await req.json()
+  try {
+    const user = await getOrCreateUser()
+    const profile = await getOrCreateProfile(user.id)
+    const body = await req.json()
 
-  let title: string = body.title ?? ''
-  let description: string = body.description ?? ''
-  let tags: string[] = body.tags ?? []
-  let type: KbType = VALID_TYPES.includes(body.type) ? body.type : 'past_proposal'
+    let title: string = body.title ?? ''
+    let description: string = body.description ?? ''
+    let tags: string[] = body.tags ?? []
+    let type: KbType = VALID_TYPES.includes(body.type) ? body.type : 'past_proposal'
 
-  if (body.fileUrl && !body.title) {
-    const extracted = await extractFromPdf(body.fileUrl, body.type)
-    title = extracted.title || title
-    description = extracted.description || description
-    tags = extracted.tags?.length ? extracted.tags : tags
-    if (VALID_TYPES.includes(extracted.type as KbType)) type = extracted.type as KbType
+    if (body.fileUrl && !body.title) {
+      const extracted = await extractFromPdf(body.fileUrl, body.type)
+      title = extracted.title || title
+      description = extracted.description || description
+      tags = extracted.tags?.length ? extracted.tags : tags
+      if (VALID_TYPES.includes(extracted.type as KbType)) type = extracted.type as KbType
+    }
+
+    if (!title) return NextResponse.json({ error: 'title required' }, { status: 400 })
+
+    const [item] = await db
+      .insert(knowledgeBaseItems)
+      .values({
+        companyProfileId: profile.id,
+        type,
+        title,
+        description,
+        tags,
+        fileUrl: body.fileUrl ?? null,
+        isActive: true,
+      })
+      .returning()
+
+    return NextResponse.json(item, { status: 201 })
+  } catch {
+    return NextResponse.json({ error: 'failed' }, { status: 500 })
   }
-
-  if (!title) return NextResponse.json({ error: 'title required' }, { status: 400 })
-
-  const [item] = await db
-    .insert(knowledgeBaseItems)
-    .values({
-      companyProfileId: profile.id,
-      type,
-      title,
-      description,
-      tags,
-      fileUrl: body.fileUrl ?? null,
-      isActive: true,
-    })
-    .returning()
-
-  return NextResponse.json(item, { status: 201 })
 }
