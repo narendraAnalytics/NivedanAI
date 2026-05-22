@@ -158,11 +158,11 @@ Return ONLY valid JSON — no markdown fences, no explanation text — matching 
     const result = await ai.models.generateContent({
       model: 'gemini-3.1-pro-preview',
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      config: { temperature: 0.3, maxOutputTokens: 1024 },
+      config: { temperature: 0.3, maxOutputTokens: 2048, responseMimeType: 'application/json' },
     })
 
     const raw = result.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}'
-    const cleaned = raw.replace(/```json\n?|\n?```/g, '').trim()
+    const cleaned = raw.replace(/```json\n?|\n?```/g, '').trim() || '{}'
     const pipelineDirective: PipelineDirective = JSON.parse(cleaned)
 
     const inputTokens = result.usageMetadata?.promptTokenCount ?? 0
