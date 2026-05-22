@@ -12,6 +12,9 @@ import {
   updateJobActivity,
 } from '@/db/helpers/job-status'
 
+// ADK LlmAgent reads GOOGLE_GENAI_API_KEY, not GOOGLE_API_KEY — alias at module load
+process.env.GOOGLE_GENAI_API_KEY ??= process.env.GOOGLE_API_KEY
+
 const CLIENT_RESEARCH_INSTRUCTION = `
 You are the Client Research Agent for Nivedan AI.
 
