@@ -338,20 +338,35 @@ function UploadZone({ onFile, recipientEmail, onEmailRequired }: { onFile: (name
         onChange={(e) => handle(e.target.files?.[0])}
       />
 
-      <div style={{
-        position: "relative", zIndex: 1,
-        width: 96, height: 96, margin: "0 auto 24px",
-        borderRadius: 24,
-        background: "linear-gradient(180deg, #FBF1D8 0%, #E0B663 100%)",
-        display: "grid", placeItems: "center",
-        boxShadow: "0 10px 28px rgba(212,168,79,0.35), inset 0 1px 0 rgba(255,255,255,0.7)",
-        animation: drag ? "bounce 0.8s ease-in-out infinite" : "floatSlow 4s ease-in-out infinite",
-      }}>
-        <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-          <path d="M22 30 V12 M14 20 L22 12 L30 20" stroke="#2A1E08" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M10 30 V34 H34 V30" stroke="#2A1E08" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </div>
+      {uploading ? (
+        <div style={{
+          position: "relative", zIndex: 1,
+          width: 96, height: 96, margin: "0 auto 24px",
+          display: "grid", placeItems: "center",
+        }}>
+          <div style={{
+            width: 72, height: 72, borderRadius: "50%",
+            border: "4px solid rgba(212,168,79,0.25)",
+            borderTopColor: "var(--gold)",
+            animation: "spin 0.9s linear infinite",
+          }} />
+        </div>
+      ) : (
+        <div style={{
+          position: "relative", zIndex: 1,
+          width: 96, height: 96, margin: "0 auto 24px",
+          borderRadius: 24,
+          background: "linear-gradient(180deg, #FBF1D8 0%, #E0B663 100%)",
+          display: "grid", placeItems: "center",
+          boxShadow: "0 10px 28px rgba(212,168,79,0.35), inset 0 1px 0 rgba(255,255,255,0.7)",
+          animation: drag ? "bounce 0.8s ease-in-out infinite" : "floatSlow 4s ease-in-out infinite",
+        }}>
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+            <path d="M22 30 V12 M14 20 L22 12 L30 20" stroke="#2A1E08" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M10 30 V34 H34 V30" stroke="#2A1E08" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      )}
 
       <div style={{ position: "relative", zIndex: 1 }}>
         <div style={{
