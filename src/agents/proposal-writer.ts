@@ -70,7 +70,7 @@ export async function runProposalWriter(input: ProposalWriterInput): Promise<voi
   const { jobId, userId } = input
   const startTime = Date.now()
 
-  const runId = await createAgentRun(jobId, 5, 'proposal_writer', 'gemini-3.1-pro')
+  const runId = await createAgentRun(jobId, 5, 'proposal_writer', 'gemini-3.1-pro-preview')
 
   try {
     await updateCurrentAgent(jobId, 5)
@@ -151,7 +151,7 @@ ${JSON.stringify(
 Return ONLY valid JSON matching the 8-section schema in your instructions.`
 
     const result = await ai.models.generateContent({
-      model: 'gemini-3.1-pro',
+      model: 'gemini-3.1-pro-preview',
       contents: [{ role: 'user', parts: [{ text: writerPrompt }] }],
       config: {
         temperature: 0.7,

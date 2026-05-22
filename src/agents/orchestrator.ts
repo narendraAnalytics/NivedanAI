@@ -97,7 +97,7 @@ export async function runOrchestrator(input: OrchestratorInput): Promise<void> {
   const { jobId, userId, rfpDocumentUrl, companyProfileId, inngestRunId } = input
   const startTime = Date.now()
 
-  const runId = await createAgentRun(jobId, 1, 'orchestrator', 'gemini-3.1-pro')
+  const runId = await createAgentRun(jobId, 1, 'orchestrator', 'gemini-3.1-pro-preview')
 
   try {
     await Promise.all([
@@ -156,7 +156,7 @@ Return ONLY valid JSON — no markdown fences, no explanation text — matching 
 }`
 
     const result = await ai.models.generateContent({
-      model: 'gemini-3.1-pro',
+      model: 'gemini-3.1-pro-preview',
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       config: { temperature: 0.3, maxOutputTokens: 1024 },
     })
