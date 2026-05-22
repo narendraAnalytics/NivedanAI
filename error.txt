@@ -1,139 +1,118 @@
- PUT /api/inngest 200 in 81ms (next.js: 12ms, proxy.ts: 22ms, application-code: 47ms)
-[22:28:49.758] INFO (#19) handleUploadAction=2956ms: Sending presigned URLs to client
+[22:40:22.360] INFO (#19) handleUploadAction=6666ms: Sending presigned URLs to client
   presignedUrls: [
     {
-      url: 'https://sea1.ingest.uploadthing.com/SbQNqXcWByAhjQhcfCTIRxfGKdOr7L14Bn9am3qZ5ivj2gEW?expires=1779472729734&x-ut-identifier=5ulvvd6i88&x-ut-file-name=Apollo_Hospitals_RFP_AHEL_IT_2026_0047.pdf&x-ut-file-size=44105&x-ut-file-type=application%252Fpdf&x-ut-slug=rfpDocument&x-ut-content-disposition=inline&signature=hmac-sha256%3D9e92e9e481bd6b05225135ad761f26301587cc70ef6364ea234ac8b8a5996df0',
-      key: 'SbQNqXcWByAhjQhcfCTIRxfGKdOr7L14Bn9am3qZ5ivj2gEW',
+      url: 'https://sea1.ingest.uploadthing.com/SbQNqXcWByAh5BYA4BRRVpsETvZkicKzmUw0OxDdj4WSHnhy?expires=1779473422344&x-ut-identifier=5ulvvd6i88&x-ut-file-name=Apollo_Hospitals_RFP_AHEL_IT_2026_0047.pdf&x-ut-file-size=44105&x-ut-file-type=application%252Fpdf&x-ut-slug=rfpDocument&x-ut-content-disposition=inline&signature=hmac-sha256%3Dd223a87d3326663d294c624abe295dd047bd8da6a2d54b49b07ddbad5c656898',
+      key: 'SbQNqXcWByAh5BYA4BRRVpsETvZkicKzmUw0OxDdj4WSHnhy',
       name: 'Apollo_Hospitals_RFP_AHEL_IT_2026_0047.pdf',
       customId: null
     }
   ]
- POST /api/uploadthing?actionType=upload&slug=rfpDocument 200 in 3.2s (next.js: 17ms, proxy.ts: 48ms, application-code: 3.1s)
- PUT /api/inngest 200 in 92ms (next.js: 13ms, proxy.ts: 19ms, application-code: 60ms)
- POST /api/uploadthing?slug=rfpDocument 200 in 168ms (next.js: 18ms, proxy.ts: 30ms, application-code: 120ms)
-[22:28:52.635] INFO (#29) handleCallbackRequest=913ms: Sent callback result to UploadThing
- PUT /api/inngest 200 in 155ms (next.js: 18ms, proxy.ts: 32ms, application-code: 105ms)
- GET /workflow/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 5.4s (next.js: 5.1s, proxy.ts: 45ms, application-code: 346ms)
- PUT /api/inngest 200 in 77ms (next.js: 10ms, proxy.ts: 20ms, application-code: 47ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 5.6s (next.js: 2.5s, proxy.ts: 46ms, application-code: 3.1s)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 652ms (next.js: 40ms, proxy.ts: 29ms, application-code: 582ms)
- PUT /api/inngest 200 in 123ms (next.js: 23ms, proxy.ts: 38ms, application-code: 62ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 1764ms (next.js: 92ms, proxy.ts: 51ms, application-code: 1621ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 630ms (next.js: 17ms, proxy.ts: 22ms, application-code: 590ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 1893ms (next.js: 29ms, proxy.ts: 56ms, application-code: 1807ms)
- PUT /api/inngest 200 in 601ms (next.js: 178ms, proxy.ts: 46ms, application-code: 378ms)
- POST /api/inngest?fnId=nivedanai-generate-proposal&stepId=step 206 in 21.1s (next.js: 11ms, proxy.ts: 26ms, application-code: 21.1s)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 1595ms (next.js: 118ms, proxy.ts: 192ms, application-code: 1285ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 891ms (next.js: 20ms, proxy.ts: 35ms, application-code: 836ms)
- PUT /api/inngest 200 in 64ms (next.js: 8ms, proxy.ts: 14ms, application-code: 43ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 749ms (next.js: 62ms, proxy.ts: 118ms, application-code: 568ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 742ms (next.js: 22ms, proxy.ts: 44ms, application-code: 676ms)
- PUT /api/inngest 200 in 94ms (next.js: 11ms, proxy.ts: 23ms, application-code: 61ms)
- POST /api/inngest?fnId=nivedanai-generate-proposal&stepId=4720daae06f54555516527b454cd5f1ff7ce01d1 206 in 10.4s (next.js: 10ms, proxy.ts: 18ms, application-code: 10.4s)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 808ms (next.js: 44ms, proxy.ts: 36ms, application-code: 728ms)
-INFO: [ADK] 2026-05-22T16:59:26.079Z event: {"invocationId":"e-7076a9b9-3275-4a90-bb97-7c933ce7114b","author":"user","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{},"requestedToolConfirmations":{}},"content":{"role":"user","parts":[{"text":"\nResearch the following company for an RFP proposal we are preparing:\n\nCompany: the client company mentioned in the RFP\nIndustry Sector: Enterprise AI / Software\nResearch Focus Areas: current-proposal-workflow-pain-points, technology-adoption-readiness, strategic-priorities\n\nUse search_agent to find current intelligence about this company.\nSearch for: recent news, funding, strategic priorities, leadership changes, expansion plans, competitive landscape.\n\nReturn ONLY valid JSON matching the schema in your instructions.\n"}]},"id":"Lr7zvPmb","longRunningToolIds":[],"timestamp":1779469166071}
+ POST /api/uploadthing?actionType=upload&slug=rfpDocument 200 in 6.8s (next.js: 27ms, proxy.ts: 39ms, application-code: 6.8s)
+ POST /api/uploadthing?slug=rfpDocument 200 in 65ms (next.js: 7ms, proxy.ts: 14ms, application-code: 44ms)
+ PUT /api/inngest 200 in 68ms (next.js: 7ms, proxy.ts: 13ms, application-code: 49ms)
+[22:40:26.973] INFO (#29) handleCallbackRequest=2996ms: Sent callback result to UploadThing
+ PUT /api/inngest 200 in 220ms (next.js: 14ms, proxy.ts: 30ms, application-code: 176ms)
+ GET /workflow/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 7.6s (next.js: 7.3s, proxy.ts: 31ms, application-code: 303ms)
+ PUT /api/inngest 200 in 66ms (next.js: 6ms, proxy.ts: 22ms, application-code: 37ms)
+ PUT /api/inngest 200 in 58ms (next.js: 8ms, proxy.ts: 20ms, application-code: 29ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 6.4s (next.js: 2.1s, proxy.ts: 84ms, application-code: 4.2s)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 667ms (next.js: 28ms, proxy.ts: 39ms, application-code: 600ms)
+ POST /api/inngest?fnId=nivedanai-generate-proposal&stepId=step 206 in 17.3s (next.js: 10ms, proxy.ts: 30ms, application-code: 17.2s)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 1065ms (next.js: 31ms, proxy.ts: 68ms, application-code: 966ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 718ms (next.js: 50ms, proxy.ts: 28ms, application-code: 639ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 1309ms (next.js: 50ms, proxy.ts: 657ms, application-code: 602ms)
+ PUT /api/inngest 200 in 118ms (next.js: 32ms, proxy.ts: 28ms, application-code: 57ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 802ms (next.js: 105ms, proxy.ts: 97ms, application-code: 600ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 788ms (next.js: 29ms, proxy.ts: 37ms, application-code: 722ms)
+ PUT /api/inngest 200 in 58ms (next.js: 8ms, proxy.ts: 11ms, application-code: 39ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 652ms (next.js: 37ms, proxy.ts: 24ms, application-code: 591ms)
+ POST /api/inngest?fnId=nivedanai-generate-proposal&stepId=4720daae06f54555516527b454cd5f1ff7ce01d1 206 in 11.9s (next.js: 11ms, proxy.ts: 22ms, application-code: 11.9s)
+INFO: [ADK] 2026-05-22T17:10:57.464Z event: {"invocationId":"e-894140ec-4b78-495f-90b5-677d9aa48516","author":"user","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{},"requestedToolConfirmations":{}},"content":{"role":"user","parts":[{"text":"\nResearch the following company for an RFP proposal we are preparing:\n\nCompany: the client company mentioned in the RFP\nIndustry Sector: Enterprise AI Software / Proposal Automation\nResearch Focus Areas: strategic-priorities, tech-stack-integrations, efficiency-metrics\n\nUse search_agent to find current intelligence about this company.\nSearch for: recent news, funding, strategic priorities, leadership changes, expansion plans, competitive landscape.\n\nReturn ONLY valid JSON matching the schema in your instructions.\n"}]},"id":"X8lncys4","longRunningToolIds":[],"timestamp":1779469857457}
+INFO: [ADK] 2026-05-22T17:10:57.499Z Sending out request, model: gemini-3.1-flash, backend: GEMINI_API, stream: false
+ PUT /api/inngest 200 in 100ms (next.js: 27ms, proxy.ts: 18ms, application-code: 56ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 644ms (next.js: 27ms, proxy.ts: 33ms, application-code: 583ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 657ms (next.js: 31ms, proxy.ts: 36ms, application-code: 590ms)
+ PUT /api/inngest 200 in 66ms (next.js: 9ms, proxy.ts: 17ms, application-code: 39ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 660ms (next.js: 56ms, proxy.ts: 23ms, application-code: 580ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 655ms (next.js: 35ms, proxy.ts: 37ms, application-code: 583ms)
+ PUT /api/inngest 200 in 178ms (next.js: 12ms, proxy.ts: 34ms, application-code: 132ms)
+ POST /api/inngest?fnId=nivedanai-generate-proposal&stepId=step 206 in 12.6s (next.js: 14ms, proxy.ts: 18ms, application-code: 12.6s)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 656ms (next.js: 39ms, proxy.ts: 26ms, application-code: 590ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 666ms (next.js: 36ms, proxy.ts: 46ms, application-code: 583ms)
+ PUT /api/inngest 200 in 78ms (next.js: 10ms, proxy.ts: 16ms, application-code: 52ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 642ms (next.js: 39ms, proxy.ts: 22ms, application-code: 581ms)
+ PUT /api/inngest 200 in 57ms (next.js: 15ms, proxy.ts: 12ms, application-code: 29ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 641ms (next.js: 22ms, proxy.ts: 27ms, application-code: 592ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 649ms (next.js: 29ms, proxy.ts: 32ms, application-code: 588ms)
+ PUT /api/inngest 200 in 83ms (next.js: 10ms, proxy.ts: 14ms, application-code: 59ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 638ms (next.js: 32ms, proxy.ts: 21ms, application-code: 585ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 638ms (next.js: 26ms, proxy.ts: 34ms, application-code: 578ms)
+ PUT /api/inngest 200 in 75ms (next.js: 13ms, proxy.ts: 13ms, application-code: 49ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 645ms (next.js: 41ms, proxy.ts: 27ms, application-code: 576ms)
+ PUT /api/inngest 200 in 70ms (next.js: 8ms, proxy.ts: 18ms, application-code: 43ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 636ms (next.js: 36ms, proxy.ts: 23ms, application-code: 577ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 649ms (next.js: 38ms, proxy.ts: 30ms, application-code: 581ms)
+ PUT /api/inngest 200 in 77ms (next.js: 9ms, proxy.ts: 17ms, application-code: 51ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 624ms (next.js: 19ms, proxy.ts: 31ms, application-code: 573ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 684ms (next.js: 38ms, proxy.ts: 35ms, application-code: 610ms)
+ PUT /api/inngest 200 in 67ms (next.js: 11ms, proxy.ts: 17ms, application-code: 39ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 645ms (next.js: 46ms, proxy.ts: 19ms, application-code: 581ms)
+ PUT /api/inngest 200 in 74ms (next.js: 11ms, proxy.ts: 18ms, application-code: 45ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 635ms (next.js: 31ms, proxy.ts: 20ms, application-code: 584ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 638ms (next.js: 29ms, proxy.ts: 28ms, application-code: 581ms)
+ PUT /api/inngest 200 in 84ms (next.js: 9ms, proxy.ts: 15ms, application-code: 59ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 623ms (next.js: 30ms, proxy.ts: 16ms, application-code: 578ms)
+ POST /api/inngest?fnId=nivedanai-generate-proposal&stepId=4f44b7031fa5d23ab1e5ff4be9b4ccaf7648e416 206 in 47s (next.js: 12ms, proxy.ts: 15ms, application-code: 47s)
 Inngest step error
-Error: API key must be provided via constructor or GOOGLE_GENAI_API_KEY or GEMINI_API_KEY environment variable.
-    at runAsync.next (<anonymous>)
-    at runOneStepAsync.next (<anonymous>)
-    at runAsyncImpl.next (<anonymous>)
-    at async runClientResearch (src\agents\client-research.ts:121:22)
-    at async (src\inngest\functions\generate-proposal.ts:32:7)
-  119 |     })
-  120 |
-> 121 |     for await (const event of events) {
-      |                      ^
-  122 |       const text = event.content?.parts?.[0]?.text
-  123 |       if (text) {
-  124 |         finalText = text
- POST /api/inngest?fnId=nivedanai-generate-proposal&stepId=step 206 in 2.8s (next.js: 16ms, proxy.ts: 26ms, application-code: 2.8s)
- PUT /api/inngest 200 in 133ms (next.js: 45ms, proxy.ts: 28ms, application-code: 59ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 662ms (next.js: 55ms, proxy.ts: 33ms, application-code: 574ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 710ms (next.js: 85ms, proxy.ts: 39ms, application-code: 586ms)
- PUT /api/inngest 200 in 85ms (next.js: 11ms, proxy.ts: 18ms, application-code: 56ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 650ms (next.js: 36ms, proxy.ts: 38ms, application-code: 576ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 691ms (next.js: 54ms, proxy.ts: 30ms, application-code: 608ms)
- PUT /api/inngest 200 in 123ms (next.js: 12ms, proxy.ts: 16ms, application-code: 94ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 771ms (next.js: 109ms, proxy.ts: 35ms, application-code: 627ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 681ms (next.js: 45ms, proxy.ts: 24ms, application-code: 613ms)
- PUT /api/inngest 200 in 81ms (next.js: 12ms, proxy.ts: 18ms, application-code: 52ms)
-INFO: [ADK] 2026-05-22T16:59:45.219Z event: {"invocationId":"e-a4fd6863-ffd3-484f-bd06-23066db3667b","author":"user","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{},"requestedToolConfirmations":{}},"content":{"role":"user","parts":[{"text":"\nResearch the following company for an RFP proposal we are preparing:\n\nCompany: the client company mentioned in the RFP\nIndustry Sector: Enterprise AI / Software\nResearch Focus Areas: current-proposal-workflow-pain-points, technology-adoption-readiness, strategic-priorities\n\nUse search_agent to find current intelligence about this company.\nSearch for: recent news, funding, strategic priorities, leadership changes, expansion plans, competitive landscape.\n\nReturn ONLY valid JSON matching the schema in your instructions.\n"}]},"id":"8Z6u5bKM","longRunningToolIds":[],"timestamp":1779469185219}
-INFO: [ADK] 2026-05-22T16:59:45.222Z event: {"invocationId":"e-7076a9b9-3275-4a90-bb97-7c933ce7114b","author":"user","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{},"requestedToolConfirmations":{}},"content":{"role":"user","parts":[{"text":"\nResearch the following company for an RFP proposal we are preparing:\n\nCompany: the client company mentioned in the RFP\nIndustry Sector: Enterprise AI / Software\nResearch Focus Areas: current-proposal-workflow-pain-points, technology-adoption-readiness, strategic-priorities\n\nUse search_agent to find current intelligence about this company.\nSearch for: recent news, funding, strategic priorities, leadership changes, expansion plans, competitive landscape.\n\nReturn ONLY valid JSON matching the schema in your instructions.\n"}]},"id":"Lr7zvPmb","longRunningToolIds":[],"timestamp":1779469166071}
+Error: proposalDraftId missing from session state
+    at runQualityReview (src\agents\quality-review.ts:108:13)
+    at async (src\inngest\functions\generate-proposal.ts:44:7)
+  106 |     if (!proposalDraftId) {
+  107 |       await failAgentRun(runId, 'proposalDraftId missing from session state')
+> 108 |       throw new Error('proposalDraftId missing from session state')
+      |             ^
+  109 |     }
+  110 |
+  111 |     // Fetch proposal and RFP data in parallel
+ POST /api/inngest?fnId=nivedanai-generate-proposal&stepId=step 206 in 2.1s (next.js: 16ms, proxy.ts: 20ms, application-code: 2.1s)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 715ms (next.js: 55ms, proxy.ts: 79ms, application-code: 580ms)
+ PUT /api/inngest 200 in 90ms (next.js: 13ms, proxy.ts: 22ms, application-code: 55ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 641ms (next.js: 21ms, proxy.ts: 42ms, application-code: 578ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 651ms (next.js: 27ms, proxy.ts: 19ms, application-code: 605ms)
+ PUT /api/inngest 200 in 225ms (next.js: 39ms, proxy.ts: 27ms, application-code: 158ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 638ms (next.js: 17ms, proxy.ts: 35ms, application-code: 585ms)
+ PUT /api/inngest 200 in 77ms (next.js: 9ms, proxy.ts: 10ms, application-code: 59ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 676ms (next.js: 51ms, proxy.ts: 39ms, application-code: 586ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 641ms (next.js: 29ms, proxy.ts: 27ms, application-code: 585ms)
+ PUT /api/inngest 200 in 51ms (next.js: 7ms, proxy.ts: 11ms, application-code: 33ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 774ms (next.js: 41ms, proxy.ts: 150ms, application-code: 582ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 654ms (next.js: 17ms, proxy.ts: 52ms, application-code: 585ms)
+ PUT /api/inngest 200 in 56ms (next.js: 7ms, proxy.ts: 12ms, application-code: 37ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 666ms (next.js: 33ms, proxy.ts: 23ms, application-code: 609ms)
+ PUT /api/inngest 200 in 57ms (next.js: 9ms, proxy.ts: 18ms, application-code: 30ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 1013ms (next.js: 23ms, proxy.ts: 38ms, application-code: 952ms)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 659ms (next.js: 46ms, proxy.ts: 26ms, application-code: 587ms)
+ PUT /api/inngest 200 in 60ms (next.js: 7ms, proxy.ts: 14ms, application-code: 39ms)
 Inngest step error
-Error: API key must be provided via constructor or GOOGLE_GENAI_API_KEY or GEMINI_API_KEY environment variable.
-    at runAsync.next (<anonymous>)
-    at runOneStepAsync.next (<anonymous>)
-    at runAsyncImpl.next (<anonymous>)
-    at async runClientResearch (src\agents\client-research.ts:121:22)
-    at async (src\inngest\functions\generate-proposal.ts:32:7)
-  119 |     })
-  120 |
-> 121 |     for await (const event of events) {
-      |                      ^
-  122 |       const text = event.content?.parts?.[0]?.text
-  123 |       if (text) {
-  124 |         finalText = text
- POST /api/inngest?fnId=nivedanai-generate-proposal&stepId=step 206 in 1959ms (next.js: 20ms, proxy.ts: 55ms, application-code: 1884ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 931ms (next.js: 41ms, proxy.ts: 29ms, application-code: 860ms)
- PUT /api/inngest 200 in 130ms (next.js: 11ms, proxy.ts: 24ms, application-code: 95ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 1244ms (next.js: 472ms, proxy.ts: 98ms, application-code: 674ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 634ms (next.js: 25ms, proxy.ts: 31ms, application-code: 577ms)
- PUT /api/inngest 200 in 110ms (next.js: 14ms, proxy.ts: 17ms, application-code: 80ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 689ms (next.js: 75ms, proxy.ts: 28ms, application-code: 586ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 629ms (next.js: 18ms, proxy.ts: 37ms, application-code: 574ms)
- PUT /api/inngest 200 in 73ms (next.js: 11ms, proxy.ts: 15ms, application-code: 47ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 735ms (next.js: 69ms, proxy.ts: 77ms, application-code: 589ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 691ms (next.js: 60ms, proxy.ts: 33ms, application-code: 598ms)
- PUT /api/inngest 200 in 80ms (next.js: 13ms, proxy.ts: 14ms, application-code: 53ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 633ms (next.js: 31ms, proxy.ts: 40ms, application-code: 562ms)
- PUT /api/inngest 200 in 201ms (next.js: 15ms, proxy.ts: 15ms, application-code: 171ms)
- GET /api/jobs/158a6fb7-467b-4bbc-8bfc-5933edcec0ef 200 in 704ms (next.js: 27ms, proxy.ts: 33ms, application-code: 644ms)
- GET /dashboard 200 in 519ms (next.js: 24ms, proxy.ts: 31ms, application-code: 464ms)
- GET /api/uploadthing 200 in 1083ms (next.js: 148ms, proxy.ts: 582ms, application-code: 353ms)
- GET /api/uploadthing 200 in 258ms (next.js: 49ms, proxy.ts: 58ms, application-code: 152ms)
- GET /api/stats 200 in 2.9s (next.js: 695ms, proxy.ts: 426ms, application-code: 1794ms)
- GET /api/kb/items 200 in 3.5s (next.js: 532ms, proxy.ts: 441ms, application-code: 2.6s)
- GET /api/stats 200 in 662ms (next.js: 13ms, proxy.ts: 36ms, application-code: 613ms)
- PUT /api/inngest 200 in 387ms (next.js: 68ms, proxy.ts: 98ms, application-code: 222ms)
- GET /api/kb/items 200 in 1856ms (next.js: 77ms, proxy.ts: 274ms, application-code: 1505ms)
-INFO: [ADK] 2026-05-22T17:00:17.718Z event: {"invocationId":"e-39351b87-e993-4a82-b8a2-96d1b0f01ed5","author":"user","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{},"requestedToolConfirmations":{}},"content":{"role":"user","parts":[{"text":"\nResearch the following company for an RFP proposal we are preparing:\n\nCompany: the client company mentioned in the RFP\nIndustry Sector: Enterprise AI / Software\nResearch Focus Areas: current-proposal-workflow-pain-points, technology-adoption-readiness, strategic-priorities\n\nUse search_agent to find current intelligence about this company.\nSearch for: recent news, funding, strategic priorities, leadership changes, expansion plans, competitive landscape.\n\nReturn ONLY valid JSON matching the schema in your instructions.\n"}]},"id":"YknBqbp6","longRunningToolIds":[],"timestamp":1779469217717}
-INFO: [ADK] 2026-05-22T17:00:17.724Z event: {"invocationId":"e-a4fd6863-ffd3-484f-bd06-23066db3667b","author":"user","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{},"requestedToolConfirmations":{}},"content":{"role":"user","parts":[{"text":"\nResearch the following company for an RFP proposal we are preparing:\n\nCompany: the client company mentioned in the RFP\nIndustry Sector: Enterprise AI / Software\nResearch Focus Areas: current-proposal-workflow-pain-points, technology-adoption-readiness, strategic-priorities\n\nUse search_agent to find current intelligence about this company.\nSearch for: recent news, funding, strategic priorities, leadership changes, expansion plans, competitive landscape.\n\nReturn ONLY valid JSON matching the schema in your instructions.\n"}]},"id":"8Z6u5bKM","longRunningToolIds":[],"timestamp":1779469185219}
-INFO: [ADK] 2026-05-22T17:00:17.726Z event: {"invocationId":"e-7076a9b9-3275-4a90-bb97-7c933ce7114b","author":"user","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{},"requestedToolConfirmations":{}},"content":{"role":"user","parts":[{"text":"\nResearch the following company for an RFP proposal we are preparing:\n\nCompany: the client company mentioned in the RFP\nIndustry Sector: Enterprise AI / Software\nResearch Focus Areas: current-proposal-workflow-pain-points, technology-adoption-readiness, strategic-priorities\n\nUse search_agent to find current intelligence about this company.\nSearch for: recent news, funding, strategic priorities, leadership changes, expansion plans, competitive landscape.\n\nReturn ONLY valid JSON matching the schema in your instructions.\n"}]},"id":"Lr7zvPmb","longRunningToolIds":[],"timestamp":1779469166071}
-Inngest step error
-Error: API key must be provided via constructor or GOOGLE_GENAI_API_KEY or GEMINI_API_KEY environment variable.
-    at runAsync.next (<anonymous>)
-    at runOneStepAsync.next (<anonymous>)
-    at runAsyncImpl.next (<anonymous>)
-    at async runClientResearch (src\agents\client-research.ts:121:22)
-    at async (src\inngest\functions\generate-proposal.ts:32:7)
-  119 |     })
-  120 |
-> 121 |     for await (const event of events) {
-      |                      ^
-  122 |       const text = event.content?.parts?.[0]?.text
-  123 |       if (text) {
-  124 |         finalText = text
+Error: proposalDraftId missing from session state
+    at runQualityReview (src\agents\quality-review.ts:108:13)
+    at async (src\inngest\functions\generate-proposal.ts:44:7)
+  106 |     if (!proposalDraftId) {
+  107 |       await failAgentRun(runId, 'proposalDraftId missing from session state')
+> 108 |       throw new Error('proposalDraftId missing from session state')
+      |             ^
+  109 |     }
+  110 |
+  111 |     // Fetch proposal and RFP data in parallel
+ POST /api/inngest?fnId=nivedanai-generate-proposal&stepId=step 206 in 2.4s (next.js: 19ms, proxy.ts: 22ms, application-code: 2.3s)
+ GET /api/jobs/b2890451-72b0-4cae-ab95-1c82644a7cf4 200 in 6
 
-  inngest error : 
+ ----------------------------------------------- ----------------------------------------
 
-  ------------------------------------------
-  Error: API key must be provided via constructor or GOOGLE_GENAI_API_KEY or GEMINI_API_KEY environment variable.
-    at new Gemini (file:///C:/Users/ES/Desktop/2025/nivedanai/node_modules/@google/adk/dist/esm/models/google_llm.js:43:13)
-    at _LLMRegistry.newLlm (file:///C:/Users/ES/Desktop/2025/nivedanai/node_modules/@google/adk/dist/esm/models/registry.js:41:12)
-    at get canonicalModel (file:///C:/Users/ES/Desktop/2025/nivedanai/node_modules/@google/adk/dist/esm/agents/llm_agent.js:146:26)
-    at BasicLlmRequestProcessor.runAsync (file:///C:/Users/ES/Desktop/2025/nivedanai/node_modules/@google/adk/dist/esm/agents/processors/basic_llm_request_processor.js:19:30)
-    at runAsync.next (<anonymous>)
-    at LlmAgent.runOneStepAsync (file:///C:/Users/ES/Desktop/2025/nivedanai/node_modules/@google/adk/dist/esm/agents/llm_agent.js:355:24)
-    at runOneStepAsync.next (<anonymous>)
-    at LlmAgent.runAsyncImpl (file:///C:/Users/ES/Desktop/2025/nivedanai/node_modules/@google/adk/dist/esm/agents/llm_agent.js:309:24)
-    at runAsyncImpl.next (<anonymous>)
-    at LlmAgent.<anonymous> (file:///C:/Users/ES/Desktop/2025/nivedanai/node_modules/@google/adk/dist/esm/agents/base_agent.js:71:28)
+ Error: proposalDraftId missing from session state
+    at runQualityReview (C:\Users\ES\Desktop\2025\nivedanai\.next\dev\server\chunks\[root-of-the-server]__0ns9izg._.js:1763:19)
     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-    at async LlmAgent.runAsync (file:///C:/Users/ES/Desktop/2025/nivedanai/node_modules/@google/adk/dist/esm/agents/base_agent.js:57:7)
-    at async Runner.<anonymous> (file:///C:/Users/ES/Desktop/2025/nivedanai/node_modules/@google/adk/dist/esm/runner/runner.js:206:32)
-    at async Runner.runAsync (file:///C:/Users/ES/Desktop/2025/nivedanai/node_modules/@google/adk/dist/esm/runner/runner.js:97:7)
-    at async runClientResearch (C:\Users\ES\Desktop\2025\nivedanai\.next\dev\server\chunks\[root-of-the-server]__0ns9izg._.js:1218:26)
-    at async C:\Users\ES\Desktop\2025\nivedanai\.next\dev\server\chunks\[root-of-the-server]__0ns9izg._.js:1930:9
+    at async C:\Users\ES\Desktop\2025\nivedanai\.next\dev\server\chunks\[root-of-the-server]__0ns9izg._.js:1950:9
     at async goIntervalTiming (C:\Users\ES\Desktop\2025\nivedanai\.next\dev\server\chunks\0uyt_inngest_0whvao.._.js:1932:9)
     at async InngestExecutionEngine.tryExecuteStep (C:\Users\ES\Desktop\2025\nivedanai\.next\dev\server\chunks\0uyt_inngest_0whvao.._.js:7115:26)
     at async steps-found (C:\Users\ES\Desktop\2025\nivedanai\.next\dev\server\chunks\0uyt_inngest_0whvao.._.js:7069:40)

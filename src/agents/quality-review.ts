@@ -101,11 +101,17 @@ export async function runQualityReview(input: QualityReviewInput): Promise<void>
       throw new Error('Pipeline session missing')
     }
 
-    const { proposalDraftId } = session.state as { proposalDraftId: string }
+    const [latestProposal] = await db
+      .select({ id: proposals.id })
+      .from(proposals)
+      .where(eq(proposals.rfpJobId, jobId))
+      .limit(1)
+
+    const proposalDraftId = latestProposal?.id ?? null
 
     if (!proposalDraftId) {
-      await failAgentRun(runId, 'proposalDraftId missing from session state')
-      throw new Error('proposalDraftId missing from session state')
+      await failAgentRun(runId, 'No proposals row found — Proposal Writer may have failed')
+      throw new Error('No proposals row found for this job')
     }
 
     // Fetch proposal and RFP data in parallel
