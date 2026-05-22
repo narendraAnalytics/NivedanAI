@@ -103,7 +103,8 @@ src/app/api/jobs/
                                        clientName, fileName, recipientEmail for workflow page polling
 src/app/api/kb/
   profile/route.ts                   — GET + PATCH company profile (companyName, industry, website, tagline)
-  items/route.ts                     — GET all KB items; POST new item (PDF → pdf-parse → LLM extraction)
+  items/route.ts                     — GET all KB items; POST new item (filename → Gemini extraction → DB insert)
+                                       Uses extractFromFilename() — NOT pdf-parse (hangs on Vercel cold starts)
   items/[itemId]/route.ts            — DELETE KB item
 src/app/api/stats/route.ts           — GET: counts rfp_jobs for current user this calendar month
                                        Returns { jobsThisMonth: number }; used by dashboard StatCards
@@ -286,7 +287,7 @@ const result = await utapi.uploadFiles(file)
 
 **Two endpoints in `src/lib/uploadthing.ts`:**
 - `rfpDocument` — 32 MB PDF; uses `.input(z.object({ recipientEmail: z.string().optional() }))` to receive email from `startUpload(files, { recipientEmail })`; middleware returns `{ userId, companyProfileId, recipientEmail }`; `onUploadComplete` stores `recipientEmail` in `rfpJobs` and threads it into the Inngest event
-- `kbDocument` — 16 MB PDF; middleware returns `{}` (no auth — avoids Next.js async-storage issues in UT middleware context); `onUploadComplete` returns `{ fileUrl }` only; auth + text extraction happen entirely in `POST /api/kb/items` (fetches PDF → pdf-parse → LLM → DB insert). `extractFromPdf` wraps the entire body in try-catch, falling back to empty metadata on any failure. **Uses `{ awaitServerData: true }` — required or client receives `serverData: null` in production (v7 default is false).**
+- `kbDocument` — 16 MB PDF; middleware returns `{}` (no auth — avoids Next.js async-storage issues in UT middleware context); `onUploadComplete` returns `{ fileUrl }` only; auth + metadata extraction happen entirely in `POST /api/kb/items`. **Does NOT use `awaitServerData` — client reads `files[0].ufsUrl` directly (always available), not `serverData`. See rule 6 in Vercel Serverless Production Rules below.**
 
 **Recipient email thread:** `startUpload(files, { recipientEmail })` → UploadThing `.input()` → `rfpJobs.recipient_email` DB column → `nivedan/rfp.submitted` event `data.recipientEmail` → Inngest step 8 `event.data.recipientEmail ?? user?.email` → Resend `to:` address. If user leaves field empty, falls back to Clerk sign-up email.
 
@@ -296,10 +297,7 @@ const result = await utapi.uploadFiles(file)
 
 These caused silent failures in production — do not repeat:
 
-1. **`awaitServerData: true` on any UploadThing route that returns serverData** — v7 defaults to `false`; without it `serverData` is `null` on the client even though the server callback ran:
-   ```typescript
-   kbDocument: f({ pdf: { maxFileSize: '16MB' } }, { awaitServerData: true })
-   ```
+1. **`awaitServerData: true` only for routes where the client MUST receive serverData** — e.g. `rfpDocument` which returns `{ jobId }` needed for navigation. Do NOT use for `kbDocument` — instead read `files[0].ufsUrl` directly on the client (always available, no server round-trip). Using `awaitServerData` when the callback can fail silently blocks the client.
 
 2. **`export const maxDuration = 60` on any API route doing LLM or PDF work** — Vercel default is 10s; PDF fetch + pdf-parse + Gemini call takes 20–40s. Place at module level after imports:
    ```typescript
@@ -322,7 +320,17 @@ These caused silent failures in production — do not repeat:
    ]).then(([p, items]) => { ... }).catch(() => setLoading(false))
    ```
 
-5. **`pdf-parse` is unreliable on Vercel serverless** — even with `serverExternalPackages`, `PDFParse` can throw on Linux cold starts. Always wrap `extractFromPdf`-style functions in an outer try/catch that returns empty metadata rather than propagating the error.
+5. **`pdf-parse` MUST NOT be used in Vercel API routes** — it silently hangs (not throws) on cold starts, keeping the function alive until Vercel kills it with a timeout. A try/catch does NOT protect against hangs. The `/api/kb/items` route previously used pdf-parse and was broken in production for this reason. **Use Gemini directly on the filename instead** (`extractFromFilename` in `src/app/api/kb/items/route.ts`).
+
+6. **`kbDocument` UploadThing endpoint — never use `serverData` on the client** — on Vercel, the UT server callback can be delayed or fail, leaving `serverData` null. Always use `files[0].ufsUrl` in `onClientUploadComplete` — it is always populated from the UT upload result regardless of server callback status:
+   ```typescript
+   onClientUploadComplete: (files) => {
+     const fileUrl = files[0]?.ufsUrl
+       ?? (files[0]?.serverData as { fileUrl?: string } | null)?.fileUrl
+       ?? ''
+     if (fileUrl) onUploaded(fileUrl)
+   }
+   ```
 
 ### generateContent config — all agents
 
