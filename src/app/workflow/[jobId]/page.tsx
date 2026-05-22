@@ -178,7 +178,7 @@ function PageHeader({ clientName, fileName }: { clientName: string | null; fileN
 }
 
 /* ── Circular progress ── */
-function CircularProgress({ value, etaMin, etaMax }: { value: number; etaMin: number; etaMax: number }) {
+function CircularProgress({ value, etaMin, etaMax, isDone }: { value: number; etaMin: number; etaMax: number; isDone: boolean }) {
   const size = 92
   const stroke = 7
   const r = (size - stroke) / 2
@@ -230,12 +230,14 @@ function CircularProgress({ value, etaMin, etaMax }: { value: number; etaMin: nu
           fontFamily: 'var(--f-display-serif)', fontWeight: 600, fontSize: 15,
           color: 'var(--ink)', marginBottom: 3,
         }}>Overall Progress</div>
-        <div style={{ fontSize: 12, color: 'var(--gold-deep)', fontWeight: 500 }}>Estimated time left</div>
+        <div style={{ fontSize: 12, color: isDone ? 'var(--forest)' : 'var(--gold-deep)', fontWeight: 500 }}>
+          {isDone ? 'All agents done' : 'Estimated time left'}
+        </div>
         <div style={{
-          fontFamily: 'var(--f-mono)', fontSize: 13, color: 'var(--gold-deep)',
+          fontFamily: 'var(--f-mono)', fontSize: 13, color: isDone ? 'var(--forest)' : 'var(--gold-deep)',
           fontWeight: 600, marginTop: 1,
         }}>
-          {etaMin} – {etaMax} min
+          {isDone ? 'Complete' : `${etaMin} – ${etaMax} min`}
         </div>
       </div>
     </div>
@@ -1037,7 +1039,12 @@ export default function WorkflowPage() {
           </div>
 
           {/* Circular progress */}
-          <CircularProgress value={overallPct} etaMin={etaMin} etaMax={etaMax} />
+          <CircularProgress
+            value={overallPct}
+            etaMin={etaMin}
+            etaMax={etaMax}
+            isDone={job?.status === 'awaiting_review' || job?.status === 'completed'}
+          />
         </div>
 
         {/* RFP banner */}

@@ -2,8 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> This file is the authoritative context document for Claude when working on Nivedan AI.
-> Read this fully before making any code, UI, or architecture decision.
+> Authoritative context document for Nivedan AI. Read fully before making any code, UI, or architecture decision.
 
 ---
 
@@ -27,7 +26,19 @@ npm run db:push      # Push schema directly (avoid — TCP hangs with Neon; use 
 npm run db:studio    # Open Drizzle Studio at localhost:4983
 ```
 
-**Schema changes workflow:** Run `db:generate` to produce SQL in `drizzle/`, then apply via the Neon MCP tool (`mcp__neon__run_sql_transaction`) — `db:push` hangs when connecting to Neon from local machine over TCP.
+**Schema changes workflow:** Run `db:generate` → apply via Neon MCP tool (`mcp__neon__run_sql_transaction`). `db:push` hangs over TCP from local machine.
+
+**Local pipeline testing:** `npm run dev` + Inngest dev server running separately. Re-sync after every deploy at `https://nivedan-ai.vercel.app/api/inngest` in Inngest Cloud.
+
+---
+
+## What Is Nivedan AI?
+
+Autonomous, multi-agent SaaS that turns an uploaded RFP PDF into a submission-ready branded proposal PDF in 15–20 minutes via a 6-agent pipeline.
+
+- **Stack:** Next.js 15 · Neon PostgreSQL · Drizzle ORM · Clerk auth · UploadThing · Resend · Vercel
+- **AI:** Google Agent Development Kit (ADK) TypeScript + `@google/genai` direct
+- **Models:** `gemini-3.1-pro-preview` (Orchestrator, Writer) · `gemini-3.1-flash` (Client Research) · `gemini-3.1-flash-lite` (Parser, Matcher, Reviewer)
 
 ---
 
@@ -35,537 +46,202 @@ npm run db:studio    # Open Drizzle Studio at localhost:4983
 
 ### Database — `src/db/`
 
-Schema is split into 5 domain files, all re-exported from `src/db/schema/index.ts`:
+Schema in 5 domain files, all re-exported from `src/db/schema/index.ts`:
 
 | File | Tables |
 |---|---|
 | `users.ts` | `users` — Clerk user sync target |
 | `company.ts` | `company_profiles`, `knowledge_base_items` |
-| `jobs.ts` | `rfp_jobs` (includes `recipient_email text` nullable), `rfp_documents`, `agent_runs` |
+| `jobs.ts` | `rfp_jobs` (includes `recipient_email` nullable), `rfp_documents`, `agent_runs` |
 | `agent-outputs.ts` | `parsed_rfp_data`, `client_research_data`, `capability_matches` |
 | `proposals.ts` | `proposals`, `proposal_exports`, `hitl_reviews` |
 
-`src/db/index.ts` creates a single `db` export using `drizzle-orm/neon-http` (HTTP driver — required for Vercel/serverless; never use `pg` or WebSocket driver).
+`src/db/index.ts` — single `db` export via `drizzle-orm/neon-http` (HTTP driver — required for Vercel serverless; never use `pg` or WebSocket driver).
 
-Critical schema rules:
-- `users.id` is `text` (Clerk IDs are `user_xxx` strings — **never** `uuid`)
+**Schema rules:**
+- `users.id` is `text` (Clerk IDs are `user_xxx` — **never** `uuid`)
 - All FKs to `users.id` are also `text`
 - All other PKs are `uuid().defaultRandom()`
 - All FK constraints use `{ onDelete: 'cascade' }` except `capability_matches.knowledge_base_item_id` which uses `set null`
+- `capability_matches.confidenceScore` is `numeric(3,2)` — always pass `String(score)`, not a raw number
 
 ### Auth — `src/middleware.ts` + `src/lib/auth.ts`
 
-- Middleware is `src/middleware.ts` (not `src/proxy.ts`) — public routes: `/`, `/sign-in(.*)`, `/sign-up(.*)`, `/api/inngest`, `/api/uploadthing`
-- `src/lib/auth.ts` exports `getOrCreateUser()` — call at the top of every protected API route. It lazy-creates the `users` row on first login using `currentUser()` (not `sessionClaims` — Clerk v7 JWT excludes email by default), and syncs the Clerk billing plan on every call via `has({ plan })`.
-- `src/app/api/auth/sync/route.ts` — protected GET route Clerk redirects to after sign-in/sign-up. Calls `getOrCreateUser()` then redirects to `/`.
+- Public routes: `/`, `/sign-in(.*)`, `/sign-up(.*)`, `/api/inngest`, `/api/uploadthing`
+- `getOrCreateUser()` in `src/lib/auth.ts` — call at top of every protected API route. Uses `currentUser()` (not `sessionClaims` — Clerk v7 JWT excludes email by default).
+- Sign-in/sign-up → `/api/auth/sync` → lazy-creates `users` row → redirects to `/`
 
-### Current Build State
+### Six-Agent Pipeline
 
-| Area | Status |
-|---|---|
-| Landing page (`/`) | Complete — 11 components in `src/components/landing/` |
-| Clerk auth (sign-in, sign-up, sync) | Complete |
-| Neon DB schema (all 12 tables) | Created via Neon MCP |
-| Dashboard (`/dashboard`) | Complete — upload triggers redirect to `/workflow/[jobId]`; pipeline preview shown as demo |
-| Inngest foundation (Stage 0) | Complete — pipeline shell wired, verified on Inngest Cloud |
-| Agent 01 — Orchestrator | Complete — `src/agents/orchestrator.ts` |
-| Agent 02 — RFP Parser | Complete — `src/agents/rfp-parser.ts` |
-| Agent 03 — Client Research | Complete — `src/agents/client-research.ts` + `src/agents/search-agent.ts` |
-| Agent 04 — Requirements Matcher | Complete — `src/agents/requirements-matcher.ts` |
-| Agent 05 — Proposal Writer | Complete — `src/agents/proposal-writer.ts` |
-| Agent 06 — Quality Review | Complete — `src/agents/quality-review.ts` |
-| HITL Gate (Stage 7) | Complete — approve + changes API routes + `handle-hitl-changes.ts` |
-| PDF Export & Delivery (Stage 8) | Complete — `@react-pdf/renderer` + UploadThing server upload + Resend |
-| UploadThing RFP upload | Complete — `src/lib/uploadthing.ts` + `src/utils/uploadthing.ts` |
-| Workflow page (`/workflow/[jobId]`) | Complete — redesigned single-column, 2×3 agent grid, circular progress, QualityFooter shows recipient email |
-| Knowledge Base (`/knowledge-base`) | Complete — company profile editor, PDF upload with AI extraction, manual form, item list |
+All agents live in `src/agents/` and are called from `src/inngest/functions/generate-proposal.ts` via `step.run()`.
 
-### Infrastructure — `src/inngest/` + `src/lib/adk/` + `src/db/helpers/` + `src/agents/`
+| # | File | Model | Role |
+|---|------|-------|------|
+| 1 | `orchestrator.ts` | gemini-3.1-pro-preview | Validates inputs, LLM pipeline directive, `createSession` |
+| 2 | `rfp-parser.ts` | gemini-3.1-flash-lite | Fetches PDF → base64 `inlineData` → Gemini native PDF reading → `parsedRfpData` |
+| 3 | `client-research.ts` + `search-agent.ts` | gemini-3.1-flash | `LlmAgent` + Runner + `GOOGLE_SEARCH` tool → `clientResearchData` |
+| 4 | `requirements-matcher.ts` | gemini-3.1-flash-lite | Queries KB, per-requirement LLM match → `capability_matches` |
+| 5 | `proposal-writer.ts` | gemini-3.1-pro-preview | 8-section JSON proposal → `proposals` row |
+| 6 | `quality-review.ts` | gemini-3.1-flash-lite | 5 quality checks, applies corrections, sets `awaiting_review` |
 
+**Pipeline flow:**
 ```
-src/inngest/
-  client.ts                          — Inngest client: new Inngest({ id: 'nivedanai' })
-                                       Also exports NivedanEvents type for all 6 event shapes
-  functions/
-    generate-proposal.ts             — Pipeline: all 8 steps wired
-                                       Steps 1-6: agents; step 7: waitForEvent HITL (7d timeout); step 8: PDF export + email
-    handle-hitl-changes.ts           — Separate function triggered by nivedan/hitl.changes.requested
-                                       Rewrites flagged sections via LLM → re-runs quality review
-                                       Main pipeline stays paused until user re-approves
-
-src/app/api/inngest/route.ts         — Inngest serve route (GET/POST/PUT); public in middleware
-src/app/api/proposals/
-  [jobId]/approve/route.ts           — POST: inserts hitlReviews (approved), fires nivedan/hitl.approved
-  [jobId]/changes/route.ts           — POST: inserts hitlReviews (changes_requested), fires nivedan/hitl.changes.requested
-src/app/api/uploadthing/route.ts     — GET/POST: UploadThing route handler; public in middleware
-src/app/api/jobs/
-  [jobId]/route.ts                   — GET: left-joins rfp_documents; returns status, currentAgent, currentActivity,
-                                       clientName, fileName, recipientEmail for workflow page polling
-src/app/api/kb/
-  profile/route.ts                   — GET + PATCH company profile (companyName, industry, website, tagline)
-  items/route.ts                     — GET all KB items; POST new item (filename → Gemini extraction → DB insert)
-                                       Uses extractFromFilename() — NOT pdf-parse (hangs on Vercel cold starts)
-  items/[itemId]/route.ts            — DELETE KB item
-src/app/api/stats/route.ts           — GET: counts rfp_jobs for current user this calendar month
-                                       Returns { jobsThisMonth: number }; used by dashboard StatCards
-
-src/app/workflow/[jobId]/page.tsx    — Live pipeline page: polls /api/jobs/[jobId] every 3s, single-column layout
-                                       Components: PageHeader, CircularProgress (overall %), RfpBanner, StatusBadge,
-                                       AgentRow (2×3 grid, pulseGoldRing on active), QualityFooter, QuoteBlock, HitlPanel
-                                       JobStatus type includes: recipientEmail, fileName, clientName, currentActivity
-                                       userEmail = job.recipientEmail ?? clerk primary email ?? fallback string
-                                       Fonts: --f-display-serif (agent titles), --f-mono (badges)
-src/app/knowledge-base/page.tsx      — KB management: company profile editor, PDF upload (AI auto-extracts
-                                       title/description/tags via gemini-3.1-flash-lite), manual form, item list
-
-src/agents/                          — One file per agent; called from Inngest step.run()
-  orchestrator.ts                    — Agent 1: validates inputs, LLM directive, createSession
-  rfp-parser.ts                      — Agent 2: fetch PDF → pdf-parse → LLM → parsedRfpData
-  search-agent.ts                    — Search sub-agent (LlmAgent + GOOGLE_SEARCH tool); used only by client-research
-  client-research.ts                 — Agent 3: LlmAgent + Runner; delegates web lookups to search-agent → clientResearchData
-  requirements-matcher.ts            — Agent 4: queries knowledge_base_items, per-requirement LLM match,
-                                       bulk inserts capability_matches with confidenceScore (String(), not number)
-  proposal-writer.ts                 — Agent 5: gemini-3.1-pro, temperature 0.7, 8-section JSON output,
-                                       inserts proposals row, writes proposalDraftId to session
-  quality-review.ts                  — Agent 6: gemini-3.1-flash-lite, temperature 0.1, 5 quality checks,
-                                       updates proposals row, calls updateJobStatus(jobId, 'awaiting_review')
-
-src/lib/
-  uploadthing.ts                     — FileRouter: rfpDocument endpoint (32MB PDF); middleware: getOrCreateUser;
-                                       .input(z.object({ recipientEmail: z.string().optional() })) — passes email from client
-                                       onUploadComplete: creates rfpJobs (with recipientEmail) + rfpDocuments + fires nivedan/rfp.submitted
-                                       Returns { jobId } as serverData
-  pdf/
-    generate.tsx                     — generateProposalPdf(): @react-pdf/renderer JSX → renderToBuffer()
-                                       Cover page + TOC + 8 section pages; buildStyles(primary, secondary) for branding
-                                       Footer with fixed prop + render={({ pageNumber, totalPages }) => ...}
-
-src/utils/
-  uploadthing.ts                     — Client-side: generateReactHelpers<OurFileRouter>() → exports useUploadThing
-                                       (NOT generateUploadHook — that doesn't exist in @uploadthing/react v7)
-
-src/lib/adk/
-  session.ts                         — InMemorySessionService singleton (shared by ALL agents)
-  memory.ts                          — InMemoryMemoryService singleton (Agent 3+ only)
-  runner.ts                          — createRunner(agent) factory — used only by agents with LlmAgent
-
-src/db/helpers/
-  job-status.ts                      — createAgentRun, completeAgentRun, failAgentRun,
-                                       updateJobStatus, updateCurrentAgent, updateJobActivity
+Inngest: nivedan/rfp.submitted
+  → step-1-orchestrator → step-2-rfp-parser → step-3-client-research
+  → step-4-requirements-matcher → step-5-proposal-writer → step-6-quality-review
+  → step.waitForEvent (HITL, 7d timeout)
+  → step-8-pdf-export (PDF → UploadThing + Resend email)
 ```
 
-**Live activity pattern:** Call `updateJobActivity(jobId, message)` at each meaningful step inside every agent — this writes to `rfp_jobs.current_activity` and is polled by the workflow page every 3s to show real-time progress to the user. Import from `@/db/helpers/job-status`.
+**Live activity:** Call `updateJobActivity(jobId, message)` at each meaningful step — writes to `rfp_jobs.current_activity`, polled every 3s by `/workflow/[jobId]`.
 
-**ADK singleton rule:** Import `sessionService` from `@/lib/adk/session` — never `new InMemorySessionService()` inside an agent. Direct state mutation: `Object.assign(session.state, { ... })` — `InMemorySessionService` has no `updateSession` method.
+### ADK Session — Critical Inngest Caveat
 
-**`memoryService` usage:** NOT used in Agents 1, 2, 4, 5, 6 (no Runner). Only wired into Agent 3 via `createRunner()`. Call `memoryService.addSessionToMemory(session)` once after all agents complete in `generate-proposal.ts`.
+**`InMemorySessionService` mutations do NOT survive across Inngest step boundaries.**
 
-### ADK Implementation Pattern per Agent Type
+Inngest replays the function body on each step execution, skipping already-completed step callbacks. This means `Object.assign(session.state, { key: value })` from step N is NOT visible when step N+1 executes (the callback was never called in that HTTP request).
 
-| Agent | LLM approach | memoryService | sessionService |
-|-------|-------------|---------------|----------------|
-| 1 Orchestrator | `generateContent` one-shot | ❌ | `createSession` |
-| 2 RFP Parser | `generateContent` one-shot | ❌ | `getSession` + `Object.assign(session.state)` |
-| 3 Client Research | `LlmAgent` + `createRunner()` | ✅ via Runner | `getSession` + `Object.assign` |
-| 4–6 | `generateContent` one-shot | ❌ | `getSession` + `Object.assign` |
+**Rule:** Never read session state that was written by a *different* agent step. Read from the DB instead.
 
-**`GoogleGenAI` constructor — all agents using gemini-3.1 models:**
 ```typescript
-const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY!, apiVersion: 'v1alpha' })
+// ❌ Broken — proposalDraftId was set by step 5, but step 6 never sees it
+const { proposalDraftId } = session.state as { proposalDraftId: string }
+
+// ✅ Correct — query DB directly
+const [row] = await db.select({ id: proposals.id })
+  .from(proposals).where(eq(proposals.rfpJobId, jobId)).limit(1)
+const proposalDraftId = row?.id ?? null
 ```
 
-**pdf-parse v2 API** (v2.4.5 — class-based, no default export):
-```typescript
-import { PDFParse } from 'pdf-parse'
-const parser = new PDFParse({ data: buffer })
-const [textResult, infoResult] = await Promise.all([parser.getText(), parser.getInfo()])
-const text = textResult.pages.map((p: { text: string }) => p.text).join('\n')
-const pageCount = infoResult.total ?? 0
-await parser.destroy()
-```
+Session state IS reliable for data the Orchestrator writes at `createSession` (step 1 creates the session; steps 2–6 read initial values like `rfpDocumentUrl`, `companyName`, `pipelineDirective`).
+
+**ADK singleton rule:** Import `sessionService` from `@/lib/adk/session` — never `new InMemorySessionService()`. Mutate via `Object.assign(session.state, { ... })`.
+
+**`memoryService`:** Only wired into Agent 3 via `createRunner()`. Not used in any other agent.
+
+### ADK Implementation Pattern per Agent
+
+| Agent | LLM approach | sessionService |
+|-------|-------------|----------------|
+| 1 Orchestrator | `generateContent` one-shot | `createSession` |
+| 2 RFP Parser | `generateContent` one-shot | `getSession` + `Object.assign` |
+| 3 Client Research | `LlmAgent` + `createRunner()` | `getSession` + `Object.assign` |
+| 4–6 | `generateContent` one-shot | `getSession` + `Object.assign` |
 
 ### @google/adk TypeScript API — Confirmed Correct Patterns
 
-These were discovered by reading `node_modules/@google/adk/dist/types/` — do not revert:
+Read from `node_modules/@google/adk/dist/types/` — do not revert:
 
-1. **All ADK exports from root only** — no sub-path imports:
+1. **All ADK exports from root only:**
    ```typescript
-   // ✅ Correct
-   import { LlmAgent, GOOGLE_SEARCH } from '@google/adk'
-   // ❌ Wrong — these paths do not exist in the TypeScript package
-   import { LlmAgent } from '@google/adk/agents'
-   import { googleSearch } from '@google/adk/tools'
+   import { LlmAgent, GOOGLE_SEARCH } from '@google/adk'  // ✅
+   import { LlmAgent } from '@google/adk/agents'           // ❌ path doesn't exist
    ```
 
-2. **Google Search tool is `GOOGLE_SEARCH`** (uppercase constant), not `googleSearch`
+2. **`GOOGLE_SEARCH`** (uppercase constant), not `googleSearch`
 
-3. **Sub-agents property is `subAgents`**, not `agents`:
-   ```typescript
-   new LlmAgent({ subAgents: [searchAgent], ... })
-   ```
+3. **Sub-agents property is `subAgents`**, not `agents`
 
-4. **`runner.runAsync()` takes a single params object** (not positional args):
+4. **`runner.runAsync()` returns `AsyncGenerator<Event>`:**
    ```typescript
-   runner.runAsync({ userId, sessionId: jobId, newMessage: { role: 'user', parts: [{ text: prompt }] } })
-   ```
-
-5. **`runner.runAsync()` returns `AsyncGenerator<Event>`** — iterate with `for await`:
-   ```typescript
-   for await (const event of runner.runAsync({ ... })) {
+   for await (const event of runner.runAsync({ userId, sessionId: jobId, newMessage: { role: 'user', parts: [{ text: prompt }] } })) {
      const text = event.content?.parts?.[0]?.text
      if (text) finalText = text
    }
    ```
 
-### Inngest v4 API Rules (v4.4.0 — breaking changes from v3)
+5. **ADK env var:** `LlmAgent` reads `GOOGLE_GENAI_API_KEY` or `GEMINI_API_KEY` — **not** `GOOGLE_API_KEY`. The alias in `client-research.ts` fixes this:
+   ```typescript
+   process.env.GOOGLE_GENAI_API_KEY ??= process.env.GOOGLE_API_KEY
+   ```
 
-These bit us during build — do not repeat:
+### `@google/genai` — All Direct Agents
 
-1. **`EventSchemas` does not exist in v4** — `new Inngest({ id: '...' })` only; define event types separately as a TypeScript `type`
-2. **`createFunction` takes 2 arguments, not 3** — trigger moves inside the config object:
+```typescript
+const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY!, apiVersion: 'v1alpha' })
+
+const result = await ai.models.generateContent({
+  model: 'gemini-3.1-pro-preview',
+  contents: [{ role: 'user', parts: [{ text: prompt }] }],
+  config: { temperature: 0.3, maxOutputTokens: 2048, responseMimeType: 'application/json' },
+})
+```
+
+Use `config:` not `generationConfig:`. Use `responseMimeType: 'application/json'` for agents that output JSON — avoids markdown fence wrapping and parse errors.
+
+**Gemini inline PDF (Agent 2):**
+```typescript
+const pdfBase64 = Buffer.from(await fetch(url).then(r => r.arrayBuffer())).toString('base64')
+// Pass as inlineData — Gemini reads PDF natively, no extraction library needed
+parts: [
+  { inlineData: { mimeType: 'application/pdf', data: pdfBase64 } },
+  { text: prompt },
+]
+```
+
+### Inngest v4 API (v4.4.0 — breaking changes from v3)
+
+1. **`EventSchemas` does not exist** — `new Inngest({ id: '...' })` only; event types as a TypeScript `type`
+2. **`createFunction` takes 2 args** — trigger inside config:
    ```typescript
    inngest.createFunction(
      { id: 'generate-proposal', triggers: [{ event: 'nivedan/rfp.submitted' }] },
      async ({ event, step }) => { ... }
    )
    ```
-3. **`step.waitForEvent` uses `if:` not `match:`** for event correlation:
+3. **`step.waitForEvent` uses `if:`** not `match:` for correlation:
    ```typescript
-   step.waitForEvent('wait-for-hitl', {
-     event: 'nivedan/hitl.approved',
-     timeout: '7d',
-     if: 'event.data.jobId == async.data.jobId',
-   })
+   step.waitForEvent('wait-for-hitl', { event: 'nivedan/hitl.approved', timeout: '7d', if: 'event.data.jobId == async.data.jobId' })
    ```
-4. **`INNGEST_DEV=1`** — only in `.env.local` for local dev; never on Vercel
-5. **Inngest Cloud sync URL:** `https://nivedan-ai.vercel.app/api/inngest` — re-sync after every deploy
+4. **`INNGEST_DEV=1`** — only in `.env.local`; never on Vercel
 
-### UploadThing v7 API — Critical Patterns
+### UploadThing v7 (uploadthing@^7.7.4, @uploadthing/react@^7.3.3)
 
-Package versions: `uploadthing@^7.7.4`, `@uploadthing/react@^7.3.3`.
+**Env var:** Single `UPLOADTHING_TOKEN` (base64 JSON) — replaces v6's `UPLOADTHING_SECRET` + `UPLOADTHING_APP_ID`.
 
-**Environment variable — v7 breaking change:** v7 replaced `UPLOADTHING_SECRET` + `UPLOADTHING_APP_ID` with a single `UPLOADTHING_TOKEN` (base64-encoded JSON containing apiKey + appId + region). Get the token from the UploadThing dashboard → API Keys tab. Both `.env` (local) and Vercel env vars must use `UPLOADTHING_TOKEN`.
-
-**Server-side (FileRouter):**
-```typescript
-import { createUploadthing, type FileRouter } from 'uploadthing/next'
-const f = createUploadthing()
-export const ourFileRouter = { ... } satisfies FileRouter
-export type OurFileRouter = typeof ourFileRouter
-```
-
-**Route handler** (`src/app/api/uploadthing/route.ts`):
-```typescript
-import { createRouteHandler } from 'uploadthing/next'
-export const { GET, POST } = createRouteHandler({ router: ourFileRouter })
-```
-
-**Client-side hook** — use `generateReactHelpers`, NOT `generateUploadHook` (doesn't exist in v7):
+**Client hook** — `generateReactHelpers`, NOT `generateUploadHook` (doesn't exist in v7):
 ```typescript
 import { generateReactHelpers } from '@uploadthing/react'
 export const { useUploadThing } = generateReactHelpers<OurFileRouter>()
 ```
 
-**In components:**
-```typescript
-const { startUpload } = useUploadThing('rfpDocument', {
-  onClientUploadComplete: (files) => { const jobId = files[0]?.serverData?.jobId },
-  onUploadError: () => { ... },
-})
-```
+**File URL:** `file.ufsUrl` (not `file.url`) in `onUploadComplete`.
 
-**Server-side upload (PDF export):**
+**Server-side upload:**
 ```typescript
-import { UTApi } from 'uploadthing/server'
-const utapi = new UTApi()
 const file = new File([new Uint8Array(pdfBuffer)], fileName, { type: 'application/pdf' })
-// ⚠️ Must use new Uint8Array(buffer), NOT raw Buffer — TypeScript BlobPart incompatibility
-const result = await utapi.uploadFiles(file)
+// Must use new Uint8Array(buffer), NOT raw Buffer — TypeScript BlobPart incompatibility
+await new UTApi().uploadFiles(file)
 ```
-
-**File URL property:** `file.ufsUrl` (not `file.url`) in v7 `onUploadComplete` handler.
 
 **Two endpoints in `src/lib/uploadthing.ts`:**
-- `rfpDocument` — 32 MB PDF; uses `.input(z.object({ recipientEmail: z.string().optional() }))` to receive email from `startUpload(files, { recipientEmail })`; middleware returns `{ userId, companyProfileId, recipientEmail }`; `onUploadComplete` stores `recipientEmail` in `rfpJobs` and threads it into the Inngest event
-- `kbDocument` — 16 MB PDF; middleware returns `{}` (no auth — avoids Next.js async-storage issues in UT middleware context); `onUploadComplete` returns `{ fileUrl }` only; auth + metadata extraction happen entirely in `POST /api/kb/items`. **Does NOT use `awaitServerData` — client reads `files[0].ufsUrl` directly (always available), not `serverData`. See rule 6 in Vercel Serverless Production Rules below.**
+- `rfpDocument` — 32 MB; takes `recipientEmail` via `.input()`; `onUploadComplete` creates `rfpJobs` + fires `nivedan/rfp.submitted`; returns `{ jobId }` as `serverData`
+- `kbDocument` — 16 MB; `onUploadComplete` returns `{ fileUrl }` only; client reads `files[0].ufsUrl` directly (never `serverData` — can be null on Vercel)
 
-**Recipient email thread:** `startUpload(files, { recipientEmail })` → UploadThing `.input()` → `rfpJobs.recipient_email` DB column → `nivedan/rfp.submitted` event `data.recipientEmail` → Inngest step 8 `event.data.recipientEmail ?? user?.email` → Resend `to:` address. If user leaves field empty, falls back to Clerk sign-up email.
+**Recipient email thread:** `startUpload(files, { recipientEmail })` → DB `rfpJobs.recipient_email` → Inngest event → Resend `to:`. Falls back to Clerk sign-up email.
 
-**`getOrCreateProfile(userId)`** — shared helper inside `src/lib/uploadthing.ts`: SELECT → INSERT on miss. Both endpoints use it. Never pass empty string as `companyProfileId`.
+### Vercel Serverless — Production Rules
 
-### Vercel Serverless Production Rules
+Silent failures that burned us:
 
-These caused silent failures in production — do not repeat:
+1. **`pdf-parse` must NEVER be used in Vercel routes** — silently hangs on cold starts; a try/catch does NOT protect. Use Gemini on filename (`extractFromFilename` in `/api/kb/items/route.ts`) or pass PDF as `inlineData`.
 
-1. **`awaitServerData: true` only for routes where the client MUST receive serverData** — e.g. `rfpDocument` which returns `{ jobId }` needed for navigation. Do NOT use for `kbDocument` — instead read `files[0].ufsUrl` directly on the client (always available, no server round-trip). Using `awaitServerData` when the callback can fail silently blocks the client.
+2. **`export const maxDuration = 60`** on any route doing LLM or PDF work — default is 10s.
 
-2. **`export const maxDuration = 60` on any API route doing LLM or PDF work** — Vercel default is 10s; PDF fetch + pdf-parse + Gemini call takes 20–40s. Place at module level after imports:
+3. **All API routes must have try/catch returning JSON** — uncaught throws return HTML, `r.json()` throws, breaking `Promise.all` silently.
+
+4. **Client `Promise.all` fetches:** use `r.ok ? r.json() : fallback` — bare `.then(r => r.json())` throws on non-2xx.
+
+5. **`awaitServerData: true` only when client MUST have `serverData`** (e.g. `rfpDocument` → `jobId`). `kbDocument` does not use it; read `files[0].ufsUrl` directly.
+
+6. **`@react-pdf/renderer` in `next.config.ts`:**
    ```typescript
-   export const maxDuration = 60  // src/app/api/kb/items/route.ts
+   serverExternalPackages: ['@react-pdf/renderer']
    ```
 
-3. **All API routes must have try/catch returning JSON** — if a handler throws uncaught, Next.js returns an HTML error page. Client `r.ok` is false and `r.json()` throws, silently breaking the calling `Promise.all`:
-   ```typescript
-   export async function GET() {
-     try { ... return NextResponse.json(data) }
-     catch { return NextResponse.json({ error: 'failed' }, { status: 500 }) }
-   }
-   ```
+### UI — Design Tokens (globals.css)
 
-4. **Client-side `Promise.all` fetches must use `r.ok ? r.json() : fallback`** — a bare `.then(r => r.json())` throws on any non-2xx response and, without `.catch()`, leaves state never updated:
-   ```typescript
-   Promise.all([
-     fetch('/api/kb/profile').then(r => r.ok ? r.json() : null),
-     fetch('/api/kb/items').then(r => r.ok ? r.json() : []),
-   ]).then(([p, items]) => { ... }).catch(() => setLoading(false))
-   ```
-
-5. **`pdf-parse` MUST NOT be used in Vercel API routes** — it silently hangs (not throws) on cold starts, keeping the function alive until Vercel kills it with a timeout. A try/catch does NOT protect against hangs. The `/api/kb/items` route previously used pdf-parse and was broken in production for this reason. **Use Gemini directly on the filename instead** (`extractFromFilename` in `src/app/api/kb/items/route.ts`).
-
-6. **`kbDocument` UploadThing endpoint — never use `serverData` on the client** — on Vercel, the UT server callback can be delayed or fail, leaving `serverData` null. Always use `files[0].ufsUrl` in `onClientUploadComplete` — it is always populated from the UT upload result regardless of server callback status:
-   ```typescript
-   onClientUploadComplete: (files) => {
-     const fileUrl = files[0]?.ufsUrl
-       ?? (files[0]?.serverData as { fileUrl?: string } | null)?.fileUrl
-       ?? ''
-     if (fileUrl) onUploaded(fileUrl)
-   }
-   ```
-
-### generateContent config — all agents
-
-Use `config:` not `generationConfig:`:
-```typescript
-const result = await model.generateContent({
-  contents: [{ role: 'user', parts: [{ text: prompt }] }],
-  config: { temperature: 0.7, maxOutputTokens: 8192 },
-})
-```
-
-### @react-pdf/renderer — serverExternalPackages
-
-Add to `next.config.ts` to prevent bundling issues:
-```typescript
-serverExternalPackages: ['@react-pdf/renderer']
-```
-
-### capability_matches.confidenceScore — numeric column
-
-Drizzle `numeric(3,2)` requires string input. Always pass `String(score)`:
-```typescript
-confidenceScore: String(m.confidenceScore)  // not the raw number
-```
-
-### Utilities
-
-- `src/lib/utils.ts` — exports `cn()` (clsx + tailwind-merge). Use for all `className` composition.
-- CSS variables and Tailwind tokens live in `src/app/globals.css` `@theme inline {}` — never `tailwind.config.ts`.
-
----
-
-## Skills (always load before working in these areas)
-
-```
-Frontend / UI work:           C:\Users\ES\.claude\skills\nextstack.skill
-                              C:\Users\ES\.claude\skills\multigentsadk.skill
-```
-
-## What Is Nivedan AI?
-
-**Nivedan AI** is an autonomous, multi-agent SaaS platform that transforms how agencies, freelancers, and sales teams respond to RFPs (Request for Proposals).
-
-- **Name origin:** निवेदन — Hindi/Sanskrit for a formal, respectful submission. This is what an RFP response is: a professionally written proposal submitted to win a contract, government tender, or enterprise deal.
-- **Framework:** Google Agent Development Kit (ADK) with TypeScript
-- **Models:** `gemini-3.1-pro` (Orchestrator & Writer) · `gemini-3.1-flash-lite` (Parser, Researcher, Matcher, Reviewer)
-- **Stack:** Next.js 15 · Neon PostgreSQL · Clerk · Drizzle ORM · UploadThing · Resend · Vercel
-- **Deployment:** Single Next.js 15 monorepo on Vercel — no separate backend, no external infrastructure
-
-The platform runs 6 specialized AI agents in a coordinated pipeline that takes an uploaded RFP PDF and produces a submission-ready, branded proposal PDF in **15–20 minutes**.
-
----
-
-## The Problem Being Solved
-
-### Before Nivedan AI
-- Sales manager reads 40-page RFP manually — 3 hours just to understand requirements
-- Writes from a blank doc, copy-pasting from old proposals
-- Proposal feels generic, barely addresses client's situation
-- Reviewer finds missing sections — entire rewrite needed
-- **8–20 hours of senior staff time wasted per proposal**
-- Win rate stuck at 20–25%
-
-### After Nivedan AI
-- RFP parsed in 60 seconds — every requirement extracted
-- Client researched automatically — news, priorities, strategic direction
-- Case studies and past work retrieved from knowledge base
-- Every section tailored to the specific client
-- Quality review checks all mandatory requirements before export
-- **Complete proposal in 15–20 minutes**
-- Win rate improves to 40–50%
-
-**Business impact:** One extra contract won per month = ₹25–50 lakhs additional annual revenue. The subscription pays for itself in the first hour of use.
-
----
-
-## The Six-Agent Pipeline
-
-Each agent has one clearly defined job. Outputs are structured JSON passed sequentially. This is **not** prompt renaming — each agent has distinct responsibility, business role, and structured output.
-
-| # | Agent | Role | Model |
-|---|-------|------|-------|
-| 01 | **Orchestrator Agent** | Root ADK agent. Creates session state, routes pipeline, handles retries/failures gracefully. | gemini-3.1-pro |
-| 02 | **RFP Parser Agent** | Reads entire RFP document. Extracts mandatory vs optional requirements, budget, timeline, evaluation criteria, compliance needs. Outputs structured RFP Blueprint JSON. | gemini-3.1-flash-lite |
-| 03 | **Client Research Agent** | Web searches the client company for recent news, funding, leadership changes, strategic priorities. Makes proposals feel deeply client-aware. | gemini-3.1-flash |
-| 04 | **Requirements Matcher Agent** | Searches company knowledge base (past proposals, case studies, certifications, team bios). Maps every RFP requirement to strongest proof point with confidence scores. | gemini-3.1-flash-lite |
-| 05 | **Proposal Writer Agent** | Core creative agent. Uses all prior structured outputs to write the full proposal: Executive Summary, Solution, Technical Approach, Case Studies, Team, Timeline, Pricing. | gemini-3.1-pro |
-| 06 | **Quality Review & Export Agent** | Validates every mandatory requirement is addressed. Catches conflicts (e.g. timeline mismatch). Exports branded PDF with company logo, colors, TOC, cover page, page numbers. | gemini-3.1-flash-lite |
-
-### End-to-End Flow
-```
-User uploads RFP PDF + company profile
-  → Orchestrator: creates session, routes pipeline
-  → RFP Parser: structured requirements extracted
-  → Client Research: company intelligence gathered
-  → Requirements Matcher: capability map built
-  → Proposal Writer: full draft written
-  → Quality Review & Export: validated → branded PDF
-  → Dashboard view + downloadable PDF + Resend email + saved to Neon DB
-```
-
----
-
-## Target Users & Pricing
-
-| Segment | Use Case | Pricing |
-|---------|----------|---------|
-| Software Agencies | 10–15 RFPs/month, enterprise/hospital/government clients | ₹16,000–₹25,000/mo |
-| Freelance Developers | Upwork/Toptal bids, direct clients | ₹8,000–₹12,000/mo |
-| SaaS Sales Teams | Fortune 500 RFPs, deals worth ₹50L–₹5Cr | ₹25,000–₹40,000/mo |
-| Consulting Firms | Proposal writing as core business cost | ₹25,000–₹40,000/mo |
-| Construction & Infrastructure | Government tenders, complex lengthy RFPs | ₹12,000–₹20,000/mo |
-| EdTech & Research | Grant applications, academic procurement | ₹8,000–₹16,000/mo |
-
----
-
-## Build Roadmap (4 Phases)
-
-### Phase 1 — Build & Prove (Vercel + Inngest)
-- All 6 agents working locally, pipeline end-to-end
-- Structured outputs correct
-- PDF generates properly
-- Real users can use it
-
-### Phase 2 — Add MCP
-- Convert tools (knowledge base search, PDF export, web search) into MCP servers
-- Agents use MCP toolsets instead of direct function calls
-- No change to agent logic — just the tool layer
-
-### Phase 3 — Add A2A
-- Wrap RFP Parser, Client Research, Requirements Matcher as A2A services on Cloud Run
-- Orchestrator calls them via `RemoteA2aAgent`
-- Pipeline becomes distributed and independently scalable
-
-### Phase 4 — Add Evals, HITL, Observability
-- ADK eval framework on each agent
-- Human approval gate before PDF export
-- AgentOps or Galileo for tracing
-
----
-
-## Product Perception & Design Principles
-
-This project is **not** a chatbot wrapper, RAG demo, or tutorial clone. It must present and feel like:
-
-- **Enterprise SaaS** — not hobby AI
-- **Workflow intelligence** — not a chat UI
-- **AI infrastructure** — not prompt engineering
-- **Operational automation** — not content generation
-- **Revenue product** — not portfolio project
-
-### Visual References (UI must feel like these)
-Linear · Vercel · Retool · Notion AI · Harvey AI · Scale AI · Glean
-
-### UI/UX Priorities (in order)
-1. **Dashboard** — pipeline progress, agent execution states, extraction outputs, confidence scores, export history. Users must visually see the AI working.
-2. **Workflow Visualization** — animated orchestration view, agent-to-agent transitions, live execution states, reasoning traces.
-3. **Knowledge Base UI** — users see retrieved case studies, matched certifications, evidence mapping. Makes the platform feel like institutional intelligence.
-4. **PDF Output** — the final PDF is the "wow" moment. Must be beautifully branded, structured, enterprise-grade. If it looks generic, perceived value collapses.
-5. **Dark/light polished themes** — premium typography, subtle motion, structured dashboards, clean enterprise minimalism.
-
----
-
-## Vision Statement
-
-> "A solo developer in Palakollu should be able to submit a proposal that competes with one prepared by a 10-person agency in Mumbai. Nivedan AI makes that the new normal."
-
-This communicates: democratization · empowerment · leverage · AI augmentation.
-
----
-
-## Key Metrics to Always Reference
-
-| Metric | Value |
-|--------|-------|
-| Time per proposal (before) | 8–20 hours |
-| Time per proposal (after) | 15–20 minutes |
-| Time reduction | 95% |
-| Win rate (before) | 20–25% |
-| Win rate (after) | 40–50% |
-| Proposal capacity multiplier | 3× |
-| Missed requirements | 0 (Quality Review Agent) |
-| Infrastructure overhead | ₹0 extra (single Vercel monorepo) |
-
----
-
-## Important Conventions
-
-- All agents live in `src/agents/` and are called from `src/inngest/functions/generate-proposal.ts` via `step.run()` — not directly in API routes
-- Agent 3 (Client Research) uses `LlmAgent` + `createRunner()` for googleSearch tool use; all other agents use `generateContent` one-shot
-- Session state is the shared contract between all agents — treat it as the source of truth
-- Outputs must always be **structured JSON** between agents; no free-form text passing
-- PDF generation uses company profile settings for branding (logo, colors, fonts) applied automatically
-- Auth: Clerk · Database: Neon PostgreSQL via Drizzle ORM · File upload: UploadThing · Email: Resend
-- The knowledge base (past proposals, case studies, certifications) is the key differentiator — surface it visually everywhere possible
-
----
-
-## Landing Page (Phase 0 — Marketing Site)
-
-The public-facing landing page at `/` is fully implemented. It is a premium cinematic single-page site with ivory/forest-green/gold theme, glassmorphism cards, scroll-reveal animations, and a sticky workflow section.
-
-### Files Created
-
-```
-src/middleware.ts             — Clerk auth middleware; public routes: /, /sign-in, /sign-up, /api/inngest, /api/uploadthing
-
-src/app/layout.tsx            — Sora + Inter + Playfair Display + JetBrains Mono via next/font/google; ClerkProvider; metadata
-                               Variables: --font-playfair, --font-jetbrains exposed on <html> element
-src/app/globals.css           — Brand CSS vars, animation keyframes, utility classes
-src/app/page.tsx              — Section composition (imports all landing components)
-src/app/sign-in/
-  [[...sign-in]]/page.tsx     — Branded sign-in page (Nivedan logo + Clerk <SignIn />)
-src/app/sign-up/
-  [[...sign-up]]/page.tsx     — Branded sign-up page (Nivedan logo + Clerk <SignUp />)
-src/app/redirecting/
-  page.tsx                    — Auth transition splash: logo + animated green tick → redirects after 2.2s
-
-src/lib/utils.ts              — cn() helper (clsx + tailwind-merge)
-
-src/components/landing/
-  Navbar.tsx                  — Glassmorphism sticky nav; auth-aware (Login/Book a Demo → /redirecting; signed-in → Welcome + UserButton)
-  Hero.tsx                    — 2-col hero; Start Free Trial → /redirecting?to=sign-up
-  WorkflowViz.tsx             — Animated 7-stage grid snake pipeline (hero right panel) ← see below
-  TrustedStrip.tsx            — Horizontal scrolling enterprise wordmark strip
-  ProblemSolution.tsx         — Before/After comparison cards (red vs green)
-  Agents.tsx                  — 6 AI agent cards in 3-col grid with hover glow
-  HowItWorks.tsx              — Sticky scroll: 6 steps left, live pipeline visualization right
-  Benefits.tsx                — 6 animated counter cards (95%, 2×, 3×, 0 missed, ₹0 infra, ∞)
-  Audience.tsx                — 6 target audience cards (3-col grid) with pricing tags
-  FinalCTA.tsx                — Dark forest section with gold radial accents + dual CTAs
-  Footer.tsx                  — 5-col footer: logo/tagline/socials + 4 link columns
-```
-
-### Design Tokens (globals.css)
+CSS variables and Tailwind tokens live in `src/app/globals.css` `@theme inline {}` — never `tailwind.config.ts`. `cn()` helper in `src/lib/utils.ts`.
 
 | Token | Value |
 |-------|-------|
@@ -574,154 +250,32 @@ src/components/landing/
 | `--gold` | `#D4A84F` |
 | `--gold-deep` | `#B88A2F` |
 | `--ivory` | `#FAF7F2` |
-| `--ivory-warm` | `#F4EFE6` |
-| `--champagne` | `#F7E7C1` |
-| `--sage-soft` | `#EBF1E7` |
-| `--f-display` | `Sora` (headings) |
-| `--f-display-serif` | `Playfair Display` (serif headings, workflow page titles) |
-| `--f-body` | `Inter` (body) |
-| `--f-mono` | `JetBrains Mono` (badges, model names) — loaded via next/font, uses `var(--font-jetbrains)` |
+| `--f-display` | Sora |
+| `--f-display-serif` | Playfair Display |
+| `--f-body` | Inter |
+| `--f-mono` | JetBrains Mono |
 
-Key classes: `.ni-glass` (glassmorphism), `.ni-section`, `.ni-container`, `.ni-eyebrow`, `.ni-section-head`, `.ni-text-gradient-gold`, `.btn-primary`, `.btn-gold`
+Key classes: `.ni-glass` (glassmorphism), `.ni-section`, `.ni-container`, `.btn-primary`, `.btn-gold`
 
-Animations: `drift 8s ease-in-out infinite` (WorkflowViz float), `pulseGold`, `twinkle`, `floatParticle`, `pulseGoldRing` (active agent card ring on workflow page)
+Animations: `pulseGold`, `pulseGoldRing` (active agent card), `drift` (WorkflowViz float), `twinkle`, `spin` (upload spinner)
 
-### WorkflowViz — Grid Snake Layout
+### Key Pages
 
-The hero right panel shows a 7-stage pipeline in a horizontal snake pattern:
+- `/dashboard` — single `'use client'` file; all sub-components defined inline. Upload validates email before `startUpload`. Polls `/api/stats` and `/api/kb/items` on mount.
+- `/workflow/[jobId]` — polls `/api/jobs/[jobId]` every 3s. `CircularProgress` shows ETA while running, "Complete" when `awaiting_review`/`completed`.
+- `/knowledge-base` — company profile editor + PDF upload (AI extracts title/tags from filename) + manual form.
 
-```
-[01 RFP Upload] → [02 RFP Parsing] → [03 Client Research] → [04 Requirements Matching]
-                                                                          ↓
-                 [07 PDF Export]  ← [06 Quality Review]  ← [05 Proposal Writing]
-```
+### Clerk v7 Patterns
 
-- CSS Grid: `gridTemplateColumns: "1fr 15px 1fr 15px 1fr 15px 1fr"`, `gridTemplateRows: "auto 28px auto"`
-- Row 2 stages placed at cols 3, 5, 7 (so stage 05 aligns under stage 04 for the ↓ connector)
-- `active` state: `useState(4)` → cycles 0–6 every 2500ms via `setInterval`
-- Active card: `rgba(247,231,193,0.35)` bg + gold border + gold dot top-right
-- Done card (idx < active): white bg + 100% progress bar
-- Pending card (idx > active): white bg + "Pending" text
-- Progress bar fill: `linear-gradient(90deg, #E8C97A 0%, #C99437 100%)` (gold gradient)
-- Stage 01 only: file chip "Hospital_RFP.pdf · 38.4 MB"
-- Bottom panels: "Proposal Preview" (left) + "AI Agents Active" with 6 agent icon rings (right)
-- Outer wrapper: `drift 8s` float animation + `.ni-glass` glassmorphism
-
-### Responsive Breakpoints
-
-- `≤ 1180px`: hero/sticky grids → 1 col; agent/benefit/audience grids → 2 col; nav links hide
-- `≤ 760px`: all grids → 1 col
-
----
-
-## Auth (Phase 0 — Clerk Integration)
-
-Clerk v7 (`@clerk/nextjs@^7.3.5`) is fully integrated. Auth keys are in `.env`.
-
-### Auth Flow
-
-```
-Signed-out user: CTA click (Login / Book a Demo / Start Free Trial)
-  → /redirecting?to=sign-in | sign-up     (2.2s branded splash + tick animation)
-  → /sign-in or /sign-up                  (Clerk hosted UI with Nivedan branding)
-  → /api/auth/sync                        (lazy-creates users row, syncs plan)
-  → /redirecting?to=                      (tick animation again)
-  → /                                     (landing page)
-
-Signed-in user: "Start Free Trial" CTA
-  → /redirecting?to=dashboard             (tick animation)
-  → /dashboard
-```
-
-### Files Created / Modified
-
-```
-src/middleware.ts                              — Clerk middleware; public: /, /sign-in, /sign-up, /api/inngest
-src/app/sign-in/[[...sign-in]]/page.tsx       — Branded sign-in (Nivedan logo + <SignIn />)
-src/app/sign-up/[[...sign-up]]/page.tsx       — Branded sign-up (Nivedan logo + <SignUp />)
-src/app/redirecting/page.tsx                  — Transition splash: logo + animated tick → redirects after 2.2s
-src/app/layout.tsx                            — <ClerkProvider> wraps children inside <body>
-src/components/landing/Navbar.tsx             — Auth-aware: signed-out → Login/Book a Demo buttons; signed-in → Welcome + <UserButton />
-src/components/landing/Hero.tsx               — Start Free Trial → router.push('/redirecting?to=sign-up')
-```
-
-### Signed-In Navbar State
-
-- `Welcome, {username ?? firstName ?? "there"}` — forest green, Sora font
-- `<UserButton />` — Clerk profile picture with built-in sign-out dropdown
-- Sign-out → `/` via `NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL=/` in `.env`
-
-### Clerk v7 Patterns — Critical
-
-- `useUser()` → `{ isSignedIn, user }` for client-side auth state
-- `<UserButton />` — **no** `afterSignOutUrl` prop (removed in v7; use env var)
+- `useUser()` → `{ isSignedIn, user }`
+- `<UserButton />` — no `afterSignOutUrl` prop (removed in v7; use `NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL` env var)
 - Middleware: `clerkMiddleware` + `createRouteMatcher` from `@clerk/nextjs/server`
-- CTA navigation uses `useRouter().push('/redirecting?to=...')` — **not** `<SignInButton>` / `<SignUpButton>`
-- All routes are public by default; `auth.protect()` called only for non-public routes
-
-### Hero CTA — Conditional Redirect
-
-`src/components/landing/Hero.tsx` uses `useUser()` to branch on "Start Free Trial":
-- Signed-in → `router.push('/redirecting?to=dashboard')`
-- Signed-out → `router.push('/redirecting?to=sign-up')`
-
-### Transition Page (`/redirecting`) Design
-
-- Background: `#FAF7F2` (ivory)
-- Animation: CSS keyframes only — no animation library
-  - Card fades up on mount (450ms)
-  - Circle strokes in clockwise from top (850ms, `stroke-dashoffset` trick)
-  - Checkmark draws in after circle completes (450ms, 750ms delay)
-  - SVG glow pulses during animation
-  - "Preparing your workspace..." with 3 blinking dots
-- Color: `#2F5D50` (forest green)
-- Auto-redirects after 2200ms via `useEffect` + `setTimeout`
 
 ---
 
-## Dashboard (`/dashboard`)
+## Skills (always load before working in these areas)
 
-Single `'use client'` file: `src/app/dashboard/page.tsx`. All sub-components are defined in the same file (no separate component files).
-
-### Sub-components
-| Component | Purpose |
-|---|---|
-| `DashLogo` | Logo + "Workspace" label — clicks navigate to `/` |
-| `UserPill` | Avatar initials + name + "Free Plan" badge (from `useUser()`) |
-| `ProcessingPipeline` | 6-stage animated pipeline — simulated via `setInterval`; calls `onComplete` when done |
-| `UploadZone` | Drag-drop / click-to-upload PDF area; validates email before upload (`onEmailRequired` callback if invalid); calls `useUploadThing('rfpDocument')` → `onFile(name, jobId)` |
-| `StatCard` | Single stat tile with icon, value, hint |
-| `RecentList` | Proposals table — `userProposals` (state, top) + `sampleProposals` (constant, bottom) |
-| `AgentRoster` | 6 agent list with colored rings |
-| `BgLayer` | Fixed radial gradient background + wave SVG |
-| `Twinkles` | Twinkling gold dots — generated in `useEffect` only (not SSR) to avoid hydration mismatch |
-
-### State in Dashboard component
-```ts
-fileName        — set on upload; triggers transition card → router.push('/workflow/[jobId]') after 1.8s
-recipientEmail  — string, starts empty (""); user types any email address
-emailError      — string, set when upload attempted with empty/invalid email; cleared on typing
-proposalCount   — fetched from /api/stats on mount (real DB count, not local state)
-kbCount         — number | null; fetched from /api/kb/items on mount; drives KB StatCard + nudge banner
-userProposals   — ProposalEntry[] (kept for future history use)
 ```
-
-**On mount:** Single `useEffect` with `Promise.all([fetch('/api/kb/items'), fetch('/api/stats')])` sets both `kbCount` and `proposalCount` from DB. Counts are real and persist across page visits.
-
-**Upload flow:** User types email → drops PDF → `UploadZone.handle()` validates email with `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`; if invalid calls `onEmailRequired` (sets `emailError`, shows red border + message, blocks upload); if valid calls `startUpload([file], { recipientEmail })` → `onFile(name, jid)` → redirect to `/workflow/[jobId]` after 1800ms.
-
-**Email input design:** Label shows red `*` asterisk (required). Placeholder: `arjunmehta@acmesolutions.com`. NOT pre-filled. Border turns red on error; hint text replaced by error message; clears on keystroke.
-
-**KB nudge banner:** Shown above email input when `kbCount === 0`. Gold warning style, links to `/knowledge-base`. Disappears on next mount after user adds KB items. Text says "Requirements Matcher" (not "Agent 4").
-
-### Dynamic stat logic (fetched from DB on mount)
-- **Proposals this month** → `proposalCount` from `GET /api/stats` (counts `rfp_jobs` for user this calendar month)
-- **Avg. time saved** → `proposalCount × 19h`
-- **Win rate** → always `—` (outcome data not tracked)
-- **Knowledge base** → `kbCount` docs — live count from `/api/kb/items`; shows `"—"` while loading
-
-### `ProposalEntry` type
-```ts
-type ProposalEntry = { name: string; status: string; score: number; date: string; win?: boolean; isOwn?: boolean }
+Frontend / UI work:     C:\Users\ES\.claude\skills\nextstack.skill
+Multi-agent / ADK:      C:\Users\ES\.claude\skills\multigentsadk.skill
 ```
-Entries with `isOwn: true` get green tint + "Yours" badge in `RecentList`.
