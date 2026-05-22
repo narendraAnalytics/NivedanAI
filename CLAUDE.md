@@ -286,11 +286,43 @@ const result = await utapi.uploadFiles(file)
 
 **Two endpoints in `src/lib/uploadthing.ts`:**
 - `rfpDocument` — 32 MB PDF; uses `.input(z.object({ recipientEmail: z.string().optional() }))` to receive email from `startUpload(files, { recipientEmail })`; middleware returns `{ userId, companyProfileId, recipientEmail }`; `onUploadComplete` stores `recipientEmail` in `rfpJobs` and threads it into the Inngest event
-- `kbDocument` — 16 MB PDF; middleware returns `{}` (no auth — avoids Next.js async-storage issues in UT middleware context); `onUploadComplete` returns `{ fileUrl }` only; auth + text extraction happen entirely in `POST /api/kb/items` (fetches PDF → pdf-parse → LLM → DB insert). `extractFromPdf` wraps `JSON.parse` in try-catch, falling back to empty metadata if LLM returns malformed JSON.
+- `kbDocument` — 16 MB PDF; middleware returns `{}` (no auth — avoids Next.js async-storage issues in UT middleware context); `onUploadComplete` returns `{ fileUrl }` only; auth + text extraction happen entirely in `POST /api/kb/items` (fetches PDF → pdf-parse → LLM → DB insert). `extractFromPdf` wraps the entire body in try-catch, falling back to empty metadata on any failure. **Uses `{ awaitServerData: true }` — required or client receives `serverData: null` in production (v7 default is false).**
 
 **Recipient email thread:** `startUpload(files, { recipientEmail })` → UploadThing `.input()` → `rfpJobs.recipient_email` DB column → `nivedan/rfp.submitted` event `data.recipientEmail` → Inngest step 8 `event.data.recipientEmail ?? user?.email` → Resend `to:` address. If user leaves field empty, falls back to Clerk sign-up email.
 
 **`getOrCreateProfile(userId)`** — shared helper inside `src/lib/uploadthing.ts`: SELECT → INSERT on miss. Both endpoints use it. Never pass empty string as `companyProfileId`.
+
+### Vercel Serverless Production Rules
+
+These caused silent failures in production — do not repeat:
+
+1. **`awaitServerData: true` on any UploadThing route that returns serverData** — v7 defaults to `false`; without it `serverData` is `null` on the client even though the server callback ran:
+   ```typescript
+   kbDocument: f({ pdf: { maxFileSize: '16MB' } }, { awaitServerData: true })
+   ```
+
+2. **`export const maxDuration = 60` on any API route doing LLM or PDF work** — Vercel default is 10s; PDF fetch + pdf-parse + Gemini call takes 20–40s. Place at module level after imports:
+   ```typescript
+   export const maxDuration = 60  // src/app/api/kb/items/route.ts
+   ```
+
+3. **All API routes must have try/catch returning JSON** — if a handler throws uncaught, Next.js returns an HTML error page. Client `r.ok` is false and `r.json()` throws, silently breaking the calling `Promise.all`:
+   ```typescript
+   export async function GET() {
+     try { ... return NextResponse.json(data) }
+     catch { return NextResponse.json({ error: 'failed' }, { status: 500 }) }
+   }
+   ```
+
+4. **Client-side `Promise.all` fetches must use `r.ok ? r.json() : fallback`** — a bare `.then(r => r.json())` throws on any non-2xx response and, without `.catch()`, leaves state never updated:
+   ```typescript
+   Promise.all([
+     fetch('/api/kb/profile').then(r => r.ok ? r.json() : null),
+     fetch('/api/kb/items').then(r => r.ok ? r.json() : []),
+   ]).then(([p, items]) => { ... }).catch(() => setLoading(false))
+   ```
+
+5. **`pdf-parse` is unreliable on Vercel serverless** — even with `serverExternalPackages`, `PDFParse` can throw on Linux cold starts. Always wrap `extractFromPdf`-style functions in an outer try/catch that returns empty metadata rather than propagating the error.
 
 ### generateContent config — all agents
 

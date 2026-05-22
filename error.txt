@@ -1,2 +1,184 @@
-Confirmed. The docs clearly show UploadThing v7 uses UPLOADTHING_TOKEN, not UPLOADTHING_SECRET + UPLOADTHING_APP_ID (those are v6). That's
-   why it fails locally but works on Vercel (where you likely set the correct token).         
+File Routes - UploadThing Docs (https://docs.uploadthing.com/file-routes)
+- Migrate from v6 to v7 - UploadThing Docs (https://docs.uploadthing.com/v7)
+
+kbDocument` — 16 MB PDF; middleware returns `{}` (no auth — avoids Next.js async-storage issues in UT middleware context); `onUploadComplete` returns `{ fileUrl }` only; auth + text extraction happen entirely in `POST /api/kb/items` (fetches PDF → pdf-parse → LLM → DB insert). `extractFromPdf` wraps the entire body in try-catch, falling back to empty metadata on any failure. **Uses `{ awaitServerData: true }` — required or client receives `serverData: null` in production (v7 default is false).**
+
+
+This usually means **UploadThing upload succeeded but the callback / document processing failed in Vercel**, so your UI uploads → waits → then your DB/document state stays `0 documents`. Since local works and Vercel fails, the problem is likely deployment/runtime rather than your code. Your stack uses UploadThing + Next.js + Vercel for document parsing. 
+
+Check these in order:
+
+### 1. Verify ALL UploadThing environment variables
+
+You mentioned:
+
+```env
+UPLOADTHING_TOKEN=xxxx
+```
+
+Also ensure if your version requires:
+
+```env
+UPLOADTHING_TOKEN=
+UPLOADTHING_SECRET=
+APP_URL=https://yourdomain.vercel.app
+```
+
+Redeploy after adding env vars.
+
+---
+
+### 2. Add callback URL explicitly (very common)
+
+Vercel sometimes fails UploadThing callbacks while localhost simulates them automatically. Set:
+
+```env
+UPLOADTHING_CALLBACK_URL=https://yourdomain.vercel.app
+```
+
+Example:
+
+```env
+UPLOADTHING_CALLBACK_URL=https://nivedan-ai.vercel.app
+```
+
+UploadThing callbacks failing in production but working locally is a known issue. ([docs.uploadthing.com][1])
+
+---
+
+### 3. Check Vercel Function logs
+
+Open:
+
+**Vercel → Project → Functions → Logs**
+
+Upload PDF again.
+
+Look for errors like:
+
+```
+POST /api/uploadthing 401
+callback failed
+document parse error
+timeout
+```
+
+If you see:
+
+```
+401 /api/uploadthing
+```
+
+callback protection/auth issue. ([GitHub][2])
+
+---
+
+### 4. Check Vercel Deployment Protection
+
+If using Preview deployment:
+
+Vercel can block UploadThing callback requests.
+
+Go:
+
+```
+Vercel
+→ Project Settings
+→ Deployment Protection
+```
+
+Disable protection temporarily and test. ([Stack Overflow][3])
+
+---
+
+### 5. Check PDF parser runtime issue
+
+Your Nivedan AI uses document parsing libraries (`pdf-parse`, etc.). 
+
+Vercel serverless may fail if parser crashes.
+
+Wrap parser:
+
+```ts
+try {
+  const text = await parsePdf(fileUrl)
+  console.log("PDF parsed", text.length)
+} catch (err) {
+  console.error("PDF parse failed", err)
+}
+```
+
+Then inspect Vercel logs.
+
+---
+
+### 6. Node version mismatch
+
+Local:
+
+```
+Node 22 / Node 20
+```
+
+Vercel:
+
+maybe older.
+
+Add package.json:
+
+```json
+{
+  "engines": {
+    "node": "20.x"
+  }
+}
+```
+
+UploadThing production issues can happen with Node/runtime mismatches. ([docs.uploadthing.com][1])
+
+---
+
+### 7. Database insert failing after upload
+
+You said:
+
+> PDF loads few seconds → then documents = 0
+
+That strongly suggests:
+
+```
+PDF Upload ✅
+UploadThing callback ✅
+PDF parse ❌
+OR
+Neon insert ❌
+```
+
+Add logging:
+
+```ts
+console.log("Upload complete")
+console.log("PDF extracted")
+console.log("Embedding stored")
+console.log("Document saved DB")
+```
+
+Find where it stops.
+
+---
+
+Most likely cause from your description:
+
+**80% probability → UploadThing callback issue on Vercel → add**
+
+```env
+UPLOADTHING_CALLBACK_URL=https://your-app.vercel.app
+```
+
+and check Vercel logs immediately after upload. ([docs.uploadthing.com][1])
+
+If you paste your **UploadThing route (`api/uploadthing`)** and the **PDF processing code after upload**, I can pinpoint the exact issue.
+
+[1]: https://docs.uploadthing.com/faq?utm_source=chatgpt.com "Frequently Asked Questions - UploadThing Docs"
+[2]: https://github.com/pingdotgg/uploadthing/issues/519?utm_source=chatgpt.com "[bug]: file uploads work locally but not in production using ..."
+[3]: https://stackoverflow.com/questions/77709963/how-to-deploy-uploadthing-to-vecel-for-my-next-js-project?utm_source=chatgpt.com "How to deploy uploadthing to vecel for my next js project"

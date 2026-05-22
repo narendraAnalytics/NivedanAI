@@ -183,7 +183,9 @@ function UploadZone({ onUploaded }: { onUploaded: (fileUrl: string) => void }) {
 
   const { startUpload } = useUploadThing('kbDocument', {
     onClientUploadComplete: (files) => {
-      const fileUrl = (files[0]?.serverData as { fileUrl?: string } | null)?.fileUrl ?? ''
+      const fileUrl = files[0]?.ufsUrl
+        ?? (files[0]?.serverData as { fileUrl?: string } | null)?.fileUrl
+        ?? ''
       setUploading(false)
       if (fileUrl) onUploaded(fileUrl)
     },

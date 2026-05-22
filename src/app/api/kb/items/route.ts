@@ -78,7 +78,8 @@ export async function GET() {
       .where(eq(knowledgeBaseItems.companyProfileId, profile.id))
       .orderBy(knowledgeBaseItems.createdAt)
     return NextResponse.json(items)
-  } catch {
+  } catch (err) {
+    console.error('[kb/items GET]', err)
     return NextResponse.json({ error: 'failed' }, { status: 500 })
   }
 }
@@ -95,7 +96,11 @@ export async function POST(req: NextRequest) {
     let type: KbType = VALID_TYPES.includes(body.type) ? body.type : 'past_proposal'
 
     if (body.fileUrl && !body.title) {
-      const extracted = await extractFromPdf(body.fileUrl, body.type)
+      const emptyMeta = { title: '', description: '', tags: [] as string[], type: (body.type as string) ?? 'past_proposal' }
+      const extracted = await Promise.race([
+        extractFromPdf(body.fileUrl, body.type),
+        new Promise<typeof emptyMeta>(resolve => setTimeout(() => resolve(emptyMeta), 8000)),
+      ])
       title = extracted.title || title
       description = extracted.description || description
       tags = extracted.tags?.length ? extracted.tags : tags
@@ -122,7 +127,8 @@ export async function POST(req: NextRequest) {
       .returning()
 
     return NextResponse.json(item, { status: 201 })
-  } catch {
+  } catch (err) {
+    console.error('[kb/items POST]', err)
     return NextResponse.json({ error: 'failed' }, { status: 500 })
   }
 }
