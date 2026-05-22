@@ -243,6 +243,8 @@ These bit us during build — do not repeat:
 
 Package versions: `uploadthing@^7.7.4`, `@uploadthing/react@^7.3.3`.
 
+**Environment variable — v7 breaking change:** v7 replaced `UPLOADTHING_SECRET` + `UPLOADTHING_APP_ID` with a single `UPLOADTHING_TOKEN` (base64-encoded JSON containing apiKey + appId + region). Get the token from the UploadThing dashboard → API Keys tab. Both `.env` (local) and Vercel env vars must use `UPLOADTHING_TOKEN`.
+
 **Server-side (FileRouter):**
 ```typescript
 import { createUploadthing, type FileRouter } from 'uploadthing/next'
@@ -284,7 +286,7 @@ const result = await utapi.uploadFiles(file)
 
 **Two endpoints in `src/lib/uploadthing.ts`:**
 - `rfpDocument` — 32 MB PDF; uses `.input(z.object({ recipientEmail: z.string().optional() }))` to receive email from `startUpload(files, { recipientEmail })`; middleware returns `{ userId, companyProfileId, recipientEmail }`; `onUploadComplete` stores `recipientEmail` in `rfpJobs` and threads it into the Inngest event
-- `kbDocument` — 16 MB PDF; middleware calls same `getOrCreateProfile`; `onUploadComplete` returns `{ fileUrl, companyProfileId }` — text extraction happens in `/api/kb/items` route (not here, to avoid timeout)
+- `kbDocument` — 16 MB PDF; middleware returns `{}` (no auth — avoids Next.js async-storage issues in UT middleware context); `onUploadComplete` returns `{ fileUrl }` only; auth + text extraction happen entirely in `POST /api/kb/items` (fetches PDF → pdf-parse → LLM → DB insert). `extractFromPdf` wraps `JSON.parse` in try-catch, falling back to empty metadata if LLM returns malformed JSON.
 
 **Recipient email thread:** `startUpload(files, { recipientEmail })` → UploadThing `.input()` → `rfpJobs.recipient_email` DB column → `nivedan/rfp.submitted` event `data.recipientEmail` → Inngest step 8 `event.data.recipientEmail ?? user?.email` → Resend `to:` address. If user leaves field empty, falls back to Clerk sign-up email.
 

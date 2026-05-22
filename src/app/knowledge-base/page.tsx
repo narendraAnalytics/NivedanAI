@@ -441,13 +441,13 @@ export default function KnowledgeBasePage() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/kb/profile').then(r => r.json()),
-      fetch('/api/kb/items').then(r => r.json()),
+      fetch('/api/kb/profile').then(r => r.ok ? r.json() : null),
+      fetch('/api/kb/items').then(r => r.ok ? r.json() : []),
     ]).then(([p, kbItems]) => {
       setProfile(p)
-      setItems(kbItems)
+      setItems(Array.isArray(kbItems) ? kbItems : [])
       setLoading(false)
-    })
+    }).catch(() => setLoading(false))
   }, [])
 
   const onUploaded = async (fileUrl: string) => {
