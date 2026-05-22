@@ -26,16 +26,17 @@ async function getOrCreateProfile(userId: string) {
 }
 
 async function extractFromPdf(fileUrl: string, hintType?: string) {
-  const res = await fetch(fileUrl)
-  const buffer = Buffer.from(await res.arrayBuffer())
-  const parser = new PDFParse({ data: buffer })
-  const [textResult] = await Promise.all([parser.getText()])
-  const text = textResult.pages.map((p: { text: string }) => p.text).join('\n').slice(0, 6000)
-  await parser.destroy()
+  try {
+    const res = await fetch(fileUrl)
+    const buffer = Buffer.from(await res.arrayBuffer())
+    const parser = new PDFParse({ data: buffer })
+    const [textResult] = await Promise.all([parser.getText()])
+    const text = textResult.pages.map((p: { text: string }) => p.text).join('\n').slice(0, 6000)
+    await parser.destroy()
 
-  const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY!, apiVersion: 'v1alpha' })
-  const model = ai.models
-  const prompt = `You are extracting metadata from a business document for an AI proposal system.
+    const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY!, apiVersion: 'v1alpha' })
+    const model = ai.models
+    const prompt = `You are extracting metadata from a business document for an AI proposal system.
 
 Document text (first 6000 chars):
 ${text}
@@ -50,15 +51,18 @@ Extract and return ONLY valid JSON (no markdown):
 
 ${hintType ? `Hint: the user selected type "${hintType}" — prefer it unless clearly wrong.` : ''}`
 
-  const result = await model.generateContent({
-    model: 'gemini-3.1-flash-lite',
-    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    config: { temperature: 0.2 },
-  })
-  const raw = result.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}'
-  const cleaned = raw.replace(/```json\n?|```/g, '').trim()
-  try {
-    return JSON.parse(cleaned) as { title: string; description: string; tags: string[]; type: string }
+    const result = await model.generateContent({
+      model: 'gemini-3.1-flash-lite',
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: { temperature: 0.2 },
+    })
+    const raw = result.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}'
+    const cleaned = raw.replace(/```json\n?|```/g, '').trim()
+    try {
+      return JSON.parse(cleaned) as { title: string; description: string; tags: string[]; type: string }
+    } catch {
+      return { title: '', description: '', tags: [], type: hintType ?? 'past_proposal' }
+    }
   } catch {
     return { title: '', description: '', tags: [], type: hintType ?? 'past_proposal' }
   }
@@ -98,6 +102,10 @@ export async function POST(req: NextRequest) {
       if (VALID_TYPES.includes(extracted.type as KbType)) type = extracted.type as KbType
     }
 
+    if (!title && body.fileUrl) {
+      const raw = (body.fileUrl as string).split('/').pop() ?? 'document'
+      title = raw.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ').trim() || 'Uploaded document'
+    }
     if (!title) return NextResponse.json({ error: 'title required' }, { status: 400 })
 
     const [item] = await db
