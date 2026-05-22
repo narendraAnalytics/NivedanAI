@@ -62,7 +62,7 @@ export const ourFileRouter = {
       return { jobId: job.id }
     }),
 
-  kbDocument: f({ pdf: { maxFileSize: '16MB', maxFileCount: 1 } })
+  kbDocument: f({ pdf: { maxFileSize: '16MB', maxFileCount: 1 } }, { awaitServerData: true })
     .middleware(async () => {
       return {}
     })
