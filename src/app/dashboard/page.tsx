@@ -704,6 +704,10 @@ export default function Dashboard() {
     })
   }, [])
 
+  const _limits = PLAN_LIMITS[userPlan as PlanKey] ?? PLAN_LIMITS.free
+  const _proposalRemaining = Math.max(0, _limits.proposalsPerMonth - proposalCount)
+  const _proposalUsedPct = _limits.proposalsPerMonth === Infinity ? 0 : Math.min(100, proposalCount / _limits.proposalsPerMonth * 100)
+
   return (
     <div className="ni-page-enter" style={{ position: "relative", minHeight: "100vh", overflow: "hidden" }}>
       <BgLayer />
@@ -779,8 +783,8 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Free trial banner — only shown for free plan users */}
-        {userPlan === 'free' && (
+        {/* Plan usage banner — shown for free and plus users */}
+        {userPlan !== 'pro' && (
           <div className="reveal in d1" style={{
             display: "flex", alignItems: "center", gap: 18,
             padding: "14px 22px", marginBottom: 18,
@@ -802,14 +806,14 @@ export default function Dashboard() {
             </div>
             <div style={{ flex: "0 0 auto" }}>
               <div style={{ fontFamily: "var(--f-display)", fontWeight: 600, fontSize: 14, color: "var(--ink)" }}>
-                You&apos;re on a Free trial
+                {userPlan === 'plus' ? `Plus plan · ${_limits.proposalsPerMonth} proposals/month` : "You're on a Free trial"}
               </div>
               <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>
-                {Math.max(0, 1 - proposalCount)} proposal{Math.max(0, 1 - proposalCount) !== 1 ? 's' : ''} remaining
+                {_proposalRemaining} proposal{_proposalRemaining !== 1 ? 's' : ''} remaining this month
               </div>
             </div>
             <div style={{ flex: 1, height: 5, borderRadius: 999, background: "rgba(47,93,80,0.10)", overflow: "hidden" }}>
-              <div style={{ width: `${Math.min(100, proposalCount * 100)}%`, height: "100%", background: "linear-gradient(90deg, #E0B663, #D4A84F)", borderRadius: 999 }} />
+              <div style={{ width: `${_proposalUsedPct}%`, height: "100%", background: "linear-gradient(90deg, #E0B663, #D4A84F)", borderRadius: 999 }} />
             </div>
             <a href="/pricing" style={{ fontSize: 13, color: "var(--gold-deep)", fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>
               Upgrade to Pro →

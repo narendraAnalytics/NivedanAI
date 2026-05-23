@@ -404,6 +404,7 @@ function ManualForm({ onAdded }: { onAdded: (item: KbItem) => void }) {
 /* ── KB item row ── */
 function ItemRow({ item, onDelete }: { item: KbItem; onDelete: (id: string) => void }) {
   const [deleting, setDeleting] = useState(false)
+  const [delHover, setDelHover] = useState(false)
   const meta = TYPE_META[item.type] ?? TYPE_META.past_proposal
 
   const del = async () => {
@@ -461,12 +462,23 @@ function ItemRow({ item, onDelete }: { item: KbItem; onDelete: (id: string) => v
         )}
       </div>
 
-      <button onClick={del} disabled={deleting} title="Remove" style={{
-        flexShrink: 0, width: 30, height: 30, borderRadius: 8,
-        background: 'transparent', border: '1px solid var(--line-strong)',
-        display: 'grid', placeItems: 'center', cursor: deleting ? 'not-allowed' : 'pointer',
-        color: 'var(--ni-muted)',
-      }}>
+      <button
+        onClick={del}
+        disabled={deleting}
+        title="Delete document"
+        onMouseEnter={() => setDelHover(true)}
+        onMouseLeave={() => setDelHover(false)}
+        style={{
+          flexShrink: 0, width: 32, height: 32, borderRadius: 8,
+          background: delHover ? 'rgba(224,82,82,0.10)' : 'rgba(255,255,255,0.7)',
+          border: `1px solid ${delHover ? 'rgba(224,82,82,0.35)' : 'var(--line-strong)'}`,
+          display: 'grid', placeItems: 'center',
+          cursor: deleting ? 'not-allowed' : 'pointer',
+          color: delHover ? '#E05252' : 'var(--ink-soft)',
+          opacity: deleting ? 0.4 : 1,
+          transition: 'all .2s',
+        }}
+      >
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
           <path d="M2 2l9 9M11 2l-9 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
@@ -541,6 +553,9 @@ export default function KnowledgeBasePage() {
     }
     setExtracting(null)
   }
+
+  const _kbLimit = (PLAN_LIMITS[userPlan as PlanKey] ?? PLAN_LIMITS.free).kbDocsPerMonth
+  const _kbUsedPct = _kbLimit === Infinity ? 0 : Math.min(100, items.length / _kbLimit * 100)
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh', overflow: 'hidden' }}>
@@ -717,15 +732,29 @@ export default function KnowledgeBasePage() {
             <div style={{
               padding: '18px 18px 14px',
               borderBottom: '1px solid var(--line)',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             }}>
-              <h3 style={{ fontFamily: 'var(--f-display)', fontWeight: 600, fontSize: 15, color: 'var(--ink)' }}>
-                Your documents
-              </h3>
-              <span style={{
-                padding: '3px 9px', borderRadius: 999, fontSize: 11, fontWeight: 600,
-                background: 'rgba(47,93,80,0.10)', color: 'var(--forest)',
-              }}>{items.length}</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: userPlan !== 'pro' ? 10 : 0 }}>
+                <h3 style={{ fontFamily: 'var(--f-display)', fontWeight: 600, fontSize: 15, color: 'var(--ink)' }}>
+                  Your documents
+                </h3>
+                <span style={{
+                  padding: '3px 9px', borderRadius: 999, fontSize: 11, fontWeight: 600,
+                  background: 'rgba(47,93,80,0.10)', color: 'var(--forest)',
+                }}>{items.length}</span>
+              </div>
+              {userPlan !== 'pro' && (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                    <span style={{ fontSize: 11, color: 'var(--ink-soft)' }}>
+                      {items.length} of {_kbLimit} docs used this month
+                    </span>
+                    <span style={{ fontSize: 11, color: 'var(--ni-muted)' }}>Resets monthly</span>
+                  </div>
+                  <div style={{ height: 4, borderRadius: 999, background: 'rgba(47,93,80,0.08)', overflow: 'hidden' }}>
+                    <div style={{ width: `${_kbUsedPct}%`, height: '100%', background: 'linear-gradient(90deg, #6FAE99, #2F5D50)', borderRadius: 999, transition: 'width .5s ease' }} />
+                  </div>
+                </>
+              )}
             </div>
 
             {loading ? (
