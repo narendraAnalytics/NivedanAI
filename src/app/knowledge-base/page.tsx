@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUploadThing } from '@/utils/uploadthing'
+import { PLAN_LIMITS, type PlanKey } from '@/lib/plans'
 
 /* ── Types ── */
 type KbItem = {
@@ -511,14 +512,17 @@ export default function KnowledgeBasePage() {
   const [loading, setLoading]   = useState(true)
   const [addMode, setAddMode]   = useState<'upload' | 'manual'>('upload')
   const [extracting, setExtracting] = useState<string | null>(null)
+  const [userPlan, setUserPlan] = useState<string>('free')
 
   useEffect(() => {
     Promise.all([
       fetch('/api/kb/profile').then(r => r.ok ? r.json() : null),
       fetch('/api/kb/items').then(r => r.ok ? r.json() : []),
-    ]).then(([p, kbItems]) => {
+      fetch('/api/user/plan').then(r => r.ok ? r.json() : { plan: 'free' }),
+    ]).then(([p, kbItems, planData]) => {
       setProfile(p)
       setItems(Array.isArray(kbItems) ? kbItems : [])
+      setUserPlan(planData?.plan ?? 'free')
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [])
@@ -613,6 +617,84 @@ export default function KnowledgeBasePage() {
 
             {extracting ? (
               <ExtractingCard fileName={extracting} />
+            ) : userPlan === 'free' && items.length >= PLAN_LIMITS[userPlan as PlanKey].kbDocsPerMonth ? (
+                /* ── KB limit reached card (blocks both Upload PDF and Manual entry tabs) ── */
+                <div style={{
+                  padding: '40px 28px', borderRadius: 18, textAlign: 'center',
+                  background: 'linear-gradient(180deg, #FFFCF4 0%, #FBF1D8 60%, rgba(255,252,244,0.9) 100%)',
+                  border: '1.5px solid rgba(212,168,79,0.45)',
+                  boxShadow: '0 0 0 5px rgba(247,231,193,0.30), 0 12px 32px rgba(212,168,79,0.15)',
+                  position: 'relative', overflow: 'hidden',
+                }}>
+                  <div style={{
+                    position: 'absolute', top: -40, left: '50%', transform: 'translateX(-50%)',
+                    width: 300, height: 200,
+                    background: 'radial-gradient(ellipse, rgba(212,168,79,0.25), transparent 65%)',
+                    pointerEvents: 'none',
+                  }} />
+                  <div style={{
+                    width: 58, height: 58, margin: '0 auto 18px', borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #FBF1D8, #E0B663)',
+                    display: 'grid', placeItems: 'center',
+                    boxShadow: '0 0 0 7px rgba(212,168,79,0.12), 0 8px 22px rgba(212,168,79,0.28)',
+                  }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <rect x="5" y="11" width="14" height="10" rx="2" stroke="#2A1E08" strokeWidth="1.8" />
+                      <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#2A1E08" strokeWidth="1.8" strokeLinecap="round" />
+                      <circle cx="12" cy="16" r="1.5" fill="#2A1E08" />
+                    </svg>
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <div style={{
+                      fontFamily: 'var(--f-mono)', fontSize: 10, fontWeight: 700,
+                      letterSpacing: '0.14em', color: 'var(--gold-deep)',
+                      textTransform: 'uppercase', marginBottom: 8,
+                    }}>Free plan · KB limit reached</div>
+                    <div style={{
+                      fontFamily: 'var(--f-display)', fontWeight: 600, fontSize: 19,
+                      color: 'var(--forest-deep)', letterSpacing: '-0.02em', marginBottom: 8,
+                    }}>
+                      1 document limit reached
+                    </div>
+                    <div style={{
+                      fontSize: 13.5, color: 'var(--ink-soft)', lineHeight: 1.6,
+                      maxWidth: 320, margin: '0 auto 22px',
+                    }}>
+                      Free plan supports 1 KB document. Upgrade to{' '}
+                      <strong style={{ color: 'var(--forest)' }}>Plus</strong> for 10 docs or{' '}
+                      <strong style={{ color: 'var(--forest)' }}>Pro</strong> for unlimited.
+                    </div>
+                    <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+                      <a href="/pricing" style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 7,
+                        padding: '11px 20px', borderRadius: 10,
+                        background: 'var(--forest)', color: '#fff',
+                        fontFamily: 'var(--f-display)', fontWeight: 600, fontSize: 13.5,
+                        textDecoration: 'none',
+                        boxShadow: '0 5px 16px rgba(47,93,80,0.25)',
+                      }}>
+                        Upgrade to Pro
+                        <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                          <path d="M3 11 L11 3 M5 3 H11 V9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </a>
+                      <a href="/pricing" style={{
+                        display: 'inline-flex', alignItems: 'center',
+                        padding: '11px 20px', borderRadius: 10,
+                        background: 'rgba(212,168,79,0.15)',
+                        border: '1px solid rgba(212,168,79,0.40)',
+                        color: 'var(--gold-deep)',
+                        fontFamily: 'var(--f-display)', fontWeight: 600, fontSize: 13.5,
+                        textDecoration: 'none',
+                      }}>
+                        View plans
+                      </a>
+                    </div>
+                    <div style={{ marginTop: 18, fontSize: 11.5, color: 'var(--ni-muted)' }}>
+                      Limit resets on the 1st of each month
+                    </div>
+                  </div>
+                </div>
             ) : addMode === 'upload' ? (
               <UploadZone onUploaded={onUploaded} />
             ) : (

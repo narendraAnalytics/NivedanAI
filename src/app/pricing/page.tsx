@@ -2,7 +2,7 @@
 
 import { PricingTable } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 
 /* ─── Data ─────────────────────────────────────────────────────────── */
 
@@ -61,18 +61,22 @@ const FAQS = [
 
 /* ─── Twinkles ──────────────────────────────────────────────────────── */
 
+type TwinkleDot = { top: number; left: number; size: number; delay: number; duration: number };
+
 const Twinkles = () => {
-  const dots = useMemo(
-    () =>
+  const [dots, setDots] = useState<TwinkleDot[]>([]);
+
+  useEffect(() => {
+    setDots(
       Array.from({ length: 18 }, () => ({
         top: Math.random() * 70 + 8,
         left: Math.random() * 96,
         size: 3 + Math.random() * 6,
         delay: Math.random() * 4,
         duration: 3 + Math.random() * 3,
-      })),
-    []
-  );
+      }))
+    );
+  }, []);
   return (
     <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
       {dots.map((d, i) => (
@@ -607,7 +611,7 @@ export default function PricingPage() {
       }}>
         <BackButton onClick={() => router.push("/")} />
         <Logo />
-        <div style={{ width: 130 }} />
+        <DashboardButton onClick={() => router.push("/dashboard")} />
       </header>
 
       {/* Main */}
@@ -734,6 +738,35 @@ export default function PricingPage() {
 }
 
 /* ─── Back button ───────────────────────────────────────────────────── */
+
+function DashboardButton({ onClick }: { onClick: () => void }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        display: "inline-flex", alignItems: "center", gap: 8,
+        fontSize: 13.5, fontWeight: 500,
+        color: hover ? "var(--forest)" : "var(--ink-soft)",
+        padding: "8px 14px", borderRadius: 10,
+        background: hover ? "#fff" : "rgba(255,255,255,0.7)",
+        border: "1px solid rgba(47,93,80,0.12)",
+        cursor: "pointer",
+        fontFamily: "var(--f-body)",
+        boxShadow: hover ? "0 2px 8px rgba(35,69,57,0.10)" : "none",
+        transition: "all .2s",
+      }}
+    >
+      Dashboard
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M5 3 L9 7 L5 11" stroke="currentColor" strokeWidth="1.8"
+          strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </button>
+  );
+}
 
 function BackButton({ onClick }: { onClick: () => void }) {
   const [hover, setHover] = useState(false);

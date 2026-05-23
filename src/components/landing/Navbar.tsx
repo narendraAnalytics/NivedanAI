@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUser, UserButton } from "@clerk/nextjs";
+import { PLAN_LIMITS, type PlanKey } from "@/lib/plans";
 
 const Logo = () => (
   <a href="#top" style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -153,6 +154,7 @@ export { MagneticButton };
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [navPlan, setNavPlan] = useState<string>('free');
   const { isSignedIn, user } = useUser();
   const router = useRouter();
 
@@ -162,6 +164,12 @@ export default function Navbar() {
     onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    if (isSignedIn) {
+      fetch('/api/user/plan').then(r => r.ok ? r.json() : { plan: 'free' }).then(d => setNavPlan(d.plan ?? 'free'))
+    }
+  }, [isSignedIn]);
 
   return (
     <nav
@@ -220,6 +228,14 @@ export default function Navbar() {
                   }}
                 >
                   Welcome, {user?.username ?? user?.firstName ?? "there"}
+                </span>
+                <span style={{
+                  padding: "3px 10px", borderRadius: 999, fontSize: 11, fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  background: (PLAN_LIMITS[navPlan as PlanKey] ?? PLAN_LIMITS.free).badgeBg,
+                  color: (PLAN_LIMITS[navPlan as PlanKey] ?? PLAN_LIMITS.free).badgeColor,
+                }}>
+                  {(PLAN_LIMITS[navPlan as PlanKey] ?? PLAN_LIMITS.free).label}
                 </span>
                 <UserButton />
               </>

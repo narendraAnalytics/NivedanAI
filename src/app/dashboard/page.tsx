@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useUploadThing } from "@/utils/uploadthing";
 import { useRouter } from "next/navigation";
 import { useUser, UserButton } from "@clerk/nextjs";
+import { PLAN_LIMITS, type PlanKey } from "@/lib/plans";
 
 /* ── Pipeline stages ── */
 const pipelineStages = [
@@ -71,12 +72,13 @@ function DashLogo() {
   );
 }
 
-function UserPill() {
+function UserPill({ plan = 'free' }: { plan?: string }) {
   const { user } = useUser();
   const first = user?.firstName ?? "";
   const last  = user?.lastName  ?? "";
   const initials = (first[0] ?? "") + (last[0] ?? "");
   const name = [first, last].filter(Boolean).join(" ") || "User";
+  const limits = PLAN_LIMITS[plan as PlanKey] ?? PLAN_LIMITS.free;
 
   return (
     <div style={{
@@ -100,7 +102,14 @@ function UserPill() {
       </div>
       <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
         <span style={{ fontSize: 13, fontWeight: 600, color: "var(--forest-deep)" }}>{name}</span>
-        <span style={{ fontSize: 11, color: "var(--ink-soft)", fontWeight: 500 }}>Free Plan</span>
+        <span style={{
+          fontSize: 10, fontWeight: 700, letterSpacing: "0.08em",
+          padding: "2px 8px", borderRadius: 999,
+          background: limits.badgeBg, color: limits.badgeColor,
+          display: "inline-block", marginTop: 2,
+        }}>
+          {limits.label}
+        </span>
       </div>
       <svg width="12" height="12" viewBox="0 0 12 12" style={{ marginLeft: 4, color: "var(--ink-soft)" }}>
         <path d="M3 4.5 L6 7.5 L9 4.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
@@ -664,15 +673,18 @@ export default function Dashboard() {
   const [recipientEmail, setRecipientEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [kbCount, setKbCount] = useState<number | null>(null);
+  const [userPlan, setUserPlan] = useState<string>('free');
 
   useEffect(() => {
     Promise.all([
       fetch('/api/kb/items').then(r => r.ok ? r.json() : []),
       fetch('/api/stats').then(r => r.ok ? r.json() : { jobsThisMonth: 0 }),
       fetch('/api/proposals/recent').then(r => r.ok ? r.json() : []),
-    ]).then(([items, stats, recent]) => {
+      fetch('/api/user/plan').then(r => r.ok ? r.json() : { plan: 'free' }),
+    ]).then(([items, stats, recent, planData]) => {
       setKbCount(Array.isArray(items) ? items.length : 0)
       setProposalCount(stats?.jobsThisMonth ?? 0)
+      setUserPlan(planData?.plan ?? 'free')
       if (Array.isArray(recent)) {
         const mapped: ProposalEntry[] = recent.map((r: {
           jobId: string; clientName: string | null; rfpTitle: string | null;
@@ -719,7 +731,7 @@ export default function Dashboard() {
               <circle cx="17" cy="6" r="3" fill="#D4A84F" />
             </svg>
           </button>
-          <UserPill />
+          <UserPill plan={userPlan} />
           <UserButton />
         </div>
       </div>
@@ -766,6 +778,44 @@ export default function Dashboard() {
             a submission-ready PDF in under 20 minutes.
           </p>
         </div>
+
+        {/* Free trial banner — only shown for free plan users */}
+        {userPlan === 'free' && (
+          <div className="reveal in d1" style={{
+            display: "flex", alignItems: "center", gap: 18,
+            padding: "14px 22px", marginBottom: 18,
+            borderRadius: 16,
+            background: "linear-gradient(120deg, rgba(255,255,255,0.90) 0%, rgba(255,252,244,0.85) 100%)",
+            border: "1px solid rgba(212,168,79,0.30)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            boxShadow: "0 4px 16px rgba(212,168,79,0.12)",
+          }}>
+            <div style={{
+              width: 38, height: 38, borderRadius: "50%", flexShrink: 0,
+              background: "linear-gradient(135deg, #DDE7D8, #2F5D50)",
+              display: "grid", placeItems: "center", color: "#fff",
+            }}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 1l2.2 4.5L15 6.2l-3.5 3.4L12.4 15 8 12.4 3.6 15l.9-5.4L1 6.2l4.8-.7L8 1Z" fill="currentColor" />
+              </svg>
+            </div>
+            <div style={{ flex: "0 0 auto" }}>
+              <div style={{ fontFamily: "var(--f-display)", fontWeight: 600, fontSize: 14, color: "var(--ink)" }}>
+                You&apos;re on a Free trial
+              </div>
+              <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>
+                {Math.max(0, 1 - proposalCount)} proposal{Math.max(0, 1 - proposalCount) !== 1 ? 's' : ''} remaining
+              </div>
+            </div>
+            <div style={{ flex: 1, height: 5, borderRadius: 999, background: "rgba(47,93,80,0.10)", overflow: "hidden" }}>
+              <div style={{ width: `${Math.min(100, proposalCount * 100)}%`, height: "100%", background: "linear-gradient(90deg, #E0B663, #D4A84F)", borderRadius: 999 }} />
+            </div>
+            <a href="/pricing" style={{ fontSize: 13, color: "var(--gold-deep)", fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>
+              Upgrade to Pro →
+            </a>
+          </div>
+        )}
 
         {/* Stats row */}
         <div
@@ -828,13 +878,97 @@ export default function Dashboard() {
                   </div>
                   <div style={{ fontSize: 13.5, color: "var(--ink-soft)", marginTop: 4 }}>
                     {!fileName
-                      ? "Drop an RFP to kick off the pipeline"
+                      ? (userPlan === 'free' && proposalCount >= PLAN_LIMITS.free.proposalsPerMonth
+                          ? "Monthly limit reached — upgrade to continue"
+                          : "Drop an RFP to kick off the pipeline")
                       : "Uploading complete — redirecting to your live workflow now."}
                   </div>
                 </div>
               </div>
 
               {!fileName ? (
+                userPlan === 'free' && proposalCount >= PLAN_LIMITS.free.proposalsPerMonth ? (
+                  /* ── Free plan limit reached — block upload ── */
+                  <div style={{
+                    padding: "52px 32px",
+                    borderRadius: 22,
+                    background: "linear-gradient(180deg, #FFFCF4 0%, #FBF1D8 60%, rgba(255,252,244,0.9) 100%)",
+                    border: "1.5px solid rgba(212,168,79,0.45)",
+                    textAlign: "center",
+                    boxShadow: "0 0 0 6px rgba(247,231,193,0.35), 0 16px 40px rgba(212,168,79,0.18)",
+                    position: "relative", overflow: "hidden",
+                  }}>
+                    <div style={{
+                      position: "absolute", top: -60, left: "50%", transform: "translateX(-50%)",
+                      width: 400, height: 300,
+                      background: "radial-gradient(ellipse, rgba(212,168,79,0.28), transparent 65%)",
+                      pointerEvents: "none",
+                    }} />
+                    <div style={{
+                      width: 72, height: 72, margin: "0 auto 22px",
+                      borderRadius: "50%",
+                      background: "linear-gradient(135deg, #FBF1D8, #E0B663)",
+                      display: "grid", placeItems: "center",
+                      boxShadow: "0 0 0 8px rgba(212,168,79,0.15), 0 10px 28px rgba(212,168,79,0.30)",
+                    }}>
+                      <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+                        <rect x="5" y="11" width="14" height="10" rx="2" stroke="#2A1E08" strokeWidth="1.8" />
+                        <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#2A1E08" strokeWidth="1.8" strokeLinecap="round" />
+                        <circle cx="12" cy="16" r="1.5" fill="#2A1E08" />
+                      </svg>
+                    </div>
+                    <div style={{ position: "relative" }}>
+                      <div style={{
+                        fontFamily: "var(--f-mono)", fontSize: 10, fontWeight: 700,
+                        letterSpacing: "0.14em", color: "var(--gold-deep)",
+                        textTransform: "uppercase", marginBottom: 10,
+                      }}>Free plan · Monthly limit reached</div>
+                      <div style={{
+                        fontFamily: "var(--f-display)", fontWeight: 600, fontSize: 22,
+                        color: "var(--forest-deep)", letterSpacing: "-0.02em", marginBottom: 10,
+                      }}>
+                        You&apos;ve used your proposal this month
+                      </div>
+                      <div style={{
+                        fontSize: 14.5, color: "var(--ink-soft)", lineHeight: 1.6,
+                        maxWidth: 380, margin: "0 auto 28px",
+                      }}>
+                        Free plan includes 1 proposal per month. Upgrade to{" "}
+                        <strong style={{ color: "var(--forest)" }}>Plus</strong> for 5/month or{" "}
+                        <strong style={{ color: "var(--forest)" }}>Pro</strong> for unlimited proposals.
+                      </div>
+                      <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+                        <a href="/pricing" style={{
+                          display: "inline-flex", alignItems: "center", gap: 8,
+                          padding: "13px 24px", borderRadius: 12,
+                          background: "var(--forest)", color: "#fff",
+                          fontFamily: "var(--f-display)", fontWeight: 600, fontSize: 14.5,
+                          textDecoration: "none",
+                          boxShadow: "0 6px 20px rgba(47,93,80,0.28)",
+                        }}>
+                          Upgrade to Pro
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M3 11 L11 3 M5 3 H11 V9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </a>
+                        <a href="/pricing" style={{
+                          display: "inline-flex", alignItems: "center", gap: 8,
+                          padding: "13px 24px", borderRadius: 12,
+                          background: "rgba(212,168,79,0.15)",
+                          border: "1px solid rgba(212,168,79,0.40)",
+                          color: "var(--gold-deep)",
+                          fontFamily: "var(--f-display)", fontWeight: 600, fontSize: 14.5,
+                          textDecoration: "none",
+                        }}>
+                          View plans
+                        </a>
+                      </div>
+                      <div style={{ marginTop: 22, fontSize: 12, color: "var(--ni-muted)" }}>
+                        Limit resets on the 1st of each month
+                      </div>
+                    </div>
+                  </div>
+                ) : (
                 <>
                   {/* KB nudge — shown only when knowledge base is empty */}
                   {kbCount === 0 && (
@@ -927,6 +1061,7 @@ export default function Dashboard() {
                     <ProcessingPipeline fileName="Sample_RFP.pdf" onComplete={() => {}} />
                   </div>
                 </>
+                )
               ) : (
                 /* Transition card — shown briefly before redirect to /workflow/[jobId] */
                 <div style={{
@@ -1064,35 +1199,6 @@ export default function Dashboard() {
                   Manage knowledge base →
                 </button>
               </div>
-            </div>
-
-            {/* Plan status */}
-            <div style={{
-              padding: "18px 22px", borderRadius: 18,
-              background: "rgba(255,255,255,0.78)",
-              border: "1px solid var(--line-strong)",
-              backdropFilter: "blur(10px)",
-              WebkitBackdropFilter: "blur(10px)",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: "50%",
-                  background: "linear-gradient(135deg, #DDE7D8, #2F5D50)",
-                  display: "grid", placeItems: "center", color: "#fff",
-                }}>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M8 1l2.2 4.5L15 6.2l-3.5 3.4L12.4 15 8 12.4 3.6 15l.9-5.4L1 6.2l4.8-.7L8 1Z" fill="currentColor" />
-                  </svg>
-                </div>
-                <div>
-                  <div style={{ fontFamily: "var(--f-display)", fontWeight: 600, fontSize: 14, color: "var(--ink)" }}>You&apos;re on a Free trial</div>
-                  <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>3 proposals remaining</div>
-                </div>
-              </div>
-              <div style={{ height: 5, borderRadius: 999, background: "rgba(47,93,80,0.10)", overflow: "hidden", marginBottom: 12 }}>
-                <div style={{ width: "30%", height: "100%", background: "linear-gradient(90deg, #E0B663, #D4A84F)", borderRadius: 999 }} />
-              </div>
-              <a href="#" style={{ fontSize: 12.5, color: "var(--gold-deep)", fontWeight: 600 }}>Upgrade to Pro →</a>
             </div>
 
           </div>
