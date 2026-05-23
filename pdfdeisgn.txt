@@ -1,15 +1,101 @@
-THANK YOU
+=======================================================
+  NIVEDAN AI — PRICING PLANS & FEATURES
+=======================================================
 
-Thank you for the opportunity to respond.
+-------------------------------------------------------
+  FREE — $0 / month
+-------------------------------------------------------
+  Limits:
+    • 1 Proposal per month
+    • 1 Knowledge Base PDF upload per month
 
-We appreciate the opportunity to partner with {companyname}.
+  Features:
+    • Full 6-agent AI proposal pipeline
+    • Standard processing speed (15–20 min)
+    • Email delivery to recipient
+    • Basic proposal viewer (web)
+    • Quality score on each proposal
+    • Up to 5 KB items (manual entry, no PDF)
 
-Prepared By:
+  Best for: Freelancers testing the platform
 
-Nivedan AI
 
-Autonomous Proposal Intelligence Platform
+-------------------------------------------------------
+  PLUS — $9 / month
+-------------------------------------------------------
+  Limits:
+    • 5 Proposals per month
+    • 10 Knowledge Base PDF uploads per month
 
-Contact Information
+  Features (everything in Free, plus):
+    • Priority processing queue (faster turnaround)
+    • Downloadable PDF proposals
+    • Custom company logo on proposals
+    • Proposal quality score analytics (history)
+    • Email open / delivery tracking
+    • Unlimited manual KB entries
+    • Dedicated onboarding support (email)
 
-CONFIDENTIAL & PROPRIETARY
+  Best for: Small agencies & consultants (2–5 active bids/month)
+
+
+-------------------------------------------------------
+  PRO — $19 / month
+-------------------------------------------------------
+  Limits:
+    • Unlimited proposals
+    • Unlimited Knowledge Base PDF uploads
+
+  Features (everything in Plus, plus):
+    • Fastest processing (top-priority pipeline)
+    • White-label proposals (no Nivedan AI branding)
+    • REST API access (submit RFPs programmatically)
+    • Team seats — up to 5 users under one account
+    • Win / Loss analytics dashboard
+    • Custom proposal section templates
+    • Bulk RFP submission
+    • Dedicated Slack / priority support channel
+    • Early access to new AI models & features
+
+  Best for: Mid-size firms & enterprises with high RFP volume
+
+
+=======================================================
+  FEATURE COMPARISON TABLE
+=======================================================
+
+  Feature                         Free    Plus    Pro
+  --------------------------------------------- -----
+  Proposals / month                  1       5    Unlimited
+  KB PDF uploads / month             1      10    Unlimited
+  Manual KB entries                  5    Unlimited Unlimited
+  Email delivery                     Yes     Yes     Yes
+  Web proposal viewer                Yes     Yes     Yes
+  Downloadable PDF                   No      Yes     Yes
+  Custom logo / branding             No      Yes     Yes
+  White-label (no Nivedan brand)     No      No      Yes
+  Priority processing                No      Yes     Yes (Fastest)
+  Quality score analytics            Basic   Full    Full
+  Email tracking                     No      Yes     Yes
+  REST API access                    No      No      Yes
+  Team seats                         1       1       5
+  Win/Loss dashboard                 No      No      Yes
+  Custom templates                   No      No      Yes
+  Support                            Docs    Email   Slack + Priority
+
+
+=======================================================
+  UPGRADE CONTACT
+=======================================================
+
+  To upgrade your plan, email:  narendra.adp@gmail.com
+  Subject line: "Nivedan AI Upgrade — [Plus/Pro]"
+
+  Include:
+    - Your registered email (Clerk account)
+    - Desired plan
+    - Billing preference (monthly / annual)
+
+  Annual discount: 2 months free (pay 10, get 12)
+
+=======================================================

@@ -56,14 +56,16 @@ const Logo = () => (
 const NavLink = ({
   children,
   hasMenu,
+  href = "#",
 }: {
   children: React.ReactNode;
   hasMenu?: boolean;
+  href?: string;
 }) => {
   const [hover, setHover] = useState(false);
   return (
     <a
-      href="#"
+      href={href}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
@@ -201,7 +203,7 @@ export default function Navbar() {
             <NavLink>Product</NavLink>
             <NavLink>How It Works</NavLink>
             <NavLink>Agents</NavLink>
-            <NavLink>Pricing</NavLink>
+            <NavLink href="/redirecting?to=pricing">Pricing</NavLink>
             <NavLink hasMenu>Resources</NavLink>
           </div>
 

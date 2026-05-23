@@ -40,7 +40,9 @@ Relevant for Later Phases
   - Website: techsolutions.com
   - Tagline: "Delivering enterprise software since 2015"
 
----------------------------------------- -----------------------------------------------
+---------------------------------------- ------------
+
+src\app\redirecting\page.tsx-----------------------------------
 
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).

@@ -11,6 +11,7 @@ function RedirectingContent() {
   const router = useRouter();
   const params = useSearchParams();
   const to = params.get("to") ?? "sign-in";
+  const message = to === "pricing" ? "Exploring your plans" : "Preparing your workspace";
   const redirected = useRef(false);
 
   useEffect(() => {
@@ -182,7 +183,7 @@ function RedirectingContent() {
             gap: 3,
           }}
         >
-          Preparing your workspace
+          {message}
           <span className="ni-dot-1" style={{ display: "inline-block", marginLeft: 1 }}>.</span>
           <span className="ni-dot-2" style={{ display: "inline-block" }}>.</span>
           <span className="ni-dot-3" style={{ display: "inline-block" }}>.</span>
