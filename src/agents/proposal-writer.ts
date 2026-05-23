@@ -36,6 +36,7 @@ Writing rules:
 
 Output ONLY valid JSON — no markdown fences, no explanation — matching this exact schema:
 {
+  "coverLetter": "formal 1-page opening letter — addressed to client by name, from vendor company, referencing the specific RFP title, expressing genuine interest, confidence in capabilities, and a brief value proposition. Professional tone, signed off with vendor company name.",
   "executiveSummary": "3-5 paragraphs — client challenge, our understanding, value proposition",
   "understandingOfRequirements": "structured breakdown of all mandatory requirements and how we address each",
   "proposedSolution": "detailed solution narrative — architecture, methodology, approach",
@@ -43,7 +44,10 @@ Output ONLY valid JSON — no markdown fences, no explanation — matching this 
   "caseStudies": "2-3 relevant past projects with outcomes and metrics — tie to client's industry/challenges",
   "teamAndExpertise": "key team members, roles, qualifications, relevant experience",
   "projectTimeline": "phase-by-phase breakdown within the RFP deadline — milestones, deliverables",
-  "pricingStructure": "itemised pricing within budget ceiling — phases, optional add-ons, payment terms"
+  "pricingStructure": "itemised pricing within budget ceiling — phases, optional add-ons, payment terms",
+  "risksMitigation": "risk register with 4-6 risks — for each: Risk Name | Likelihood (Low/Medium/High) | Impact | Mitigation Strategy. Format as clear structured text.",
+  "assumptionsDependencies": "bullet list of 6-10 project assumptions (client provides API access, stakeholder availability, data readiness) and external dependencies clearly stated",
+  "whyUs": "3-5 compelling differentiators specific to this client's challenges and our matching strengths — concrete, evidence-backed, not generic marketing language"
 }`
 
 export interface ProposalWriterInput {
@@ -52,6 +56,7 @@ export interface ProposalWriterInput {
 }
 
 interface ProposalSections {
+  coverLetter?: string
   executiveSummary?: string
   understandingOfRequirements?: string
   proposedSolution?: string
@@ -60,6 +65,9 @@ interface ProposalSections {
   teamAndExpertise?: string
   projectTimeline?: string
   pricingStructure?: string
+  risksMitigation?: string
+  assumptionsDependencies?: string
+  whyUs?: string
 }
 
 function countWords(text: string): number {
@@ -74,7 +82,7 @@ export async function runProposalWriter(input: ProposalWriterInput): Promise<voi
 
   try {
     await updateCurrentAgent(jobId, 5)
-    await updateJobActivity(jobId, 'Drafting 8-section proposal…')
+    await updateJobActivity(jobId, 'Drafting 12-section proposal…')
 
     const session = await sessionService.getSession({
       appName: 'nivedanai',
@@ -148,14 +156,14 @@ ${JSON.stringify(
 )}
 
 ---
-Return ONLY valid JSON matching the 8-section schema in your instructions.`
+Return ONLY valid JSON matching the 12-section schema in your instructions.`
 
     const result = await ai.models.generateContent({
       model: 'gemini-3.1-pro-preview',
       contents: [{ role: 'user', parts: [{ text: writerPrompt }] }],
       config: {
         temperature: 0.7,
-        maxOutputTokens: 8192,
+        maxOutputTokens: 12000,
       },
     })
 
@@ -181,6 +189,7 @@ Return ONLY valid JSON matching the 8-section schema in your instructions.`
         rfpJobId: jobId,
         version: 1,
         isApproved: false,
+        coverLetter: sections.coverLetter ?? null,
         executiveSummary: sections.executiveSummary ?? null,
         understandingOfRequirements: sections.understandingOfRequirements ?? null,
         proposedSolution: sections.proposedSolution ?? null,
@@ -189,6 +198,9 @@ Return ONLY valid JSON matching the 8-section schema in your instructions.`
         teamAndExpertise: sections.teamAndExpertise ?? null,
         projectTimeline: sections.projectTimeline ?? null,
         pricingStructure: sections.pricingStructure ?? null,
+        risksMitigation: sections.risksMitigation ?? null,
+        assumptionsDependencies: sections.assumptionsDependencies ?? null,
+        whyUs: sections.whyUs ?? null,
         wordCount,
       })
       .returning({ id: proposals.id })

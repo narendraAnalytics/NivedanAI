@@ -858,7 +858,7 @@ function HitlPanel({ jobId }: { jobId: string }) {
 }
 
 /* ── Completion panel ── */
-function CompletionPanel() {
+function CompletionPanel({ jobId }: { jobId: string }) {
   return (
     <div style={{
       padding: '22px 28px',
@@ -886,20 +886,35 @@ function CompletionPanel() {
           </div>
         </div>
       </div>
-      <a
-        href="/dashboard"
-        style={{
-          padding: '11px 20px', fontSize: 13.5, fontWeight: 600,
-          background: 'linear-gradient(135deg, #FBF1D8, #E0B663)',
-          color: '#2A1E08', borderRadius: 10,
-          border: 'none', textDecoration: 'none',
-          boxShadow: '0 5px 14px rgba(212,168,79,0.28)',
-          whiteSpace: 'nowrap',
-          fontFamily: 'var(--f-display)',
-        }}
-      >
-        Back to Dashboard →
-      </a>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <a
+          href={`/proposals/${jobId}`}
+          style={{
+            padding: '11px 20px', fontSize: 13.5, fontWeight: 600,
+            background: 'rgba(255,255,255,0.15)',
+            color: '#fff', borderRadius: 10,
+            border: '1.5px solid rgba(255,255,255,0.3)', textDecoration: 'none',
+            whiteSpace: 'nowrap',
+            fontFamily: 'var(--f-display)',
+          }}
+        >
+          View Proposal
+        </a>
+        <a
+          href="/dashboard"
+          style={{
+            padding: '11px 20px', fontSize: 13.5, fontWeight: 600,
+            background: 'linear-gradient(135deg, #FBF1D8, #E0B663)',
+            color: '#2A1E08', borderRadius: 10,
+            border: 'none', textDecoration: 'none',
+            boxShadow: '0 5px 14px rgba(212,168,79,0.28)',
+            whiteSpace: 'nowrap',
+            fontFamily: 'var(--f-display)',
+          }}
+        >
+          Back to Dashboard →
+        </a>
+      </div>
     </div>
   )
 }
@@ -1102,10 +1117,27 @@ export default function WorkflowPage() {
           </div>
         )}
 
+        {/* View proposal link — awaiting review */}
+        {job?.status === 'awaiting_review' && (
+          <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'flex-end' }}>
+            <a
+              href={`/proposals/${jobId}`}
+              style={{
+                padding: '10px 18px', fontSize: 13, fontWeight: 600,
+                background: 'linear-gradient(135deg, var(--forest-deep), var(--forest))',
+                color: '#fff', borderRadius: 10, textDecoration: 'none',
+                boxShadow: '0 4px 12px rgba(35,69,57,0.2)',
+              }}
+            >
+              View Proposal →
+            </a>
+          </div>
+        )}
+
         {/* Completion panel */}
         {job?.status === 'completed' && (
           <div style={{ marginBottom: 24 }}>
-            <CompletionPanel />
+            <CompletionPanel jobId={jobId} />
           </div>
         )}
 

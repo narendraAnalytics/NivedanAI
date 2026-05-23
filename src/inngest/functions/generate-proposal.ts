@@ -8,9 +8,10 @@ import { runProposalWriter } from '@/agents/proposal-writer'
 import { runQualityReview } from '@/agents/quality-review'
 import { updateJobStatus } from '@/db/helpers/job-status'
 import { db } from '@/db'
-import { proposals, proposalExports, rfpJobs } from '@/db/schema'
+import { proposals, proposalExports, rfpJobs, parsedRfpData, clientResearchData, capabilityMatches } from '@/db/schema'
 import { companyProfiles } from '@/db/schema'
 import { users } from '@/db/schema'
+import { desc } from 'drizzle-orm'
 
 export const generateProposal = inngest.createFunction(
   {
@@ -59,11 +60,14 @@ export const generateProposal = inngest.createFunction(
     }
 
     await step.run('step-8-pdf-export', async () => {
-      const [proposalRows, companyRows, userRows, jobRows] = await Promise.all([
+      const [proposalRows, companyRows, userRows, jobRows, rfpRows, clientRows, matchRows] = await Promise.all([
         db.select().from(proposals).where(eq(proposals.rfpJobId, jobId)).limit(1),
         db.select().from(companyProfiles).where(eq(companyProfiles.id, companyProfileId)).limit(1),
         db.select().from(users).where(eq(users.id, userId)).limit(1),
         db.select({ clientName: rfpJobs.clientName }).from(rfpJobs).where(eq(rfpJobs.id, jobId)).limit(1),
+        db.select().from(parsedRfpData).where(eq(parsedRfpData.rfpJobId, jobId)).limit(1),
+        db.select().from(clientResearchData).where(eq(clientResearchData.rfpJobId, jobId)).limit(1),
+        db.select().from(capabilityMatches).where(eq(capabilityMatches.rfpJobId, jobId)).orderBy(desc(capabilityMatches.confidenceScore)),
       ])
 
       if (!proposalRows[0]) throw new Error('No approved proposal found for PDF export')
@@ -78,6 +82,9 @@ export const generateProposal = inngest.createFunction(
         proposal,
         companyProfile: company ?? { companyName: 'Company', logoUrl: null, brandColorPrimary: null, brandColorSecondary: null },
         clientName,
+        parsedRfp: rfpRows[0] ?? null,
+        clientResearch: clientRows[0] ?? null,
+        capabilityMatchList: matchRows,
       })
 
       const { UTApi } = await import('uploadthing/server')

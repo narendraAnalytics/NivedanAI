@@ -26,7 +26,7 @@ const agents = [
 ];
 
 /* ── Proposal entry type ── */
-type ProposalEntry = { name: string; status: string; score: number; date: string; win?: boolean; isOwn?: boolean };
+type ProposalEntry = { name: string; status: string; score: number; date: string; win?: boolean; isOwn?: boolean; jobId?: string };
 
 /* ── Sample proposals (always shown) ── */
 const sampleProposals: ProposalEntry[] = [
@@ -441,14 +441,14 @@ function StatCard({ icon, label, value, hint, accent }: {
 }
 
 function ProposalRow({ p, isLast }: { p: ProposalEntry; isLast: boolean }) {
-  return (
+  const inner = (
     <div
       style={{
         display: "flex", alignItems: "center", gap: 16,
         padding: "14px 18px",
         borderBottom: !isLast ? "1px solid var(--line)" : "none",
         transition: "background .2s",
-        cursor: "pointer",
+        cursor: p.jobId ? "pointer" : "default",
         borderRadius: 8,
         background: p.isOwn ? "rgba(47,93,80,0.04)" : "transparent",
       }}
@@ -510,6 +510,14 @@ function ProposalRow({ p, isLast }: { p: ProposalEntry; isLast: boolean }) {
       }}>{p.status}</span>
     </div>
   );
+  if (p.jobId) {
+    return (
+      <a href={`/proposals/${p.jobId}`} style={{ textDecoration: "none", display: "block" }}>
+        {inner}
+      </a>
+    );
+  }
+  return inner;
 }
 
 function RecentList({ userProposals }: { userProposals: ProposalEntry[] }) {
@@ -659,11 +667,26 @@ export default function Dashboard() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/kb/items').then(r => r.json()),
-      fetch('/api/stats').then(r => r.json()),
-    ]).then(([items, stats]) => {
+      fetch('/api/kb/items').then(r => r.ok ? r.json() : []),
+      fetch('/api/stats').then(r => r.ok ? r.json() : { jobsThisMonth: 0 }),
+      fetch('/api/proposals/recent').then(r => r.ok ? r.json() : []),
+    ]).then(([items, stats, recent]) => {
       setKbCount(Array.isArray(items) ? items.length : 0)
       setProposalCount(stats?.jobsThisMonth ?? 0)
+      if (Array.isArray(recent)) {
+        const mapped: ProposalEntry[] = recent.map((r: {
+          jobId: string; clientName: string | null; rfpTitle: string | null;
+          jobStatus: string; qualityScore: string | null; createdAt: string; isApproved: boolean;
+        }) => ({
+          jobId: r.jobId,
+          name: r.clientName ?? r.rfpTitle ?? 'Untitled RFP',
+          status: r.jobStatus === 'completed' ? 'Submitted' : r.jobStatus === 'awaiting_review' ? 'Draft Ready' : r.jobStatus,
+          score: r.qualityScore ? Math.round(Number(r.qualityScore) * 100) : 0,
+          date: new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+          isOwn: true,
+        }))
+        setUserProposals(mapped)
+      }
     }).catch(() => {
       setKbCount(0)
     })

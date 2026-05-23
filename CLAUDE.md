@@ -81,7 +81,7 @@ All agents live in `src/agents/` and are called from `src/inngest/functions/gene
 | 2 | `rfp-parser.ts` | gemini-3.1-flash-lite | Fetches PDF → base64 `inlineData` → Gemini native PDF reading → `parsedRfpData` |
 | 3 | `client-research.ts` + `search-agent.ts` | gemini-3.1-flash | `LlmAgent` + Runner + `GOOGLE_SEARCH` tool → `clientResearchData` |
 | 4 | `requirements-matcher.ts` | gemini-3.1-flash-lite | Queries KB, per-requirement LLM match → `capability_matches` |
-| 5 | `proposal-writer.ts` | gemini-3.1-pro-preview | 8-section JSON proposal → `proposals` row |
+| 5 | `proposal-writer.ts` | gemini-3.1-pro-preview | 12-section JSON proposal (incl. coverLetter, risksMitigation, assumptionsDependencies, whyUs) → `proposals` row |
 | 6 | `quality-review.ts` | gemini-3.1-flash-lite | 5 quality checks, applies corrections, sets `awaiting_review` |
 
 **Pipeline flow:**
@@ -261,8 +261,9 @@ Animations: `pulseGold`, `pulseGoldRing` (active agent card), `drift` (WorkflowV
 
 ### Key Pages
 
-- `/dashboard` — single `'use client'` file; all sub-components defined inline. Upload validates email before `startUpload`. Polls `/api/stats` and `/api/kb/items` on mount.
-- `/workflow/[jobId]` — polls `/api/jobs/[jobId]` every 3s. `CircularProgress` shows ETA while running, "Complete" when `awaiting_review`/`completed`.
+- `/dashboard` — single `'use client'` file; all sub-components defined inline. Upload validates email before `startUpload`. Polls `/api/stats`, `/api/kb/items`, and `/api/proposals/recent` on mount. Real proposals rendered as clickable rows linking to `/proposals/[jobId]`.
+- `/workflow/[jobId]` — polls `/api/jobs/[jobId]` every 3s. `CircularProgress` shows ETA while running, "Complete" + "View Proposal" button when `awaiting_review`/`completed`.
+- `/proposals/[jobId]` — server component; displays all 12 LLM-written sections with branded design. Queries `proposals` joined with `rfp_jobs` + `proposalExports`. `qualityScore` is stored as `0.00–1.00` decimal — multiply × 100 for display.
 - `/knowledge-base` — company profile editor + PDF upload (AI extracts title/tags from filename) + manual form.
 
 ### Clerk v7 Patterns
