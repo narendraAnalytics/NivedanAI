@@ -177,8 +177,9 @@ function ProfileCard({ profile, onSaved }: { profile: Profile; onSaved: (p: Prof
 
 /* ── Upload zone ── */
 function UploadZone({ onUploaded }: { onUploaded: (fileUrl: string) => void }) {
-  const [drag, setDrag]       = useState(false)
+  const [drag, setDrag]         = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [uploaded, setUploaded]   = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const { startUpload } = useUploadThing('kbDocument', {
@@ -187,17 +188,95 @@ function UploadZone({ onUploaded }: { onUploaded: (fileUrl: string) => void }) {
         ?? (files[0]?.serverData as { fileUrl?: string } | null)?.fileUrl
         ?? ''
       setUploading(false)
-      if (fileUrl) onUploaded(fileUrl)
+      if (fileUrl) {
+        setUploaded(true)
+        setTimeout(() => {
+          setUploaded(false)
+          onUploaded(fileUrl)
+        }, 1500)
+      }
     },
-    onUploadError: () => setUploading(false),
+    onUploadError: () => { setUploading(false); setUploaded(false) },
   })
 
   const handle = (file: File | null | undefined) => {
-    if (!file || uploading) return
+    if (!file || uploading || uploaded) return
     setUploading(true)
     startUpload([file])
   }
 
+  /* ── Uploading state ── */
+  if (uploading) {
+    return (
+      <div style={{
+        padding: '48px 24px', borderRadius: 16, textAlign: 'center',
+        background: 'linear-gradient(180deg, #FFFCF4 0%, #fff 100%)',
+        border: '1.5px dashed rgba(212,168,79,0.45)',
+      }}>
+        <style>{`
+          @keyframes kb-ring-spin {
+            from { stroke-dashoffset: 120; }
+            to   { stroke-dashoffset: -120; }
+          }
+        `}</style>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+          <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+            {/* Track */}
+            <circle cx="26" cy="26" r="22" stroke="#F0EBE0" strokeWidth="3.5" fill="none" />
+            {/* Animated ring */}
+            <circle
+              cx="26" cy="26" r="22"
+              stroke="#D4A84F" strokeWidth="3.5" fill="none"
+              strokeLinecap="round"
+              strokeDasharray="60 80"
+              style={{ animation: 'kb-ring-spin 1.1s linear infinite', transformOrigin: '26px 26px' }}
+            />
+            {/* Upload arrow inside */}
+            <path d="M26 34V22M21 27l5-5 5 5" stroke="#B88A2F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+        <div style={{ fontFamily: 'var(--f-display)', fontWeight: 600, fontSize: 16, color: 'var(--forest-deep)', marginBottom: 5 }}>
+          Uploading PDF…
+        </div>
+        <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
+          AI will extract title, description and tags automatically
+        </div>
+      </div>
+    )
+  }
+
+  /* ── Success state ── */
+  if (uploaded) {
+    return (
+      <div style={{
+        padding: '48px 24px', borderRadius: 16, textAlign: 'center',
+        background: 'linear-gradient(180deg, #F0FAF5 0%, #fff 100%)',
+        border: '1.5px solid rgba(47,93,80,0.20)',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: '50%',
+            background: '#E8F5F1',
+            border: '2px solid #2F5D50',
+            display: 'grid', placeItems: 'center',
+            boxShadow: '0 4px 14px rgba(47,93,80,0.15)',
+          }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M5 13l4.5 4.5L19 7" stroke="#2F5D50" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        </div>
+        <div style={{ fontFamily: 'var(--f-display)', fontWeight: 600, fontSize: 16, color: 'var(--forest-deep)', marginBottom: 5 }}>
+          Uploaded to knowledge base
+        </div>
+        <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
+          Processing document…
+        </div>
+      </div>
+    )
+  }
+
+  /* ── Idle / drag state ── */
   return (
     <div
       onDragOver={e => { e.preventDefault(); setDrag(true) }}
@@ -221,24 +300,16 @@ function UploadZone({ onUploaded }: { onUploaded: (fileUrl: string) => void }) {
         display: 'grid', placeItems: 'center',
         boxShadow: '0 8px 20px rgba(212,168,79,0.30)',
       }}>
-        {uploading ? (
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" style={{ animation: 'spin 1s linear infinite' }}>
-            <circle cx="11" cy="11" r="9" stroke="#2A1E08" strokeWidth="2" strokeDasharray="28 28" />
-          </svg>
-        ) : (
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M12 17V7M7 12l5-5 5 5" stroke="#2A1E08" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M5 19h14" stroke="#2A1E08" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        )}
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M12 17V7M7 12l5-5 5 5" stroke="#2A1E08" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M5 19h14" stroke="#2A1E08" strokeWidth="2" strokeLinecap="round" />
+        </svg>
       </div>
       <div style={{ fontFamily: 'var(--f-display)', fontWeight: 600, fontSize: 16, color: 'var(--forest-deep)', marginBottom: 5 }}>
-        {uploading ? 'Uploading PDF…' : drag ? 'Drop to upload' : 'Upload a document'}
+        {drag ? 'Drop to upload' : 'Upload a document'}
       </div>
       <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
-        {uploading
-          ? 'AI will extract title, description and tags automatically'
-          : 'Past proposals, case studies, certifications — PDF up to 16 MB'}
+        Past proposals, case studies, certifications — PDF up to 16 MB
       </div>
     </div>
   )
