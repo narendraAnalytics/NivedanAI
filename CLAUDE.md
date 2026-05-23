@@ -263,7 +263,7 @@ Animations: `pulseGold`, `pulseGoldRing` (active agent card), `drift` (WorkflowV
 
 - `/dashboard` — single `'use client'` file; all sub-components defined inline. Upload validates email before `startUpload`. Polls `/api/stats`, `/api/kb/items`, and `/api/proposals/recent` on mount. Real proposals rendered as clickable rows linking to `/proposals/[jobId]`.
 - `/workflow/[jobId]` — polls `/api/jobs/[jobId]` every 3s. `CircularProgress` shows ETA while running, "Complete" + "View Proposal" button when `awaiting_review`/`completed`.
-- `/proposals/[jobId]` — server component; displays all 12 LLM-written sections with branded design. Queries `proposals` joined with `rfp_jobs` + `proposalExports`. `qualityScore` is stored as `0.00–1.00` decimal — multiply × 100 for display.
+- `/proposals/[jobId]` — split into two files: `page.tsx` (server component — auth, DB queries, score computation, passes props) and `ProposalViewer.tsx` (client component — full interactive design: sticky TOC with scroll-spy, reading progress bar, section cards, floating action bar, Thank You closing card). `qualityScore` stored as `0.00–1.00` — multiply × 100 for display. Never move DB queries into `ProposalViewer`.
 - `/knowledge-base` — company profile editor + PDF upload (AI extracts title/tags from filename) + manual form.
 
 ### Clerk v7 Patterns
