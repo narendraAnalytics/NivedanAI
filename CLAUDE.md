@@ -265,12 +265,40 @@ Animations: `pulseGold`, `pulseGoldRing` (active agent card), `drift` (WorkflowV
 - `/workflow/[jobId]` — polls `/api/jobs/[jobId]` every 3s. `CircularProgress` shows ETA while running, "Complete" + "View Proposal" button when `awaiting_review`/`completed`.
 - `/proposals/[jobId]` — split into two files: `page.tsx` (server component — auth, DB queries, score computation, passes props) and `ProposalViewer.tsx` (client component — full interactive design: sticky TOC with scroll-spy, reading progress bar, section cards, floating action bar, Thank You closing card). `qualityScore` stored as `0.00–1.00` — multiply × 100 for display. Never move DB queries into `ProposalViewer`.
 - `/knowledge-base` — company profile editor + PDF upload (AI extracts title/tags from filename) + manual form.
+- `/pricing` — `'use client'`; uses `<PricingTable appearance={nivedanAppearance} />`. Auth-protected (middleware). Sticky header with back-to-home + logo. All styling via Clerk's `appearance` object — never add manual plan cards here.
+- `/redirecting` — transition animation page. Not in public routes. Context-aware message via `?to=` param. Any new nav link that needs the transition should route through here.
 
 ### Clerk v7 Patterns
 
 - `useUser()` → `{ isSignedIn, user }`
 - `<UserButton />` — no `afterSignOutUrl` prop (removed in v7; use `NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL` env var)
 - Middleware: `clerkMiddleware` + `createRouteMatcher` from `@clerk/nextjs/server`
+
+### Clerk Billing — Pricing Page
+
+`/pricing` uses Clerk's `<PricingTable />` from `@clerk/nextjs`. Plans are defined in the Clerk Dashboard — **no hardcoded plan IDs in code**. The component auto-fetches and renders them.
+
+Styled via the `appearance` prop in `src/app/pricing/page.tsx` using the brand palette (forest/gold/ivory). Plan name labels are lowercase (`free`, `plus`, `pro`) matching what's set in the Clerk Dashboard — `textTransform: 'none'` enforces this.
+
+Pricing tiers are documented in `pdfdeisgn.txt` at the repo root:
+- **free** — $0: 1 proposal/mo, 1 KB PDF/mo
+- **plus** — $9/mo: 5 proposals/mo, 10 KB PDFs/mo, priority processing
+- **pro** — $19/mo: unlimited, white-label, REST API, 5 team seats
+
+`users.plan` varchar in DB (`free` | `plus` | `pro`) — updated by Clerk billing webhooks (not yet wired). Default `'free'` set in `getOrCreateUser()`.
+
+### Navigation — Transition Page Pattern
+
+`/redirecting?to=X` (`src/app/redirecting/page.tsx`) shows the branded tick animation (circle draw-in → checkmark → glow pulse) then pushes to `/${X}` after 2200ms.
+
+- `/redirecting` is **not** in public routes — unauthenticated users hit sign-in first, then land on the transition after auth
+- Message is context-aware: `to=pricing` → "Exploring your plans", all others → "Preparing your workspace"
+- Used in Navbar for: Login → `sign-in`, Book a Demo → `sign-up`, Pricing → `pricing`
+
+**`NavLink` in Navbar** accepts an optional `href` prop (default `"#"`). Pass a full path for real navigation:
+```tsx
+<NavLink href="/redirecting?to=pricing">Pricing</NavLink>
+```
 
 ---
 
