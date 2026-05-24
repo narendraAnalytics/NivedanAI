@@ -1,0 +1,220 @@
+Yes, absolutely. Google ADK 2.0 fully supports Anthropic's **Model Context Protocol (MCP)** out of the box.
+
+Because Tavily officially hosts a managed, remote MCP server, you don't even need to download or run a local Tavily script or background process. You can point Google ADK's `McpToolset` directly to Tavily's remote endpoint, and the agent will automatically discover, handshake, and register Tavily's search capabilities (`tavily-search`, `tavily-extract`, etc.).
+
+---
+
+## TypeScript Implementation
+
+You can pull Tavily's MCP capabilities straight into a TypeScript agent using the official `@google/adk` library:
+
+```typescript
+import { LlmAgent, McpToolset, StreamableHTTPServerParams } from '@google/adk';
+
+// 1. Grab your Tavily API Key from the environment
+const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
+
+if (!TAVILY_API_KEY) {
+  throw new Error("Missing TAVILY_API_KEY environment variable.");
+}
+
+// 2. Connect directly to Tavily's hosted MCP endpoint
+const tavilySearchTools = new McpToolset({
+  connectionParams: new StreamableHTTPServerParams({
+    url: 'https://mcp.tavily.com/mcp/',
+    headers: {
+      'Authorization': `Bearer ${TAVILY_API_KEY}`,
+    },
+  }),
+});
+
+// 3. Initialize your ADK Agent with the MCP toolset
+const researchAgent = new LlmAgent({
+  name: 'tavily_researcher',
+  model: 'gemini-3.5-flash', 
+  instruction: 'You use Tavily web search tools to fetch real-time data, extract page text, and answer current queries.',
+  tools: [tavilySearchTools],
+});
+
+```
+
+---
+
+## How it works under the hood
+
+1. **The Handshake:** When the `LlmAgent` boots up, the `McpToolset` sends an HTTP handshake to Tavily's servers.
+2. **Schema Translation:** Tavily sends back its tool configurations (like schema definitions for arguments and descriptions). ADK maps those definitions into native ADK `BaseTool` instances dynamically.
+3. **Execution Routing:** When Gemini realizes it needs live web data, it formats a tool call. ADK intercepts it and proxies the parameters right back to Tavily's remote API via Server-Sent Events (SSE) or HTTP, returning the structured search hits straight to the model's context window.
+
+> **Tip on Local Servers:** If you ever decide to write your own custom *local* python/node MCP servers instead of using Tavily's hosted cloud option, you can swap out `StreamableHTTPServerParams` for `StdioConnectionParams` to let ADK spin up and communicate with local CLI subprocesses via standard input/output.
+----------------------------------------------------------- ----------------------------------------------------
+Yes, installing and running your code on **Vercel** is absolutely not a problem, provided you keep one crucial structural detail in mind regarding how MCP works.
+
+There are two different sides to an MCP setup, and they behave differently on Vercel:
+
+---
+
+## 1. Running the Agent (The Host App) on Vercel
+
+If your Next.js application on Vercel is acting as the **Host** (where your Google ADK agent lives and executes commands), it will work perfectly.
+
+Because Tavily provides a completely managed, remote MCP server, your Vercel deployment doesn't need to spin up or install any background processes. It simply makes outbound HTTPS requests to Tavily's endpoint.
+
+### The Code Configuration
+
+Your `api/agent/route.ts` or server action on Vercel would look exactly like this. Just ensure your `TAVILY_API_KEY` is added to your **Vercel Project Environment Variables**:
+
+```typescript
+import { NextResponse } from 'next/server';
+import { LlmAgent, McpToolset, StreamableHTTPServerParams } from '@google/adk';
+
+export async function POST(req: Request) {
+  const { userInput } = await req.json();
+
+  // 1. Connect directly to Tavily's remote cloud endpoint
+  const tavilySearchTools = new McpToolset({
+    connectionParams: new StreamableHTTPServerParams({
+      url: 'https://mcp.tavily.com/mcp/',
+      headers: {
+        'Authorization': `Bearer ${process.env.TAVILY_API_KEY}`,
+      },
+    }),
+  });
+
+  // 2. Initialize the Google ADK Agent
+  const agent = new LlmAgent({
+    name: 'vercel_researcher',
+    model: 'gemini-3.5-flash',
+    instruction: 'Use web search to answer queries based on live, real-time data.',
+    tools: [tavilySearchTools],
+  });
+
+  // 3. Run the agent execution
+  const response = await agent.run({ message: userInput });
+  
+  return NextResponse.json({ response });
+}
+
+```
+
+---
+
+## 2. What you CANNOT do on Vercel (`Stdio` servers)
+
+If you read documentation online that tells you to install the Tavily MCP server using a local command line instruction like this:
+
+```json
+// Do NOT use this style on Vercel
+"mcpServers": {
+  "tavily": {
+    "command": "npx",
+    "args": ["-y", "tavily-mcp@latest"]
+  }
+}
+
+```
+
+**This will fail on Vercel.** Vercel runs on **Serverless Functions** (ephemeral environments). Serverless functions cannot execute local CLI commands (`npx`), spawn background sub-processes via standard input/output (`stdio`), or hold persistent long-lived server connections open.
+
+### Why you don't need to worry about this
+
+Since Tavily provides their hosted HTTP endpoint (`[https://mcp.tavily.com/mcp/](https://mcp.tavily.com/mcp/)`), you bypass the need for a local subprocess completely. Your serverless functions will treat Tavily like a standard, lightweight API endpoint using the **Streamable HTTP** transport protocol, which Vercel handles cleanly.
+
+---
+
+## Quick Vercel Checklist
+
+1. **Set Environment Variables:** Go to your Vercel Dashboard → *Settings* → *Environment Variables* and add your `TAVILY_API_KEY` and your Google AI credentials (`GEMINI_API_KEY`).
+2. **Execution Timeouts:** If your agent performs deep research (e.g., pulling multiple web pages or calling sub-agents), the serverless function might take longer than the default 10-second hobby timeout. If you are on a Vercel Pro tier, you can configure your max duration in your route file:
+```typescript
+export const maxDuration = 60; // Set timeout limit to 60 seconds
+
+```
+
+
+
+```
+
+```
+--------------------------------------- ------------------------------------------------------- ---------------------
+Tavily **does have a free tier**, making it easy to test and prototype with your ADK agents without needing a credit card upfront.
+
+They use a **credit-based structure** across their endpoints:
+
+### The Free Tier (Researcher Plan)
+
+* **Cost:** $0 / month (No credit card required)
+* **Allocation:** **1,000 API credits per month**.
+* **Reset:** Your credits automatically refresh on the 1st of every month.
+
+### How the Credits are Spent
+
+Depending on how your ADK agent interacts with the MCP server, different tools use different amounts of credits:
+
+* **Basic Search (`basic`):** Costs **1 credit** per request. (Returns optimized snippets, titles, and URLs).
+* **Advanced Search (`advanced`):** Costs **2 credits** per request. (Used for deeper context, better reasoning, or AI-generated answers).
+* **Extract API (`/extract`):** Scrapes the full content of target URLs. Every 5 successful extractions cost **1 credit** (for basic extraction).
+
+### Paid Tiers (If you scale up)
+
+If your agent goes into production or runs complex multi-agent workflows that burn through 1,000 requests quickly, they offer:
+
+* **Pay-As-You-Go:** **$0.008 per credit** (billed automatically only after you pass your plan's limits).
+* **Subscription Plans:** Start at around **$30/month** for higher thresholds (e.g., ~4,000 credits/mo) with lower per-credit costs ($0.0075 down to $0.005).
+
+**Pro-tip for your ADK Agents:** If you want to stretch your 1,000 free monthly credits as far as possible, ensure the system instructions for your search agent specifically tell it to *only use basic search* unless deep research is absolutely necessary.
+
+------------------------------ ------------------------------------------------
+
+Yes. That is a good decision **for your current phase**.
+
+For Nivedan AI right now:
+
+```txt
+Client Research Agent
+   → Tavily MCP
+
+Requirements Matcher Agent
+   → Tavily MCP (optional later)
+
+Proposal Writer Agent
+   → Tavily MCP (optional statistics/trends)
+
+Google Search
+   → Keep for lightweight search if already working
+```
+
+My recommendation:
+
+**Do NOT replace everything immediately.**
+
+Current phase:
+
+```txt
+Phase 1 (Build & Prove)
+✓ Add Tavily MCP
+✓ Keep existing Google Search working
+✓ Measure proposal quality improvement
+```
+
+Then later:
+
+```txt
+Phase 2
+Decide:
+Google Search only
+OR
+Google Search + Tavily
+OR
+Fully Tavily
+```
+
+For your RFP proposal platform, Tavily is strong because it is designed for AI agents and returns structured, LLM-friendly results rather than generic search pages. ([Toloka][1])
+
+So your plan:
+
+**"Add Tavily now, improve agents gradually"**
+
+→ Correct approach. It matches your phased architecture roadmap. 
+
+[1]: https://toloka.ai/blog/best-mcp-servers-for-ai-agents/?utm_source=chatgpt.com "Best MCP servers for AI agents in 2026"

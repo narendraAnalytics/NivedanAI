@@ -1,4 +1,5 @@
 import { GoogleGenAI } from '@google/genai'
+import { MCPToolset, LlmAgent, Runner, InMemorySessionService } from '@google/adk'
 import { eq } from 'drizzle-orm'
 import { db } from '@/db'
 import { parsedRfpData, capabilityMatches } from '@/db/schema'
@@ -13,6 +14,20 @@ import {
 } from '@/db/helpers/job-status'
 
 const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY!, apiVersion: 'v1alpha' })
+
+const TAVILY_EVIDENCE_INSTRUCTION = `You are a research assistant helping match RFP requirements to vendor capabilities.
+
+For each RFP requirement given, use the search tool to find ONE relevant real-world example, industry standard, or proof point that a vendor could use to demonstrate they meet that requirement.
+
+After searching, return ONLY a valid JSON array — no markdown, no explanation:
+[
+  {
+    "requirementId": "exact id from the requirement",
+    "evidence": "1-2 sentences summarising what you found, including the source URL"
+  }
+]
+
+If search yields nothing useful for a requirement, omit it from the array.`
 
 const MATCHER_INSTRUCTION = `You are the Requirements Matcher Agent for Nivedan AI.
 
@@ -43,6 +58,70 @@ Output ONLY valid JSON — no markdown fences, no explanation:
   "gapSuggestion": "string or null"
 }`
 
+async function gatherTavilyEvidence(
+  requirements: Requirement[],
+  userId: string,
+): Promise<Map<string, string>> {
+  const tavilyKey = process.env.TAVILY_API_KEY
+  if (!tavilyKey) return new Map()
+
+  // LlmAgent reads GOOGLE_GENAI_API_KEY; alias from the env var used by the rest of the pipeline
+  process.env.GOOGLE_GENAI_API_KEY ??= process.env.GOOGLE_API_KEY
+
+  const toolset = new MCPToolset({
+    type: 'StreamableHTTPConnectionParams',
+    url: 'https://mcp.tavily.com/mcp/',
+    transportOptions: {
+      requestInit: {
+        headers: { Authorization: `Bearer ${tavilyKey}` },
+      },
+    },
+  })
+
+  try {
+    const agent = new LlmAgent({
+      name: 'tavily_evidence_gatherer',
+      model: 'gemini-3.1-flash-lite',
+      instruction: TAVILY_EVIDENCE_INSTRUCTION,
+      tools: [toolset],
+    })
+
+    const sessionSvc = new InMemorySessionService()
+    const runner = new Runner({
+      appName: 'nivedan-rm-evidence',
+      agent,
+      sessionService: sessionSvc,
+    })
+
+    const reqList = requirements
+      .map(r => `- ID: ${r.id}\n  Requirement: ${r.text}`)
+      .join('\n')
+    const prompt = `Search for real-world evidence for each of these RFP requirements and return the JSON array:\n\n${reqList}`
+
+    let finalText = ''
+    for await (const event of runner.runEphemeral({
+      userId,
+      newMessage: { role: 'user', parts: [{ text: prompt }] },
+    })) {
+      const text = event.content?.parts?.[0]?.text
+      if (text) finalText = text
+    }
+
+    const cleaned = finalText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+    const parsed = JSON.parse(cleaned) as Array<{ requirementId: string; evidence: string }>
+
+    const map = new Map<string, string>()
+    for (const entry of parsed) {
+      if (entry.requirementId && entry.evidence) map.set(entry.requirementId, entry.evidence)
+    }
+    return map
+  } catch {
+    return new Map()
+  } finally {
+    await toolset.close()
+  }
+}
+
 export interface RequirementsMatcherInput {
   jobId: string
   userId: string
@@ -63,6 +142,7 @@ interface MatchResult {
   confidenceScore: number
   isGap: boolean
   gapSuggestion: string | null
+  tavilyEvidence: string | null
 }
 
 export async function runRequirementsMatcher(input: RequirementsMatcherInput): Promise<void> {
@@ -124,6 +204,18 @@ export async function runRequirementsMatcher(input: RequirementsMatcherInput): P
       industry: item.industry,
     }))
 
+    // Gather web evidence via Tavily MCP (best-effort — silently skipped on failure)
+    let tavilyEvidence = new Map<string, string>()
+    try {
+      await updateJobActivity(jobId, 'Searching web for requirement evidence via Tavily MCP…')
+      tavilyEvidence = await gatherTavilyEvidence(mandatoryRequirements, userId)
+      if (tavilyEvidence.size > 0) {
+        await updateJobActivity(jobId, `Web evidence gathered for ${tavilyEvidence.size} requirements — matching against KB…`)
+      }
+    } catch {
+      // Non-fatal — proceed with KB-only matching
+    }
+
     const matches: MatchResult[] = []
 
     // Match each mandatory requirement against KB
@@ -132,6 +224,12 @@ export async function runRequirementsMatcher(input: RequirementsMatcherInput): P
       if (i % 5 === 0) {
         await updateJobActivity(jobId, `Matching requirement ${i + 1} / ${mandatoryRequirements.length}…`)
       }
+
+      const webEvidence = tavilyEvidence.get(req.id)
+      const evidenceBlock = webEvidence
+        ? `\n\n---\nWEB EVIDENCE (Tavily MCP):\n${webEvidence}\n\nUse this evidence to strengthen your matchSummary if relevant.`
+        : ''
+
       const matchPrompt = `${MATCHER_INSTRUCTION}
 
 ---
@@ -140,7 +238,7 @@ ${JSON.stringify(req, null, 2)}
 
 ---
 KNOWLEDGE BASE ITEMS (${activeKbItems.length} total):
-${JSON.stringify(kbSummary, null, 2)}
+${JSON.stringify(kbSummary, null, 2)}${evidenceBlock}
 
 Return ONLY valid JSON matching the schema above.`
 
@@ -184,6 +282,7 @@ Return ONLY valid JSON matching the schema above.`
         confidenceScore,
         isGap,
         gapSuggestion: isGap ? ((matchData.gapSuggestion as string) ?? 'No matching evidence found in knowledge base.') : null,
+        tavilyEvidence: tavilyEvidence.get(req.id) ?? null,
       })
     }
 
@@ -203,6 +302,7 @@ Return ONLY valid JSON matching the schema above.`
           confidenceScore: String(m.confidenceScore),
           isGap: m.isGap,
           gapSuggestion: m.gapSuggestion,
+          tavilyEvidence: m.tavilyEvidence,
         }))
       )
     }

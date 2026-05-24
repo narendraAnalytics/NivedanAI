@@ -1,8 +1,7 @@
-import { LlmAgent } from '@google/adk'
+import { LlmAgent, Runner, InMemorySessionService } from '@google/adk'
 import { db } from '@/db'
 import { clientResearchData } from '@/db/schema'
 import { sessionService } from '@/lib/adk/session'
-import { createRunner } from '@/lib/adk/runner'
 import { searchAgent } from './search-agent'
 import {
   createAgentRun,
@@ -112,20 +111,22 @@ Return ONLY valid JSON matching the schema in your instructions.
 `
 
     await updateJobActivity(jobId, `Searching: ${companyToResearch} — news, strategy, leadership…`)
-    const runner = createRunner(clientResearchAgent)
 
-    let finalText = ''
-    const events = runner.runAsync({
-      userId,
-      sessionId: jobId,
-      newMessage: { role: 'user', parts: [{ text: researchPrompt }] },
+    // Ephemeral session — no dependency on pipeline session persistence across Inngest steps
+    const localSessionSvc = new InMemorySessionService()
+    const runner = new Runner({
+      appName: 'nivedan-client-research',
+      agent: clientResearchAgent,
+      sessionService: localSessionSvc,
     })
 
-    for await (const event of events) {
+    let finalText = ''
+    for await (const event of runner.runEphemeral({
+      userId,
+      newMessage: { role: 'user', parts: [{ text: researchPrompt }] },
+    })) {
       const text = event.content?.parts?.[0]?.text
-      if (text) {
-        finalText = text
-      }
+      if (text) finalText = text
     }
 
     await updateJobActivity(jobId, 'Compiling research intelligence…')
@@ -170,6 +171,7 @@ Return ONLY valid JSON matching the schema in your instructions.
       competitors: (clientProfile.competitors as string[]) ?? null,
       sources: (clientProfile.sources as string[]) ?? null,
       researchConfidence: confidence,
+      googleSearchUsed: Array.isArray(clientProfile.sources) && (clientProfile.sources as string[]).length > 0,
     })
 
     Object.assign(session.state, {

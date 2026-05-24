@@ -64,6 +64,8 @@ Schema in 5 domain files, all re-exported from `src/db/schema/index.ts`:
 - All other PKs are `uuid().defaultRandom()`
 - All FK constraints use `{ onDelete: 'cascade' }` except `capability_matches.knowledge_base_item_id` which uses `set null`
 - `capability_matches.confidenceScore` is `numeric(3,2)` — always pass `String(score)`, not a raw number
+- `capability_matches.tavilyEvidence` (text, nullable) — stores the Tavily MCP web evidence used for that requirement; non-null confirms Tavily searched and found something
+- `client_research_data.googleSearchUsed` (boolean, default false) — true when `sources[]` is non-empty after Agent 3 runs; query this in Neon to confirm GOOGLE_SEARCH tool fired
 
 ### Auth — `src/middleware.ts` + `src/lib/auth.ts`
 
@@ -79,8 +81,8 @@ All agents live in `src/agents/` and are called from `src/inngest/functions/gene
 |---|------|-------|------|
 | 1 | `orchestrator.ts` | gemini-3.1-pro-preview | Validates inputs, LLM pipeline directive, `createSession` |
 | 2 | `rfp-parser.ts` | gemini-3.1-flash-lite | Fetches PDF → base64 `inlineData` → Gemini native PDF reading → `parsedRfpData` |
-| 3 | `client-research.ts` + `search-agent.ts` | gemini-3.1-flash | `LlmAgent` + Runner + `GOOGLE_SEARCH` tool → `clientResearchData` |
-| 4 | `requirements-matcher.ts` | gemini-3.1-flash-lite | Queries KB, per-requirement LLM match → `capability_matches` |
+| 3 | `client-research.ts` + `search-agent.ts` | gemini-3.1-flash | `LlmAgent` (`subAgents: [searchAgent]`) + `GOOGLE_SEARCH` + `Runner.runEphemeral` → `clientResearchData` |
+| 4 | `requirements-matcher.ts` | gemini-3.1-flash-lite | Tavily MCP evidence pass (`MCPToolset` + `LlmAgent` + `runEphemeral`), then per-requirement `generateContent` match → `capability_matches` |
 | 5 | `proposal-writer.ts` | gemini-3.1-pro-preview | 12-section JSON proposal (incl. coverLetter, risksMitigation, assumptionsDependencies, whyUs) → `proposals` row |
 | 6 | `quality-review.ts` | gemini-3.1-flash-lite | 5 quality checks, applies corrections, sets `awaiting_review` |
 
@@ -115,18 +117,21 @@ const proposalDraftId = row?.id ?? null
 
 Session state IS reliable for data the Orchestrator writes at `createSession` (step 1 creates the session; steps 2–6 read initial values like `rfpDocumentUrl`, `companyName`, `pipelineDirective`).
 
-**ADK singleton rule:** Import `sessionService` from `@/lib/adk/session` — never `new InMemorySessionService()`. Mutate via `Object.assign(session.state, { ... })`.
+**ADK singleton rule:** Import `sessionService` from `@/lib/adk/session` for reading Orchestrator-set state. For one-shot agent sub-tasks (Agents 3 and 4 search passes), create a local `new InMemorySessionService()` + `Runner` and use `runner.runEphemeral()` — this avoids cross-step session loss entirely.
 
-**`memoryService`:** Only wired into Agent 3 via `createRunner()`. Not used in any other agent.
+**`runEphemeral` vs `runAsync`:**
+- `runEphemeral({ userId, newMessage })` — no pre-existing session required; correct for one-shot LlmAgent calls within a step
+- `runAsync({ userId, sessionId, newMessage })` — requires session to already exist in that Runner's sessionService; **do not use** with the pipeline `sessionService` for sub-task agents (session may be gone after Inngest step replay)
 
 ### ADK Implementation Pattern per Agent
 
-| Agent | LLM approach | sessionService |
+| Agent | LLM approach | Session pattern |
 |-------|-------------|----------------|
-| 1 Orchestrator | `generateContent` one-shot | `createSession` |
-| 2 RFP Parser | `generateContent` one-shot | `getSession` + `Object.assign` |
-| 3 Client Research | `LlmAgent` + `createRunner()` | `getSession` + `Object.assign` |
-| 4–6 | `generateContent` one-shot | `getSession` + `Object.assign` |
+| 1 Orchestrator | `generateContent` one-shot | `sessionService.createSession` |
+| 2 RFP Parser | `generateContent` one-shot | `sessionService.getSession` + `Object.assign` |
+| 3 Client Research | `LlmAgent` + `Runner.runEphemeral` (local `InMemorySessionService`) | `sessionService.getSession` for clientName/directive only |
+| 4 Req. Matcher | Tavily `MCPToolset` + `LlmAgent` + `Runner.runEphemeral`, then `generateContent` per-requirement | `sessionService.getSession` for companyProfileId only |
+| 5–6 | `generateContent` one-shot | `sessionService.getSession` + `Object.assign` |
 
 ### @google/adk TypeScript API — Confirmed Correct Patterns
 
@@ -142,18 +147,39 @@ Read from `node_modules/@google/adk/dist/types/` — do not revert:
 
 3. **Sub-agents property is `subAgents`**, not `agents`
 
-4. **`runner.runAsync()` returns `AsyncGenerator<Event>`:**
+4. **`runner.runEphemeral()` — preferred for one-shot calls (no session pre-creation needed):**
    ```typescript
-   for await (const event of runner.runAsync({ userId, sessionId: jobId, newMessage: { role: 'user', parts: [{ text: prompt }] } })) {
+   const sessionSvc = new InMemorySessionService()
+   const runner = new Runner({ appName: 'my-app', agent, sessionService: sessionSvc })
+   for await (const event of runner.runEphemeral({ userId, newMessage: { role: 'user', parts: [{ text: prompt }] } })) {
      const text = event.content?.parts?.[0]?.text
      if (text) finalText = text
    }
+   // runAsync({ sessionId }) also exists but requires the session to already be in that Runner's sessionService
    ```
 
 5. **ADK env var:** `LlmAgent` reads `GOOGLE_GENAI_API_KEY` or `GEMINI_API_KEY` — **not** `GOOGLE_API_KEY`. The alias in `client-research.ts` fixes this:
    ```typescript
    process.env.GOOGLE_GENAI_API_KEY ??= process.env.GOOGLE_API_KEY
    ```
+
+6. **`MCPToolset` — Tavily MCP (used in `requirements-matcher.ts`):**
+   ```typescript
+   import { MCPToolset, LlmAgent, Runner, InMemorySessionService } from '@google/adk'
+
+   const toolset = new MCPToolset({
+     type: 'StreamableHTTPConnectionParams',
+     url: 'https://mcp.tavily.com/mcp/',
+     transportOptions: {
+       requestInit: { headers: { Authorization: `Bearer ${process.env.TAVILY_API_KEY}` } },
+     },
+   })
+   // Always close in finally block: await toolset.close()
+   // Auth goes in transportOptions.requestInit.headers — NOT the deprecated .header field
+   // Use runner.runEphemeral({ userId, newMessage }) for one-shot calls (no pre-created session needed)
+   ```
+   Env var: `TAVILY_API_KEY` (from app.tavily.com — free tier: 1,000 credits/mo).
+   Vercel compatible: HTTP transport only — never `StdioConnectionParams` on serverless.
 
 ### `@google/genai` — All Direct Agents
 

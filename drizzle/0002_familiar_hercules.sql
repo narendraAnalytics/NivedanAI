@@ -1,0 +1,1 @@
+ALTER TABLE "capability_matches" ADD COLUMN "tavily_evidence" text;

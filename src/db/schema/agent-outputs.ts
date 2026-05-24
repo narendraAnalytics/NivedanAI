@@ -32,6 +32,7 @@ export const clientResearchData = pgTable('client_research_data', {
   competitors: jsonb('competitors'),
   sources: jsonb('sources'),
   researchConfidence: text('research_confidence'), // high | medium | low
+  googleSearchUsed: boolean('google_search_used').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
@@ -45,5 +46,6 @@ export const capabilityMatches = pgTable('capability_matches', {
   confidenceScore: numeric('confidence_score', { precision: 3, scale: 2 }),
   isGap: boolean('is_gap').default(false).notNull(),
   gapSuggestion: text('gap_suggestion'),
+  tavilyEvidence: text('tavily_evidence'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })

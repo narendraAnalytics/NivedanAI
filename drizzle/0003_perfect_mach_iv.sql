@@ -1,0 +1,1 @@
+ALTER TABLE "client_research_data" ADD COLUMN "google_search_used" boolean DEFAULT false NOT NULL;
