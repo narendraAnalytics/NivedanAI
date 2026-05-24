@@ -23,6 +23,7 @@ export const generateProposal = inngest.createFunction(
 
     await step.run('step-1-orchestrator', async () => {
       await runOrchestrator({ jobId, userId, rfpDocumentUrl, companyProfileId, inngestRunId: runId })
+      return { status: 'ok', jobId }
     })
 
     await step.run('step-2-rfp-parser', async () => {
