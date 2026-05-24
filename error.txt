@@ -1,56 +1,23 @@
-GET /api/proposals/recent 200 in 714ms (next.js: 47ms, proxy.ts: 94ms, application-code: 573ms)
-[kb/items GET] Error: Failed query: select "id" from "company_profiles" where "company_profiles"."user_id" = $1 limit $2
-params: user_3Dvtrj0gr5S4eGEbpxwqkDSZWxl,1
-    at async getOrCreateProfile (src\app\api\kb\items\route.ts:14:22)
-    at async GET (src\app\api\kb\items\route.ts:62:21)
-  12 |
-  13 | async function getOrCreateProfile(userId: string) {
-> 14 |   const [existing] = await db
-     |                      ^
-  15 |     .select({ id: companyProfiles.id })
-  16 |     .from(companyProfiles)
-  17 |     .where(eq(companyProfiles.userId, userId)) {
-  query: 'select "id" from "company_profiles" where "company_profiles"."user_id" = $1 limit $2',
-  params: [ 'user_3Dvtrj0gr5S4eGEbpxwqkDSZWxl', 1 ],
-  [cause]: Error [NeonDbError]: Error connecting to database: TypeError: fetch failed
-      at async getOrCreateProfile (src\app\api\kb\items\route.ts:14:22)
-      at async GET (src\app\api\kb\items\route.ts:62:21)
-    12 |
-    13 | async function getOrCreateProfile(userId: string) {
-  > 14 |   const [existing] = await db
-       |                      ^
-    15 |     .select({ id: companyProfiles.id })
-    16 |     .from(companyProfiles)
-    17 |     .where(eq(companyProfiles.userId, userId)) {
-    severity: undefined,
-    code: undefined,
-    detail: undefined,
-    hint: undefined,
-    position: undefined,
-    internalPosition: undefined,
-    internalQuery: undefined,
-    where: undefined,
-    schema: undefined,
-    table: undefined,
-    column: undefined,
-    dataType: undefined,
-    constraint: undefined,
-    file: undefined,
-    line: undefined,
-    routine: undefined,
-    sourceError: TypeError: fetch failed
-        at async getOrCreateProfile (src\app\api\kb\items\route.ts:14:22)
-        at async GET (src\app\api\kb\items\route.ts:62:21)
-      12 |
-      13 | async function getOrCreateProfile(userId: string) {
-    > 14 |   const [existing] = await db
-         |                      ^
-      15 |     .select({ id: companyProfiles.id })
-      16 |     .from(companyProfiles)
-      17 |     .where(eq(companyProfiles.userId, userId)) {
-      [cause]: [Error]
-    }
-  }
-}
- GET /api/kb/items 500 in 17.6s (next.js: 3.8s, proxy.ts: 778ms, application-code: 13.0s)
- GET /api/kb/items 200 in 2.9s (next.js: 11ms, proxy.ts: 76ms, application-code: 2.8s)
+The metadata is likely wrong — and yes, it does matter for proposal quality.                                                              
+                                                                                                                                          
+  Here's the problem: the KB upload extracts metadata from the filename only (not PDF content). So a file named company_overview.pdf          generates generic titles like "Strategic Business Operations Overview" with generic tags — not the actual FinShield banking/fintech
+  content.                                                                                                                                                                                                                                                                            
+  The requirements-matcher only sees:
+  title: "Strategic Business Operations Overview"
+  tags: ["operations", "strategy", "business-process"]
+  type: "Technology"
+
+  Instead of what it should see:
+  title: "FinShield Analytics — UPI Fraud AI Platform (Union Bank Case Study)"
+  tags: ["fraud-detection", "AML", "UPI", "banking", "NPCI", "fintech"]
+  type: "case_study"
+
+  This will hurt your ICICI Bank proposal score — the matcher won't connect this document to banking/fraud/compliance requirements.
+
+  The fix is to extract metadata from the actual PDF content using Gemini (same way Agent 2 reads PDFs via inlineData). This needs a code
+  change to src/app/api/kb/items/route.ts — replace the filename-based extractFromFilename with a content-based extraction that fetches the
+  PDF and sends it to Gemini.
+
+  For now as a workaround: Does your KB UI allow editing the title/description/tags after upload? If yes, manually update the FinShield item   with accurate banking tags before running the proposal. That will fix the matching immediately without waiting for the code change.
+
+  Want me to implement the PDF-content-based metadata extraction fix?
