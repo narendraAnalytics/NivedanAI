@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 export const maxDuration = 60
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import { knowledgeBaseItems, companyProfiles } from '@/db/schema'
 import { getOrCreateUser } from '@/lib/auth'
 import { GoogleGenAI } from '@google/genai'
+
+const KB_LIMITS: Record<string, number> = { free: 1, plus: 10, pro: Infinity }
 
 const VALID_TYPES = ['past_proposal', 'case_study', 'certification', 'team_bio', 'technology', 'testimonial'] as const
 type KbType = typeof VALID_TYPES[number]
@@ -93,6 +95,17 @@ export async function POST(req: NextRequest) {
   try {
     const user = await getOrCreateUser()
     const profile = await getOrCreateProfile(user.id)
+
+    const [{ count }] = await withRetry(() =>
+      db.select({ count: sql<number>`count(*)::int` })
+        .from(knowledgeBaseItems)
+        .where(eq(knowledgeBaseItems.companyProfileId, profile.id))
+    )
+    const limit = KB_LIMITS[user.plan] ?? 1
+    if (count >= limit) {
+      return NextResponse.json({ error: 'plan_limit', limit, plan: user.plan }, { status: 429 })
+    }
+
     const body = await req.json()
 
     let title: string = body.title ?? ''
