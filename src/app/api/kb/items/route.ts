@@ -111,7 +111,8 @@ ${hintType ? `User-selected type hint: "${hintType}" — use unless clearly wron
     const raw = result.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}'
     const cleaned = raw.replace(/```json\n?|```/g, '').trim()
     return JSON.parse(cleaned) as ExtractedMeta
-  } catch {
+  } catch (err) {
+    console.error('[extractFromPDF] failed, falling back to filename:', err)
     return extractFromFilename(filename, hintType)
   }
 }
@@ -157,7 +158,9 @@ export async function POST(req: NextRequest) {
     let industry: string | null = body.industry ?? null
 
     if (body.fileUrl && !body.title) {
-      const filename = (body.fileUrl as string).split('/').pop() ?? 'document.pdf'
+      const filename = (body.filename as string | undefined)
+        || (body.fileUrl as string).split('/').pop()
+        || 'document.pdf'
       const extracted = await extractFromPDF(body.fileUrl, filename, body.type)
       title = extracted.title || title
       description = extracted.description || description

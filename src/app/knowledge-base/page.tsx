@@ -177,11 +177,12 @@ function ProfileCard({ profile, onSaved }: { profile: Profile; onSaved: (p: Prof
 }
 
 /* ── Upload zone ── */
-function UploadZone({ onUploaded }: { onUploaded: (fileUrl: string) => void }) {
+function UploadZone({ onUploaded }: { onUploaded: (fileUrl: string, filename: string) => void }) {
   const [drag, setDrag]         = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploaded, setUploaded]   = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const originalNameRef = useRef<string>('')
 
   const { startUpload } = useUploadThing('kbDocument', {
     onClientUploadComplete: (files) => {
@@ -193,7 +194,7 @@ function UploadZone({ onUploaded }: { onUploaded: (fileUrl: string) => void }) {
         setUploaded(true)
         setTimeout(() => {
           setUploaded(false)
-          onUploaded(fileUrl)
+          onUploaded(fileUrl, originalNameRef.current || fileUrl.split('/').pop() || 'document.pdf')
         }, 1500)
       }
     },
@@ -202,6 +203,7 @@ function UploadZone({ onUploaded }: { onUploaded: (fileUrl: string) => void }) {
 
   const handle = (file: File | null | undefined) => {
     if (!file || uploading || uploaded) return
+    originalNameRef.current = file.name
     setUploading(true)
     startUpload([file])
   }
@@ -539,13 +541,12 @@ export default function KnowledgeBasePage() {
     }).catch(() => setLoading(false))
   }, [])
 
-  const onUploaded = async (fileUrl: string) => {
-    const fileName = fileUrl.split('/').pop() ?? 'document.pdf'
-    setExtracting(fileName)
+  const onUploaded = async (fileUrl: string, filename: string) => {
+    setExtracting(filename)
     const res = await fetch('/api/kb/items', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fileUrl }),
+      body: JSON.stringify({ fileUrl, filename }),
     })
     if (res.ok) {
       const item = await res.json()
