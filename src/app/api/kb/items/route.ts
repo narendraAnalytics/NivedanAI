@@ -10,17 +10,33 @@ import { GoogleGenAI } from '@google/genai'
 const VALID_TYPES = ['past_proposal', 'case_study', 'certification', 'team_bio', 'technology', 'testimonial'] as const
 type KbType = typeof VALID_TYPES[number]
 
+async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
+  for (let i = 0; i < attempts; i++) {
+    try { return await fn() } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (i < attempts - 1 && (msg.includes('fetch failed') || msg.includes('Error connecting'))) {
+        await new Promise(r => setTimeout(r, 300))
+        continue
+      }
+      throw err
+    }
+  }
+  throw new Error('unreachable')
+}
+
 async function getOrCreateProfile(userId: string) {
-  const [existing] = await db
-    .select({ id: companyProfiles.id })
-    .from(companyProfiles)
-    .where(eq(companyProfiles.userId, userId))
-    .limit(1)
+  const [existing] = await withRetry(() =>
+    db.select({ id: companyProfiles.id })
+      .from(companyProfiles)
+      .where(eq(companyProfiles.userId, userId))
+      .limit(1)
+  )
   if (existing) return existing
-  const [created] = await db
-    .insert(companyProfiles)
-    .values({ userId, companyName: 'My Company' })
-    .returning({ id: companyProfiles.id })
+  const [created] = await withRetry(() =>
+    db.insert(companyProfiles)
+      .values({ userId, companyName: 'My Company' })
+      .returning({ id: companyProfiles.id })
+  )
   return created
 }
 
@@ -60,11 +76,12 @@ export async function GET() {
   try {
     const user = await getOrCreateUser()
     const profile = await getOrCreateProfile(user.id)
-    const items = await db
-      .select()
-      .from(knowledgeBaseItems)
-      .where(eq(knowledgeBaseItems.companyProfileId, profile.id))
-      .orderBy(knowledgeBaseItems.createdAt)
+    const items = await withRetry(() =>
+      db.select()
+        .from(knowledgeBaseItems)
+        .where(eq(knowledgeBaseItems.companyProfileId, profile.id))
+        .orderBy(knowledgeBaseItems.createdAt)
+    )
     return NextResponse.json(items)
   } catch (err) {
     console.error('[kb/items GET]', err)
