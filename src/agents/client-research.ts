@@ -1,7 +1,7 @@
 import { LlmAgent, Runner, InMemorySessionService } from '@google/adk'
+import { eq } from 'drizzle-orm'
 import { db } from '@/db'
-import { clientResearchData } from '@/db/schema'
-import { sessionService } from '@/lib/adk/session'
+import { clientResearchData, rfpJobs } from '@/db/schema'
 import { searchAgent } from './search-agent'
 import {
   createAgentRun,
@@ -59,9 +59,12 @@ const clientResearchAgent = new LlmAgent({
   generateContentConfig: { temperature: 0.3 },
 })
 
+import type { PipelineDirective } from './orchestrator'
+
 export interface ClientResearchInput {
   jobId: string
   userId: string
+  pipelineDirective: PipelineDirective | null
 }
 
 export async function runClientResearch(input: ClientResearchInput): Promise<void> {
@@ -74,21 +77,15 @@ export async function runClientResearch(input: ClientResearchInput): Promise<voi
     await updateCurrentAgent(jobId, 3)
     await updateJobActivity(jobId, 'Initialising web research…')
 
-    const session = await sessionService.getSession({
-      appName: 'nivedanai',
-      userId,
-      sessionId: jobId,
-    })
+    const { pipelineDirective } = input
 
-    if (!session?.state) {
-      await failAgentRun(runId, 'Pipeline session missing')
-      throw new Error('Pipeline session missing')
-    }
+    const [jobRow] = await db
+      .select({ clientName: rfpJobs.clientName })
+      .from(rfpJobs)
+      .where(eq(rfpJobs.id, jobId))
+      .limit(1)
 
-    const { clientName, pipelineDirective } = session.state as {
-      clientName: string | null
-      pipelineDirective: { clientResearchFocus?: string[]; sectorHint?: string } | null
-    }
+    const clientName = jobRow?.clientName ?? null
 
     const companyToResearch = clientName ?? 'the client company mentioned in the RFP'
     const focusAreas = pipelineDirective?.clientResearchFocus ?? [
@@ -179,11 +176,6 @@ Return ONLY valid JSON matching the schema in your instructions.
       sources: (clientProfile.sources as string[]) ?? null,
       researchConfidence: confidence,
       googleSearchUsed: Array.isArray(clientProfile.sources) && (clientProfile.sources as string[]).length > 0,
-    })
-
-    Object.assign(session.state, {
-      clientProfile,
-      researchConfidence: confidence,
     })
 
     await completeAgentRun(runId, 0, 0, Date.now() - startTime)

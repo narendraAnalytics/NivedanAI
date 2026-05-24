@@ -2,7 +2,6 @@ import { GoogleGenAI } from '@google/genai'
 import { eq } from 'drizzle-orm'
 import { db } from '@/db'
 import { parsedRfpData, proposals } from '@/db/schema'
-import { sessionService } from '@/lib/adk/session'
 import {
   createAgentRun,
   completeAgentRun,
@@ -89,17 +88,6 @@ export async function runQualityReview(input: QualityReviewInput): Promise<void>
   try {
     await updateCurrentAgent(jobId, 6)
     await updateJobActivity(jobId, 'Running 5 quality checks…')
-
-    const session = await sessionService.getSession({
-      appName: 'nivedanai',
-      userId,
-      sessionId: jobId,
-    })
-
-    if (!session?.state) {
-      await failAgentRun(runId, 'Pipeline session missing')
-      throw new Error('Pipeline session missing')
-    }
 
     const [latestProposal] = await db
       .select({ id: proposals.id })

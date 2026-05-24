@@ -21,9 +21,9 @@ export const generateProposal = inngest.createFunction(
   async ({ event, step, runId }) => {
     const { jobId, userId, rfpDocumentUrl, companyProfileId } = event.data
 
-    await step.run('step-1-orchestrator', async () => {
-      await runOrchestrator({ jobId, userId, rfpDocumentUrl, companyProfileId, inngestRunId: runId })
-      return { status: 'ok', jobId }
+    const orchestratorResult = await step.run('step-1-orchestrator', async () => {
+      const result = await runOrchestrator({ jobId, userId, rfpDocumentUrl, companyProfileId, inngestRunId: runId })
+      return { status: 'ok', jobId, ...result }
     })
 
     await step.run('step-2-rfp-parser', async () => {
@@ -31,11 +31,11 @@ export const generateProposal = inngest.createFunction(
     })
 
     await step.run('step-3-client-research', async () => {
-      await runClientResearch({ jobId, userId })
+      await runClientResearch({ jobId, userId, pipelineDirective: orchestratorResult.pipelineDirective })
     })
 
     await step.run('step-4-requirements-matcher', async () => {
-      await runRequirementsMatcher({ jobId, userId })
+      await runRequirementsMatcher({ jobId, userId, companyProfileId })
     })
 
     await step.run('step-5-proposal-writer', async () => {

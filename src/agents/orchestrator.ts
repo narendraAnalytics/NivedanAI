@@ -75,7 +75,7 @@ Execution rules:
 You are the execution brain of Nivedan AI. Every decision you make here affects proposal quality.
 `
 
-interface PipelineDirective {
+export interface PipelineDirective {
   sectorHint: string
   complexityLevel: 'low' | 'medium' | 'high'
   priorityFlags: string[]
@@ -93,7 +93,12 @@ export interface OrchestratorInput {
   inngestRunId: string
 }
 
-export async function runOrchestrator(input: OrchestratorInput): Promise<void> {
+export interface OrchestratorResult {
+  pipelineDirective: PipelineDirective
+  companyName: string
+}
+
+export async function runOrchestrator(input: OrchestratorInput): Promise<OrchestratorResult> {
   const { jobId, userId, rfpDocumentUrl, companyProfileId, inngestRunId } = input
   const startTime = Date.now()
 
@@ -187,6 +192,7 @@ Return ONLY valid JSON — no markdown fences, no explanation text — matching 
 
     await updateJobActivity(jobId, 'Session created — agents ready')
     await completeAgentRun(runId, inputTokens, outputTokens, Date.now() - startTime)
+    return { pipelineDirective, companyName: profile.companyName }
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error)
     await failAgentRun(runId, msg)

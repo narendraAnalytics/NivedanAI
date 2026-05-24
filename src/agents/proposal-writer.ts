@@ -2,7 +2,6 @@ import { GoogleGenAI } from '@google/genai'
 import { eq } from 'drizzle-orm'
 import { db } from '@/db'
 import { parsedRfpData, clientResearchData, capabilityMatches, proposals } from '@/db/schema'
-import { sessionService } from '@/lib/adk/session'
 import {
   createAgentRun,
   completeAgentRun,
@@ -83,17 +82,6 @@ export async function runProposalWriter(input: ProposalWriterInput): Promise<voi
   try {
     await updateCurrentAgent(jobId, 5)
     await updateJobActivity(jobId, 'Drafting 12-section proposal…')
-
-    const session = await sessionService.getSession({
-      appName: 'nivedanai',
-      userId,
-      sessionId: jobId,
-    })
-
-    if (!session?.state) {
-      await failAgentRun(runId, 'Pipeline session missing')
-      throw new Error('Pipeline session missing')
-    }
 
     // Fetch all source data in parallel
     const [rfpRows, clientRows, matchRows] = await Promise.all([
@@ -204,8 +192,6 @@ Return ONLY valid JSON matching the 12-section schema in your instructions.`
         wordCount,
       })
       .returning({ id: proposals.id })
-
-    Object.assign(session.state, { proposalDraftId: inserted.id })
 
     await completeAgentRun(runId, 0, 0, Date.now() - startTime)
   } catch (error) {

@@ -4,7 +4,6 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/db'
 import { parsedRfpData, capabilityMatches } from '@/db/schema'
 import { knowledgeBaseItems } from '@/db/schema'
-import { sessionService } from '@/lib/adk/session'
 import {
   createAgentRun,
   completeAgentRun,
@@ -133,6 +132,7 @@ async function gatherTavilyEvidence(
 export interface RequirementsMatcherInput {
   jobId: string
   userId: string
+  companyProfileId: string
 }
 
 interface Requirement {
@@ -154,31 +154,13 @@ interface MatchResult {
 }
 
 export async function runRequirementsMatcher(input: RequirementsMatcherInput): Promise<void> {
-  const { jobId, userId } = input
+  const { jobId, userId, companyProfileId } = input
   const startTime = Date.now()
 
   const runId = await createAgentRun(jobId, 4, 'requirements_matcher', 'gemini-3.1-flash-lite')
 
   try {
     await updateCurrentAgent(jobId, 4)
-
-    const session = await sessionService.getSession({
-      appName: 'nivedanai',
-      userId,
-      sessionId: jobId,
-    })
-
-    if (!session?.state) {
-      await failAgentRun(runId, 'Pipeline session missing')
-      throw new Error('Pipeline session missing')
-    }
-
-    const { companyProfileId } = session.state as { companyProfileId: string }
-
-    if (!companyProfileId) {
-      await failAgentRun(runId, 'companyProfileId missing from session state')
-      throw new Error('companyProfileId missing from session state')
-    }
 
     // Fetch parsed RFP data from Neon
     const [rfpData] = await db
@@ -314,14 +296,6 @@ Return ONLY valid JSON matching the schema above.`
         }))
       )
     }
-
-    Object.assign(session.state, {
-      capabilityMatchSummary: {
-        totalRequirements: matches.length,
-        matched,
-        gaps,
-      },
-    })
 
     await completeAgentRun(runId, 0, 0, Date.now() - startTime)
   } catch (error) {
