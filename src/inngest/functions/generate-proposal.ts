@@ -26,7 +26,7 @@ export const generateProposal = inngest.createFunction(
     })
 
     await step.run('step-2-rfp-parser', async () => {
-      await runRfpParser({ jobId, userId })
+      await runRfpParser({ jobId, userId, rfpDocumentUrl, companyProfileId })
     })
 
     await step.run('step-3-client-research', async () => {

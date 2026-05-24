@@ -2,9 +2,7 @@ import { eq } from 'drizzle-orm'
 import { GoogleGenAI } from '@google/genai'
 
 import { db } from '@/db'
-import { rfpJobs, parsedRfpData } from '@/db/schema'
-
-import { sessionService } from '@/lib/adk/session'
+import { rfpJobs, parsedRfpData, companyProfiles } from '@/db/schema'
 
 import {
   createAgentRun,
@@ -191,6 +189,8 @@ SCHEMA:
 export interface RfpParserInput {
   jobId: string
   userId: string
+  rfpDocumentUrl: string
+  companyProfileId: string
 }
 
 export async function runRfpParser(
@@ -211,25 +211,15 @@ export async function runRfpParser(
     await updateCurrentAgent(input.jobId, 2)
     await updateJobActivity(input.jobId, 'Fetching RFP document from storage…')
 
-    const session = await sessionService.getSession({
-      appName: 'nivedanai',
-      userId: input.userId,
-      sessionId: input.jobId,
-    })
+    const { rfpDocumentUrl, companyProfileId } = input
 
-    if (!session?.state) {
-      throw new Error('Pipeline session missing')
-    }
+    const [profileRow] = await db
+      .select({ companyName: companyProfiles.companyName })
+      .from(companyProfiles)
+      .where(eq(companyProfiles.id, companyProfileId))
+      .limit(1)
 
-    const {
-      rfpDocumentUrl,
-      companyName,
-      pipelineDirective,
-    } = session.state
-
-    if (!rfpDocumentUrl) {
-      throw new Error('RFP document URL missing from session')
-    }
+    const companyName = profileRow?.companyName ?? ''
 
     // Fetch PDF and pass directly to Gemini as inline base64 (no pdf-parse)
     const pdfResponse = await fetch(rfpDocumentUrl as string)
@@ -245,7 +235,7 @@ export async function runRfpParser(
         role: 'user',
         parts: [
           { inlineData: { mimeType: 'application/pdf', data: pdfBase64 } },
-          { text: `${RFP_PARSER_DESCRIPTION}\n\n${RFP_PARSER_INSTRUCTION}\n\nPIPELINE CONTEXT:\n\nCompany:\n${companyName}\n\nSector Hint:\n${(pipelineDirective as { sectorHint?: string })?.sectorHint ?? 'unknown'}\n\nPriority Signals:\n${JSON.stringify((pipelineDirective as { priorityFlags?: string[] })?.priorityFlags ?? [])}` },
+          { text: `${RFP_PARSER_DESCRIPTION}\n\n${RFP_PARSER_INSTRUCTION}\n\nPIPELINE CONTEXT:\n\nCompany:\n${companyName}` },
         ],
       }],
       config: { temperature: 0.1, maxOutputTokens: 4096, responseMimeType: 'application/json' },
@@ -284,14 +274,6 @@ export async function runRfpParser(
         .where(eq(rfpJobs.id, input.jobId)),
 
     ])
-
-    Object.assign(session.state, {
-      rfpBlueprint: blueprint,
-      clientName: blueprint.clientName ?? null,
-      budgetCeiling: blueprint.budgetCeiling ?? null,
-      submissionDeadline: blueprint.submissionDeadline ?? null,
-      projectTimeline: blueprint.projectTimeline ?? null,
-    })
 
     await completeAgentRun(
       runId,

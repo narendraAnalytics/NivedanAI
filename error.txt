@@ -1,29 +1,25 @@
-GET /api/kb/items 200 in 901ms (next.js: 9ms, proxy.ts: 28ms, application-code: 864ms)
-[18:12:59.361] INFO (#25) handleUploadAction=88ms: Sending presigned URLs to client
-  presignedUrls: [
-    {
-      url: 'https://sea1.ingest.uploadthing.com/SbQNqXcWByAhhC4EF2bTFj9RgJdrXkKhcqnHaLftV27GMpNZ?expires=1779630179342&x-ut-identifier=5ulvvd6i88&x-ut-file-name=FinShield_Analytics_Knowledge_Base_v3.1.pdf&x-ut-file-size=65714&x-ut-file-type=application%252Fpdf&x-ut-slug=kbDocument&x-ut-content-disposition=inline&signature=hmac-sha256%3D5b7cf947c55318b303d1bf9976b6dc630533f4fcb7701bf0f8003583be0b3bd8',
-      key: 'SbQNqXcWByAhhC4EF2bTFj9RgJdrXkKhcqnHaLftV27GMpNZ',
-      name: 'FinShield_Analytics_Knowledge_Base_v3.1.pdf',
-      customId: null
-    }
-  ]
- POST /api/uploadthing?actionType=upload&slug=kbDocument 200 in 401ms (next.js: 22ms, proxy.ts: 44ms, application-code: 336ms)
- POST /api/uploadthing?slug=kbDocument 200 in 68ms (next.js: 9ms, proxy.ts: 18ms, application-code: 40ms)
-[18:13:02.722] INFO (#35) handleCallbackRequest=276ms: Sent callback result to UploadThing
-[extractFromPDF] failed, falling back to filename: Error [ApiError]: {"error":{"code":404,"message":"models/gemini-3.1-flash is not found for API version v1alpha, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods.","status":"NOT_FOUND"}}
-    at async extractFromPDF (src\app\api\kb\items\route.ts:100:20)
-    at async POST (src\app\api\kb\items\route.ts:164:25)
-   98 | ${hintType ? `User-selected type hint: "${hintType}" — use unless clearly wrong.` : ''}`
-   99 |
-> 100 |     const result = await ai.models.generateContent({
-      |                    ^
-  101 |       model: 'gemini-3.1-flash',
-  102 |       contents: [{
-  103 |         role: 'user', {
-  status: 404
-}
- POST /api/kb/items 201 in 6.8s (next.js: 57ms, proxy.ts: 131ms, application-code: 6.6s)
- GET /api/uploadthing 200 in 99ms (next.js: 12ms, proxy.ts: 54ms, application-code: 34ms)
- GET /api/uploadthing 200 in 51ms (next.js: 7ms, proxy.ts: 20ms, application-code: 23ms)
- GET /dashboard 200 in 166ms (next.js: 17ms, proxy.ts: 44ms, application-code: 106ms)
+Error: Pipeline session missing
+    at u (/var/task/.next/server/chunks/[root-of-the-server]__0qrc__a._.js:255:356)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async /var/task/.next/server/chunks/[root-of-the-server]__0qrc__a._.js:480:1778
+    at async i (/var/task/.next/server/chunks/[root-of-the-server]__0~va0j8._.js:1:165788)
+    at async H.tryExecuteStep (/var/task/.next/server/chunks/[root-of-the-server]__0~va0j8._.js:6:20322)
+    at async steps-found (/var/task/.next/server/chunks/[root-of-the-server]__0~va0j8._.js:6:17567)
+    at async H.runCoreLoop (/var/task/.next/server/chunks/[root-of-the-server]__0~va0j8._.js:6:8375)
+    at async E.handleAction (/var/task/.next/server/chunks/[root-of-the-server]__0qrc__a._.js:1:16959)
+    at async y.wrap (/var/task/.next/server/chunks/[root-of-the-server]__0qrc__a._.js:1:800)
+    at async R (/var/task/.next/server/chunks/[root-of-the-server]__0qrc__a._.js:1:11101)
+
+--------------------------- ----------------------------------------------- ------------------------------
+
+2026-05-24 14:15:51.856 [error] Inngest step error
+2026-05-24 14:15:51.861 [error] Error: Pipeline session missing
+    at u (.next/server/chunks/[root-of-the-server]__0qrc__a._.js:255:356)
+    at async (.next/server/chunks/[root-of-the-server]__0qrc__a._.js:480:1778)
+    at async i (.next/server/chunks/[root-of-the-server]__0~va0j8._.js:1:165788)
+    at async H.tryExecuteStep (.next/server/chunks/[root-of-the-server]__0~va0j8._.js:6:20322)
+    at async steps-found (.next/server/chunks/[root-of-the-server]__0~va0j8._.js:6:17567)
+    at async H.runCoreLoop (.next/server/chunks/[root-of-the-server]__0~va0j8._.js:6:8375)
+    at async E.handleAction (.next/server/chunks/[root-of-the-server]__0qrc__a._.js:1:16959)
+    at async y.wrap (.next/server/chunks/[root-of-the-server]__0qrc__a._.js:1:800)
+    at async R (.next/server/chunks/[root-of-the-server]__0qrc__a._.js:1:11101)
