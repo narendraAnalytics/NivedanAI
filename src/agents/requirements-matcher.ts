@@ -61,6 +61,7 @@ Output ONLY valid JSON — no markdown fences, no explanation:
 async function gatherTavilyEvidence(
   requirements: Requirement[],
   userId: string,
+  jobId: string,
 ): Promise<Map<string, string>> {
   const tavilyKey = process.env.TAVILY_API_KEY
   if (!tavilyKey) return new Map()
@@ -103,8 +104,15 @@ async function gatherTavilyEvidence(
       userId,
       newMessage: { role: 'user', parts: [{ text: prompt }] },
     })) {
-      const text = event.content?.parts?.[0]?.text
-      if (text) finalText = text
+      for (const part of event.content?.parts ?? []) {
+        if ('functionCall' in part && part.functionCall) {
+          await updateJobActivity(jobId, 'Tavily MCP: searching for evidence…')
+        } else if ('functionResponse' in part && part.functionResponse) {
+          await updateJobActivity(jobId, 'Tavily MCP: evidence received, processing…')
+        } else if (part.text) {
+          finalText = part.text
+        }
+      }
     }
 
     const cleaned = finalText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
@@ -208,7 +216,7 @@ export async function runRequirementsMatcher(input: RequirementsMatcherInput): P
     let tavilyEvidence = new Map<string, string>()
     try {
       await updateJobActivity(jobId, 'Searching web for requirement evidence via Tavily MCP…')
-      tavilyEvidence = await gatherTavilyEvidence(mandatoryRequirements, userId)
+      tavilyEvidence = await gatherTavilyEvidence(mandatoryRequirements, userId, jobId)
       if (tavilyEvidence.size > 0) {
         await updateJobActivity(jobId, `Web evidence gathered for ${tavilyEvidence.size} requirements — matching against KB…`)
       }

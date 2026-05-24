@@ -125,8 +125,15 @@ Return ONLY valid JSON matching the schema in your instructions.
       userId,
       newMessage: { role: 'user', parts: [{ text: researchPrompt }] },
     })) {
-      const text = event.content?.parts?.[0]?.text
-      if (text) finalText = text
+      for (const part of event.content?.parts ?? []) {
+        if ('functionCall' in part && part.functionCall) {
+          await updateJobActivity(jobId, `Google Search: querying "${companyToResearch}"…`)
+        } else if ('functionResponse' in part && part.functionResponse) {
+          await updateJobActivity(jobId, 'Google Search: analysing results…')
+        } else if (part.text) {
+          finalText = part.text
+        }
+      }
     }
 
     await updateJobActivity(jobId, 'Compiling research intelligence…')
