@@ -9,7 +9,7 @@ import { GoogleGenAI } from '@google/genai'
 
 const KB_LIMITS: Record<string, number> = { free: 1, plus: 10, pro: Infinity }
 
-const VALID_TYPES = ['past_proposal', 'case_study', 'certification', 'team_bio', 'technology', 'testimonial'] as const
+const VALID_TYPES = ['past_proposal', 'case_study', 'certification', 'team_bio', 'technology', 'testimonial', 'product_overview'] as const
 type KbType = typeof VALID_TYPES[number]
 
 async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
@@ -92,7 +92,7 @@ Return ONLY valid JSON (no markdown):
   "description": "2-sentence summary of what this document specifically proves or demonstrates — include the company name, domain, and key outcomes if present",
   "industry": "single industry word e.g. banking | fintech | healthcare | government | insurance | retail | logistics | telecom | education | manufacturing",
   "tags": ["6-10 tags that are SPECIFIC DOMAIN TERMS found verbatim or directly implied in the document — use regulatory terms (AML, KYC, PCI-DSS, GDPR, ISO27001), financial product terms (UPI, NPCI, SWIFT, NEFT, FASTag), technology terms (real-time-fraud-detection, ML-scoring, rule-engine), or named entities (client name, product name, regulator) — NEVER use document-category words like knowledge-base, technical-documentation, analytics, strategy, operations, case-study"],
-  "type": "past_proposal | case_study | certification | team_bio | technology | testimonial"
+  "type": "past_proposal | case_study | certification | team_bio | technology | testimonial | product_overview"
 }
 
 ${hintType ? `User-selected type hint: "${hintType}" — use unless clearly wrong.` : ''}`

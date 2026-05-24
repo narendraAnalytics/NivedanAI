@@ -31,7 +31,8 @@ const TYPE_META: Record<string, { label: string; color: string; bg: string }> = 
   certification:  { label: 'Certification',  color: '#8B4A5E', bg: 'rgba(139,74,94,0.12)'  },
   team_bio:       { label: 'Team Bio',       color: '#C97548', bg: 'rgba(201,117,72,0.12)' },
   technology:     { label: 'Technology',     color: '#5A7FAA', bg: 'rgba(90,127,170,0.12)' },
-  testimonial:    { label: 'Testimonial',    color: '#6B8F7A', bg: 'rgba(107,143,122,0.12)'},
+  testimonial:     { label: 'Testimonial',     color: '#6B8F7A', bg: 'rgba(107,143,122,0.12)' },
+  product_overview: { label: 'Product Overview', color: '#4A6FA5', bg: 'rgba(74,111,165,0.12)' },
 }
 
 /* ── Background ── */
