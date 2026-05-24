@@ -211,7 +211,9 @@ export const { useUploadThing } = generateReactHelpers<OurFileRouter>()
 ```typescript
 const file = new File([new Uint8Array(pdfBuffer)], fileName, { type: 'application/pdf' })
 // Must use new Uint8Array(buffer), NOT raw Buffer — TypeScript BlobPart incompatibility
-await new UTApi().uploadFiles(file)
+const uploadResult = await new UTApi().uploadFiles(file)
+const url = (uploadResult as { data?: { ufsUrl?: string } }).data?.ufsUrl ?? ''
+// Use .ufsUrl on the result — NOT .url or .appUrl (those are deprecated getters that log warnings)
 ```
 
 **Two endpoints in `src/lib/uploadthing.ts`:**
@@ -219,6 +221,21 @@ await new UTApi().uploadFiles(file)
 - `kbDocument` — 16 MB; `onUploadComplete` returns `{ fileUrl }` only; client reads `files[0].ufsUrl` directly (never `serverData` — can be null on Vercel)
 
 **Recipient email thread:** `startUpload(files, { recipientEmail })` → DB `rfpJobs.recipient_email` → Inngest event → Resend `to:`. Falls back to Clerk sign-up email.
+
+### Resend Email
+
+Sent in `src/inngest/functions/generate-proposal.ts` after PDF export (step 8).
+
+**`from` field must use RFC 5322 display-name format** — bare email shows the local-part ("admin") as the sender name:
+```typescript
+// ❌ shows "admin" in inbox
+from: process.env.RESEND_FROM_EMAIL!
+
+// ✅ shows "NIVEDAN-AI" in inbox
+from: `${process.env.RESEND_FROM_NAME} <${process.env.RESEND_FROM_EMAIL}>`
+```
+
+Env vars: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `RESEND_FROM_NAME`.
 
 ### Vercel Serverless — Production Rules
 
@@ -262,8 +279,8 @@ Animations: `pulseGold`, `pulseGoldRing` (active agent card), `drift` (WorkflowV
 ### Key Pages
 
 - `/dashboard` — single `'use client'` file; all sub-components defined inline. Upload validates email before `startUpload`. Polls `/api/stats`, `/api/kb/items`, and `/api/proposals/recent` on mount. Real proposals rendered as clickable rows linking to `/proposals/[jobId]`.
-- `/workflow/[jobId]` — polls `/api/jobs/[jobId]` every 3s. `CircularProgress` shows ETA while running, "Complete" + "View Proposal" button when `awaiting_review`/`completed`.
-- `/proposals/[jobId]` — split into two files: `page.tsx` (server component — auth, DB queries, score computation, passes props) and `ProposalViewer.tsx` (client component — full interactive design: sticky TOC with scroll-spy, reading progress bar, section cards, floating action bar, Thank You closing card). `qualityScore` stored as `0.00–1.00` — multiply × 100 for display. Never move DB queries into `ProposalViewer`.
+- `/workflow/[jobId]` — polls `/api/jobs/[jobId]` every 3s. `CircularProgress` shows ETA while running, "Complete" + "View Proposal" button when `awaiting_review`/`completed`. **HITL "Request Changes":** `POST /api/proposals/[jobId]/changes` must include ALL rewritable sections in `flaggedSections` — passing `[]` causes `handle-hitl-changes.ts` to exit early and no sections get rewritten (only Quality Review re-runs). Valid sections: `executiveSummary`, `understandingOfRequirements`, `proposedSolution`, `technicalApproach`, `caseStudies`, `teamAndExpertise`, `projectTimeline`, `pricingStructure`.
+- `/proposals/[jobId]` — split into two files: `page.tsx` (server component — auth, DB queries, score computation, passes props) and `ProposalViewer.tsx` (client component — full interactive design: sticky TOC with scroll-spy, reading progress bar, section cards, floating action bar, Thank You closing card). `qualityScore` stored as `0.00–1.00` — multiply × 100 for display. Never move DB queries into `ProposalViewer`. **TOC scroll-jump:** `scrollMarginTop` must be on the outer wrapper `<div>` that holds the `ref` (the `scrollIntoView` target), NOT on the inner `<article>` — otherwise the sticky header covers the section heading on click.
 - `/knowledge-base` — company profile editor + PDF upload (AI extracts title/tags from filename) + manual form.
 - `/pricing` — `'use client'`; uses `<PricingTable appearance={nivedanAppearance} />`. Auth-protected (middleware). Sticky header with back-to-home + logo. All styling via Clerk's `appearance` object — never add manual plan cards here.
 - `/redirecting` — transition animation page. Not in public routes. Context-aware message via `?to=` param. Any new nav link that needs the transition should route through here.

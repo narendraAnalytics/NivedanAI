@@ -92,7 +92,7 @@ export const generateProposal = inngest.createFunction(
       const fileName = `proposal-${jobId}-v${proposal.version}.pdf`
       const file = new File([new Uint8Array(pdfBuffer)], fileName, { type: 'application/pdf' })
       const uploadResult = await utapi.uploadFiles(file)
-      const pdfUrl = (uploadResult as { data?: { url?: string } }).data?.url ?? ''
+      const pdfUrl = (uploadResult as { data?: { ufsUrl?: string } }).data?.ufsUrl ?? ''
 
       let resendMessageId: string | null = null
       let emailSentAt: Date | null = null
@@ -102,7 +102,7 @@ export const generateProposal = inngest.createFunction(
         const { Resend } = await import('resend')
         const resend = new Resend(process.env.RESEND_API_KEY)
         const emailResult = await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL!,
+          from: `${process.env.RESEND_FROM_NAME} <${process.env.RESEND_FROM_EMAIL}>`,
           to: toEmail,
           subject: `Your proposal for ${clientName} is ready`,
           html: `<p>Hi ${user.fullName ?? 'there'},</p><p>Your proposal has been approved and is ready to download.</p><p><a href="${pdfUrl}" style="background:#2F5D50;color:#fff;padding:10px 20px;border-radius:4px;text-decoration:none">Download Proposal PDF</a></p><p>Prepared by Nivedan AI</p>`,

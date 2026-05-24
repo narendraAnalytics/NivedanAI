@@ -738,6 +738,7 @@ function HitlPanel({ jobId }: { jobId: string }) {
   const [loading, setLoading] = useState<'approve' | 'changes' | null>(null)
   const [feedback, setFeedback] = useState('')
   const [showFeedback, setShowFeedback] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
 
   const approve = async () => {
     setLoading('approve')
@@ -751,11 +752,20 @@ function HitlPanel({ jobId }: { jobId: string }) {
     await fetch(`/api/proposals/${jobId}/changes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ flaggedSections: [], feedbackText: feedback }),
+      body: JSON.stringify({
+        flaggedSections: [
+          'executiveSummary', 'understandingOfRequirements', 'proposedSolution',
+          'technicalApproach', 'caseStudies', 'teamAndExpertise',
+          'projectTimeline', 'pricingStructure',
+        ],
+        feedbackText: feedback,
+      }),
     })
+    setSubmitted(true)
     setShowFeedback(false)
     setFeedback('')
     setLoading(null)
+    setTimeout(() => router.refresh(), 1800)
   }
 
   return (
@@ -834,23 +844,38 @@ function HitlPanel({ jobId }: { jobId: string }) {
         </button>
         <button
           onClick={requestChanges}
-          disabled={!!loading}
+          disabled={!!loading || submitted}
           style={{
             flex: 1, padding: '13px 20px',
-            background: loading === 'changes' ? 'rgba(212,168,79,0.20)' : 'rgba(212,168,79,0.10)',
-            color: 'var(--gold-deep)',
-            border: '1.5px solid rgba(212,168,79,0.38)',
+            background: submitted
+              ? 'rgba(47,93,80,0.12)'
+              : loading === 'changes' ? 'rgba(212,168,79,0.20)' : 'rgba(212,168,79,0.10)',
+            color: submitted ? 'var(--forest-deep)' : 'var(--gold-deep)',
+            border: submitted
+              ? '1.5px solid rgba(47,93,80,0.30)'
+              : '1.5px solid rgba(212,168,79,0.38)',
             borderRadius: 12,
             fontFamily: 'var(--f-display)', fontWeight: 600, fontSize: 14.5,
-            cursor: loading ? 'not-allowed' : 'pointer',
+            cursor: (loading || submitted) ? 'not-allowed' : 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             transition: 'all .25s',
           }}
         >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M2 7h10 M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          {showFeedback && feedback.trim() ? 'Send Feedback' : 'Request Changes'}
+          {submitted ? (
+            <>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M2 7l3.5 3.5 6.5-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Feedback sent ✓
+            </>
+          ) : (
+            <>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M2 7h10 M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {showFeedback && feedback.trim() ? 'Send Feedback' : 'Request Changes'}
+            </>
+          )}
         </button>
       </div>
     </div>

@@ -1,9 +1,0 @@
-
-Approve & Export PDF
-Request Changes
-
-GET /api/jobs/2ff88b1f-25a6-4f98-9efa-c60891f38536 200 in 668ms (next.js: 39ms, proxy.ts: 64ms, application-code: 565ms)
-⚠️ [uploadthing][deprecated] `file.url` is deprecated and will be removed in uploadthing v9. Use `file.ufsUrl` instead.
-⚠️ [uploadthing][deprecated] `file.appUrl` is deprecated and will be removed in uploadthing v9. Use `file.ufsUrl` instead.
- GET /api/jobs/2ff88b1f-25a6-4f98-9efa-c60891f38536 200 in 601ms (next.js: 29ms, proxy.ts: 17ms, application-code: 555ms)
- 

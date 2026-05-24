@@ -1120,11 +1120,13 @@ export default function Dashboard() {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <h3 style={{ fontFamily: "var(--f-display)", fontWeight: 600, fontSize: 18, color: "var(--ink)" }}>Recent proposals</h3>
-                  <span style={{
-                    padding: "3px 9px", borderRadius: 999, fontSize: 10.5, fontWeight: 600,
-                    background: "rgba(212,168,79,0.15)", color: "var(--gold-deep)",
-                    letterSpacing: "0.06em", textTransform: "uppercase",
-                  }}>Sample</span>
+                  {userProposals.length === 0 && (
+                    <span style={{
+                      padding: "3px 9px", borderRadius: 999, fontSize: 10.5, fontWeight: 600,
+                      background: "rgba(212,168,79,0.15)", color: "var(--gold-deep)",
+                      letterSpacing: "0.06em", textTransform: "uppercase",
+                    }}>Sample</span>
+                  )}
                 </div>
                 <a href="#" style={{ fontSize: 13, color: "var(--gold-deep)", fontWeight: 600 }}>View all →</a>
               </div>

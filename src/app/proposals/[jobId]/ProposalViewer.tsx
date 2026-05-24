@@ -423,7 +423,6 @@ const Section = React.forwardRef<HTMLDivElement, {
       ref={ref}
       id={`section-${s.num}`}
       style={{
-        scrollMarginTop: 100,
         background: '#fff',
         borderRadius: 18,
         overflow: 'hidden',
@@ -804,6 +803,7 @@ export function ProposalViewer({ proposal, job, exportRow, score, scoreColor, sc
                   key={s.num}
                   data-idx={i}
                   ref={el => { sectionRefs.current[i] = el }}
+                  style={{ scrollMarginTop: 110 }}
                 >
                   <Section s={s} i={i} content={content} />
                 </div>
