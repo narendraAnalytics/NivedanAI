@@ -101,37 +101,45 @@ Inngest: nivedan/rfp.submitted
 
 **`InMemorySessionService` mutations do NOT survive across Inngest step boundaries.**
 
-Inngest replays the function body on each step execution, skipping already-completed step callbacks. This means `Object.assign(session.state, { key: value })` from step N is NOT visible when step N+1 executes (the callback was never called in that HTTP request).
+Inngest replays the function body on each step execution, skipping already-completed step callbacks. This means `Object.assign(session.state, { key: value })` from step N is NOT visible when step N+1 executes (the callback was never called in that HTTP request). On Vercel serverless, each step runs in a separate Lambda invocation — the in-memory session from step 1 is gone by the time step 2 runs.
 
-**Rule:** Never read session state that was written by a *different* agent step. Read from the DB instead.
+**Rule:** Never read session state that was written by a different agent step. Read from the DB or use Inngest step return values instead.
+
+**How cross-step data is passed today:**
+
+- `pipelineDirective` and `companyName` — `runOrchestrator` returns them; step 1 returns this from its `step.run` callback. Inngest caches this and it's available as `orchestratorResult` in the function scope for all subsequent steps.
+- `rfpDocumentUrl`, `companyProfileId` — passed directly from `event.data` to each agent input.
+- `clientName` — Agent 2 writes to `rfp_jobs.clientName` in the DB; Agent 3 reads it from there.
+- All other inter-agent data — read from DB tables (`parsed_rfp_data`, `client_research_data`, `capability_matches`, `proposals`).
 
 ```typescript
-// ❌ Broken — proposalDraftId was set by step 5, but step 6 never sees it
-const { proposalDraftId } = session.state as { proposalDraftId: string }
+// ✅ Correct — orchestrator return value, cached by Inngest
+const orchestratorResult = await step.run('step-1-orchestrator', async () => {
+  const result = await runOrchestrator({ ... })
+  return { ...result }  // pipelineDirective, companyName
+})
 
-// ✅ Correct — query DB directly
-const [row] = await db.select({ id: proposals.id })
-  .from(proposals).where(eq(proposals.rfpJobId, jobId)).limit(1)
-const proposalDraftId = row?.id ?? null
+// step-3 receives pipelineDirective via arg, clientName via DB query
+await step.run('step-3-client-research', async () => {
+  await runClientResearch({ jobId, userId, pipelineDirective: orchestratorResult.pipelineDirective })
+})
 ```
 
-Session state IS reliable for data the Orchestrator writes at `createSession` (step 1 creates the session; steps 2–6 read initial values like `rfpDocumentUrl`, `companyName`, `pipelineDirective`).
-
-**ADK singleton rule:** Import `sessionService` from `@/lib/adk/session` for reading Orchestrator-set state. For one-shot agent sub-tasks (Agents 3 and 4 search passes), create a local `new InMemorySessionService()` + `Runner` and use `runner.runEphemeral()` — this avoids cross-step session loss entirely.
-
 **`runEphemeral` vs `runAsync`:**
-- `runEphemeral({ userId, newMessage })` — no pre-existing session required; correct for one-shot LlmAgent calls within a step
-- `runAsync({ userId, sessionId, newMessage })` — requires session to already exist in that Runner's sessionService; **do not use** with the pipeline `sessionService` for sub-task agents (session may be gone after Inngest step replay)
+- `runEphemeral({ userId, newMessage })` — no pre-existing session required; correct for one-shot LlmAgent calls within a step (Agents 3 and 4 search passes use this with a local `new InMemorySessionService()`)
+- `runAsync({ userId, sessionId, newMessage })` — requires session to already exist; never use with the pipeline `sessionService` across steps
 
 ### ADK Implementation Pattern per Agent
 
-| Agent | LLM approach | Session pattern |
-|-------|-------------|----------------|
-| 1 Orchestrator | `generateContent` one-shot | `sessionService.createSession` |
-| 2 RFP Parser | `generateContent` one-shot | `sessionService.getSession` + `Object.assign` |
-| 3 Client Research | `LlmAgent` + `Runner.runEphemeral` (local `InMemorySessionService`) | `sessionService.getSession` for clientName/directive only |
-| 4 Req. Matcher | Tavily `MCPToolset` + `LlmAgent` + `Runner.runEphemeral`, then `generateContent` per-requirement | `sessionService.getSession` for companyProfileId only |
-| 5–6 | `generateContent` one-shot | `sessionService.getSession` + `Object.assign` |
+| Agent | LLM approach | How it gets its data |
+|-------|-------------|----------------------|
+| 1 Orchestrator | `generateContent` one-shot | `event.data`; creates ADK session; **returns** `{ pipelineDirective, companyName }` |
+| 2 RFP Parser | `generateContent` one-shot | `rfpDocumentUrl` + `companyProfileId` from args; queries `company_profiles` for `companyName` |
+| 3 Client Research | `LlmAgent` + `Runner.runEphemeral` (local `InMemorySessionService`) | `pipelineDirective` from orchestrator return; `clientName` from `rfp_jobs` DB |
+| 4 Req. Matcher | Tavily `MCPToolset` + `LlmAgent` + `Runner.runEphemeral`, then `generateContent` per-requirement | `companyProfileId` from args |
+| 5–6 | `generateContent` one-shot | All data from DB queries (`parsed_rfp_data`, `client_research_data`, `capability_matches`, `proposals`) |
+
+**`sessionService` is only used by Agent 1** (to `createSession`). Agents 2–6 do not import or use it.
 
 ### @google/adk TypeScript API — Confirmed Correct Patterns
 
@@ -304,7 +312,7 @@ Animations: `pulseGold`, `pulseGoldRing` (active agent card), `drift` (WorkflowV
 
 ### Key Pages
 
-- `/dashboard` — single `'use client'` file; all sub-components defined inline. Upload validates email before `startUpload`. Polls `/api/stats`, `/api/kb/items`, and `/api/proposals/recent` on mount. Real proposals rendered as clickable rows linking to `/proposals/[jobId]`.
+- `/dashboard` — single `'use client'` file; all sub-components defined inline. Upload validates email before `startUpload`. Polls `/api/stats`, `/api/kb/items`, and `/api/proposals/recent` on mount. Real proposals rendered as clickable rows — "Draft Ready" rows link to `/workflow/[jobId]` (HITL approve panel); "Submitted" rows link to `/proposals/[jobId]` (viewer).
 - `/workflow/[jobId]` — polls `/api/jobs/[jobId]` every 3s. `CircularProgress` shows ETA while running, "Complete" + "View Proposal" button when `awaiting_review`/`completed`. **HITL "Request Changes":** `POST /api/proposals/[jobId]/changes` must include ALL rewritable sections in `flaggedSections` — passing `[]` causes `handle-hitl-changes.ts` to exit early and no sections get rewritten (only Quality Review re-runs). Valid sections: `executiveSummary`, `understandingOfRequirements`, `proposedSolution`, `technicalApproach`, `caseStudies`, `teamAndExpertise`, `projectTimeline`, `pricingStructure`.
 - `/proposals/[jobId]` — split into two files: `page.tsx` (server component — auth, DB queries, score computation, passes props) and `ProposalViewer.tsx` (client component — full interactive design: sticky TOC with scroll-spy, reading progress bar, section cards, floating action bar, Thank You closing card). `qualityScore` stored as `0.00–1.00` — multiply × 100 for display. Never move DB queries into `ProposalViewer`. **TOC scroll-jump:** `scrollMarginTop` must be on the outer wrapper `<div>` that holds the `ref` (the `scrollIntoView` target), NOT on the inner `<article>` — otherwise the sticky header covers the section heading on click.
 - `/knowledge-base` — company profile editor + PDF upload (AI extracts title/tags from filename) + manual form.

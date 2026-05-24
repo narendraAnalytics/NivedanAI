@@ -1,5 +1,17 @@
-2026-05-24 14:48:56.287 [info] [32mINFO[39m: [ADK] 2026-05-24T14:48:56.285Z event: {"invocationId":"e-ae4910ab-763c-44a1-b722-4c6baa397328","author":"user","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{},"requestedToolConfirmations":{}},"content":{"role":"user","parts":[{"text":"\nResearch the following company for an RFP proposal we are preparing:\n\nCompany: the client company mentioned in the RFP\nIndustry Sector: AI & Software Automation\nResearch Focus Areas: strategic-priorities, automation-initiatives, current-proposal-workflow-pain-points, technology-stack\n\nUse search_agent to find current intelligence about this company.\nSearch for: recent news, funding, strategic priorities, leadership changes, expansion plans, competitive landscape.\n\nReturn ONLY valid JSON matching the schema in your instructions.\n"}]},"id":"2u0ELuGN","longRunningToolIds":[],"timestamp":1779634136283}
-2026-05-24 14:48:56.294 [info] [32mINFO[39m: [ADK] 2026-05-24T14:48:56.294Z Sending out request, model: gemini-3.1-flash, backend: GEMINI_API, stream: false
-2026-05-24 14:48:56.528 [info] [32mINFO[39m: [ADK] 2026-05-24T14:48:56.528Z event: {"invocationId":"e-3ca31c93-a17c-4237-a68a-b70f943d4bde","author":"user","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{},"requestedToolConfirmations":{}},"content":{"role":"user","parts":[{"text":"Search for real-world evidence for each of these RFP requirements and return the JSON array:\n\n- ID: req-001\n  Requirement: Process minimum 100,000 TPS at peak with end-to-end fraud decision latency of under 200 milliseconds at P99.\n- ID: req-002\n  Requirement: Data Residency: All customer financial data, transaction records, and fraud model training data must reside exclusively in India (MeitY-approved cloud regions).\n- ID: req-003\n  Requirement: Valid ISO 27001:2022 certification; PCI-DSS Level 1 compliance certification from a QSA.\n- ID: req-004\n  Requirement: Minimum 3 live enterprise fraud risk management or AML implementations at Scheduled Commercial Banks in India, each valued at INR 5 Crore or above.\n- ID: req-005\n  Requirement: Integration with NPCI DPIP, RBI Innovation Hub MuleHunter.AI, and I4C negative beneficiary registry."}]},"id":"unrovz9h","longRunningToolIds":[],"timestamp":1779634136528}
-2026-05-24 14:48:56.638 [info] [32mINFO[39m: [ADK] 2026-05-24T14:48:56.638Z Sending out request, model: gemini-3.1-flash-lite, backend: GEMINI_API, stream: false
-2026-05-24 14:49:02.410 [info] [32mINFO[39m: [ADK] 2026-05-24T14:49:02.409Z Sending out request, model: gemini-3.1-flash-lite, backend: GEMINI_API, stream: false
+Before your changes: All agents ran on the same warm Vercel Lambda — so the in-memory session happened to survive. Everything "worked" except Google Search, 
+  because clientName written by Agent 2 (Object.assign(session.state)) never survived the step boundary to Agent 3. So Agent 3 always searched for "the client 
+  company mentioned in the RFP" → no results → googleSearchUsed = false.                                                                                                                                                                                                                                                      
+  After your changes: Instead of reading clientName from session, Agent 3 reads it from rfp_jobs in the DB — where Agent 2 already writes it correctly. So       Agent 3 gets the real company name and Google Search fires on the actual client.                                                                           
+                                     
+  What else changed (as a bonus):
+
+  The pipeline was also one Vercel cold-start away from fully breaking. If any two consecutive steps land on different Lambda instances, the session is gone
+  and every agent from step 2 onward would crash with "Pipeline session missing". Now:
+
+  - Agents 3–6 no longer depend on the in-memory session at all
+  - pipelineDirective comes from Inngest's own cached step return (survives across any invocation)
+  - The pipeline is now deterministically correct in production, not just lucky
+
+  Nothing changes in behaviour you could already see — proposals still generate the same way. The only visible difference: Google Search will now actually
+  search for the right company, googleSearchUsed will be true, and sources[] will have real URLs.
+
