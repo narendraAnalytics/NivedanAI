@@ -520,8 +520,9 @@ function ProposalRow({ p, isLast }: { p: ProposalEntry; isLast: boolean }) {
     </div>
   );
   if (p.jobId) {
+    const href = p.status === 'Draft Ready' ? `/workflow/${p.jobId}` : `/proposals/${p.jobId}`
     return (
-      <a href={`/proposals/${p.jobId}`} style={{ textDecoration: "none", display: "block" }}>
+      <a href={href} style={{ textDecoration: "none", display: "block" }}>
         {inner}
       </a>
     );
