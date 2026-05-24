@@ -1,23 +1,29 @@
-The metadata is likely wrong — and yes, it does matter for proposal quality.                                                              
-                                                                                                                                          
-  Here's the problem: the KB upload extracts metadata from the filename only (not PDF content). So a file named company_overview.pdf          generates generic titles like "Strategic Business Operations Overview" with generic tags — not the actual FinShield banking/fintech
-  content.                                                                                                                                                                                                                                                                            
-  The requirements-matcher only sees:
-  title: "Strategic Business Operations Overview"
-  tags: ["operations", "strategy", "business-process"]
-  type: "Technology"
-
-  Instead of what it should see:
-  title: "FinShield Analytics — UPI Fraud AI Platform (Union Bank Case Study)"
-  tags: ["fraud-detection", "AML", "UPI", "banking", "NPCI", "fintech"]
-  type: "case_study"
-
-  This will hurt your ICICI Bank proposal score — the matcher won't connect this document to banking/fraud/compliance requirements.
-
-  The fix is to extract metadata from the actual PDF content using Gemini (same way Agent 2 reads PDFs via inlineData). This needs a code
-  change to src/app/api/kb/items/route.ts — replace the filename-based extractFromFilename with a content-based extraction that fetches the
-  PDF and sends it to Gemini.
-
-  For now as a workaround: Does your KB UI allow editing the title/description/tags after upload? If yes, manually update the FinShield item   with accurate banking tags before running the proposal. That will fix the matching immediately without waiting for the code change.
-
-  Want me to implement the PDF-content-based metadata extraction fix?
+GET /api/kb/items 200 in 901ms (next.js: 9ms, proxy.ts: 28ms, application-code: 864ms)
+[18:12:59.361] INFO (#25) handleUploadAction=88ms: Sending presigned URLs to client
+  presignedUrls: [
+    {
+      url: 'https://sea1.ingest.uploadthing.com/SbQNqXcWByAhhC4EF2bTFj9RgJdrXkKhcqnHaLftV27GMpNZ?expires=1779630179342&x-ut-identifier=5ulvvd6i88&x-ut-file-name=FinShield_Analytics_Knowledge_Base_v3.1.pdf&x-ut-file-size=65714&x-ut-file-type=application%252Fpdf&x-ut-slug=kbDocument&x-ut-content-disposition=inline&signature=hmac-sha256%3D5b7cf947c55318b303d1bf9976b6dc630533f4fcb7701bf0f8003583be0b3bd8',
+      key: 'SbQNqXcWByAhhC4EF2bTFj9RgJdrXkKhcqnHaLftV27GMpNZ',
+      name: 'FinShield_Analytics_Knowledge_Base_v3.1.pdf',
+      customId: null
+    }
+  ]
+ POST /api/uploadthing?actionType=upload&slug=kbDocument 200 in 401ms (next.js: 22ms, proxy.ts: 44ms, application-code: 336ms)
+ POST /api/uploadthing?slug=kbDocument 200 in 68ms (next.js: 9ms, proxy.ts: 18ms, application-code: 40ms)
+[18:13:02.722] INFO (#35) handleCallbackRequest=276ms: Sent callback result to UploadThing
+[extractFromPDF] failed, falling back to filename: Error [ApiError]: {"error":{"code":404,"message":"models/gemini-3.1-flash is not found for API version v1alpha, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods.","status":"NOT_FOUND"}}
+    at async extractFromPDF (src\app\api\kb\items\route.ts:100:20)
+    at async POST (src\app\api\kb\items\route.ts:164:25)
+   98 | ${hintType ? `User-selected type hint: "${hintType}" — use unless clearly wrong.` : ''}`
+   99 |
+> 100 |     const result = await ai.models.generateContent({
+      |                    ^
+  101 |       model: 'gemini-3.1-flash',
+  102 |       contents: [{
+  103 |         role: 'user', {
+  status: 404
+}
+ POST /api/kb/items 201 in 6.8s (next.js: 57ms, proxy.ts: 131ms, application-code: 6.6s)
+ GET /api/uploadthing 200 in 99ms (next.js: 12ms, proxy.ts: 54ms, application-code: 34ms)
+ GET /api/uploadthing 200 in 51ms (next.js: 7ms, proxy.ts: 20ms, application-code: 23ms)
+ GET /dashboard 200 in 166ms (next.js: 17ms, proxy.ts: 44ms, application-code: 106ms)

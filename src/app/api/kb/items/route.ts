@@ -91,14 +91,14 @@ Return ONLY valid JSON (no markdown):
   "title": "exact document title found in the content, or a specific descriptive title (max 80 chars) — never generic like 'Business Operations Overview'",
   "description": "2-sentence summary of what this document specifically proves or demonstrates — include the company name, domain, and key outcomes if present",
   "industry": "single industry word e.g. banking | fintech | healthcare | government | insurance | retail | logistics | telecom | education | manufacturing",
-  "tags": ["5-8 specific domain tags extracted from the actual content — e.g. fraud-detection, AML, UPI, NPCI, ISO27001 — never generic words like strategy or operations"],
+  "tags": ["6-10 tags that are SPECIFIC DOMAIN TERMS found verbatim or directly implied in the document — use regulatory terms (AML, KYC, PCI-DSS, GDPR, ISO27001), financial product terms (UPI, NPCI, SWIFT, NEFT, FASTag), technology terms (real-time-fraud-detection, ML-scoring, rule-engine), or named entities (client name, product name, regulator) — NEVER use document-category words like knowledge-base, technical-documentation, analytics, strategy, operations, case-study"],
   "type": "past_proposal | case_study | certification | team_bio | technology | testimonial"
 }
 
 ${hintType ? `User-selected type hint: "${hintType}" — use unless clearly wrong.` : ''}`
 
     const result = await ai.models.generateContent({
-      model: 'gemini-3.1-flash',
+      model: 'gemini-3.1-flash-lite',
       contents: [{
         role: 'user',
         parts: [
