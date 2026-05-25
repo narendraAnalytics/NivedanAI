@@ -1,4 +1,4 @@
-import { LlmAgent, GOOGLE_SEARCH, Runner, InMemorySessionService } from '@google/adk'
+import { GoogleGenAI } from '@google/genai'
 import { eq } from 'drizzle-orm'
 import { db } from '@/db'
 import { clientResearchData, rfpJobs } from '@/db/schema'
@@ -10,28 +10,26 @@ import {
   updateJobActivity,
 } from '@/db/helpers/job-status'
 
-// ADK LlmAgent reads GOOGLE_GENAI_API_KEY, not GOOGLE_API_KEY — alias at module load
-process.env.GOOGLE_GENAI_API_KEY ??= process.env.GOOGLE_API_KEY
+const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY!, apiVersion: 'v1alpha' })
 
 const CLIENT_RESEARCH_INSTRUCTION = `
 You are the Client Research Agent for Nivedan AI.
 
-Your job is to build a comprehensive, intelligence-backed profile of a client company
-so that the downstream Proposal Writer can craft a deeply tailored, relevant proposal.
+Your job is to build a comprehensive profile of a client company so that the downstream
+Proposal Writer can craft a deeply tailored, relevant proposal.
 
-Process:
-1. Use the google_search tool to execute multiple targeted searches about the company.
-   Run separate searches for: company overview, recent news, leadership, strategic priorities,
-   funding rounds, expansion plans, product launches, competitive position, key challenges.
-2. Synthesise all search results into a structured Client Profile JSON.
-3. Assign researchConfidence: "high" if rich data found, "medium" if partial, "low" if minimal.
+Use everything you know about the company — its industry, business model, recent developments,
+leadership, strategic priorities, key challenges, competitors, and funding stage.
+
+If the company is a well-known enterprise (bank, government body, large corporation), provide
+rich, accurate details. If it is obscure or private with limited public information, build a
+reasonable profile from the RFP context and known industry patterns.
 
 Rules:
-- Use google_search for ALL web lookups — never rely on training data for current facts
-- Never fabricate news, funding amounts, or executive names
-- If a search returns nothing, note it and continue — do not crash
-- If the company is private/obscure and little data exists, build a minimal profile from what is in the RFP itself
-- Sources must be real URLs returned by google_search — never invented
+- Never fabricate specific funding amounts, executive names, or news headlines you are not confident about
+- If uncertain about a specific fact, omit it or mark it as approximate
+- Assign researchConfidence: "high" if the company is well-known with rich data,
+  "medium" if partial information is available, "low" if minimal data exists
 
 Output ONLY valid JSON — no markdown fences, no explanation — matching this exact schema:
 {
@@ -44,19 +42,10 @@ Output ONLY valid JSON — no markdown fences, no explanation — matching this 
   "leadership": [{ "name": "string", "role": "string" }],
   "fundingStage": "string or null",
   "competitors": ["string"],
-  "sources": ["url string"],
+  "sources": [],
   "researchConfidence": "high|medium|low"
 }
 `
-
-const clientResearchAgent = new LlmAgent({
-  name: 'client_research',
-  model: 'gemini-3.5-flash',
-  description: 'Researches client company intelligence using live web search for proposal tailoring.',
-  instruction: CLIENT_RESEARCH_INSTRUCTION,
-  tools: [GOOGLE_SEARCH],
-  generateContentConfig: { temperature: 0.3 },
-})
 
 import type { PipelineDirective } from './orchestrator'
 
@@ -68,14 +57,14 @@ export interface ClientResearchInput {
 }
 
 export async function runClientResearch(input: ClientResearchInput): Promise<{ googleSearchUsed: boolean; sourcesCount: number; confidence: string; companyName: string }> {
-  const { jobId, userId } = input
+  const { jobId } = input
   const startTime = Date.now()
 
-  const runId = await createAgentRun(jobId, 3, 'client_research', 'gemini-3.1-flash')
+  const runId = await createAgentRun(jobId, 3, 'client_research', 'gemini-3.5-flash')
 
   try {
     await updateCurrentAgent(jobId, 3)
-    await updateJobActivity(jobId, 'Initialising web research…')
+    await updateJobActivity(jobId, 'Initialising client research…')
 
     const { pipelineDirective } = input
 
@@ -96,56 +85,38 @@ export async function runClientResearch(input: ClientResearchInput): Promise<{ g
       'leadership',
     ]
 
-    const researchPrompt = `
+    const researchPrompt = `${CLIENT_RESEARCH_INSTRUCTION}
+
+---
 Research the following company for an RFP proposal we are preparing:
 
 Company: ${companyToResearch}
 Industry Sector: ${pipelineDirective?.sectorHint ?? 'unknown'}
 Research Focus Areas: ${focusAreas.join(', ')}
 
-Use the google_search tool to find current intelligence about this company.
-Run at least 2-3 searches to gather comprehensive data — search for: recent news, funding, strategic priorities, leadership changes, expansion plans, competitive landscape.
+Build a comprehensive client profile using your knowledge of this company.
+Focus on: company overview, recent strategic priorities, leadership team, key challenges,
+competitive landscape, and any known expansion or technology initiatives.
 
-Return ONLY valid JSON matching the schema in your instructions.
-`
+Return ONLY valid JSON matching the schema above.`
 
-    await updateJobActivity(jobId, `Searching: ${companyToResearch} — news, strategy, leadership…`)
+    await updateJobActivity(jobId, `Researching: ${companyToResearch} — priorities, leadership, challenges…`)
 
-    // Ephemeral session — no dependency on pipeline session persistence across Inngest steps
-    const localSessionSvc = new InMemorySessionService()
-    const runner = new Runner({
-      appName: 'nivedan-client-research',
-      agent: clientResearchAgent,
-      sessionService: localSessionSvc,
+    const result = await ai.models.generateContent({
+      model: 'gemini-3.5-flash',
+      contents: [{ role: 'user', parts: [{ text: researchPrompt }] }],
+      config: { temperature: 0.3, maxOutputTokens: 2048, responseMimeType: 'application/json' },
     })
 
-    let finalText = ''
-    for await (const event of runner.runEphemeral({
-      userId,
-      newMessage: { role: 'user', parts: [{ text: researchPrompt }] },
-    })) {
-      for (const part of event.content?.parts ?? []) {
-        if ('functionCall' in part && part.functionCall) {
-          await updateJobActivity(jobId, `Google Search: querying "${companyToResearch}"…`)
-        } else if ('functionResponse' in part && part.functionResponse) {
-          await updateJobActivity(jobId, 'Google Search: analysing results…')
-        } else if (part.text) {
-          finalText = part.text
-        }
-      }
-    }
+    const raw = result.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
+    const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
 
     await updateJobActivity(jobId, 'Compiling research intelligence…')
-    let clientProfile: Record<string, unknown>
 
+    let clientProfile: Record<string, unknown>
     try {
-      const cleaned = finalText
-        .replace(/```json\n?/g, '')
-        .replace(/```\n?/g, '')
-        .trim()
       clientProfile = JSON.parse(cleaned)
     } catch {
-      // Graceful degradation — build minimal low-confidence profile
       clientProfile = {
         companyName: companyToResearch,
         industry: pipelineDirective?.sectorHint ?? null,
@@ -175,17 +146,16 @@ Return ONLY valid JSON matching the schema in your instructions.
       leadership: (clientProfile.leadership as object[]) ?? null,
       fundingStage: (clientProfile.fundingStage as string) ?? null,
       competitors: (clientProfile.competitors as string[]) ?? null,
-      sources: (clientProfile.sources as string[]) ?? null,
+      sources: [],
       researchConfidence: confidence,
-      googleSearchUsed: Array.isArray(clientProfile.sources) && (clientProfile.sources as string[]).length > 0,
+      googleSearchUsed: false,
     })
 
     await completeAgentRun(runId, 0, 0, Date.now() - startTime)
 
-    const sources = Array.isArray(clientProfile.sources) ? (clientProfile.sources as string[]) : []
     return {
-      googleSearchUsed: sources.length > 0,
-      sourcesCount: sources.length,
+      googleSearchUsed: false,
+      sourcesCount: 0,
       confidence,
       companyName: (clientProfile.companyName as string) || companyToResearch,
     }

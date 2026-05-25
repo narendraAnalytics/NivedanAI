@@ -161,7 +161,7 @@ Return ONLY valid JSON matching the schema in your instructions.`
     const result = await ai.models.generateContent({
       model: 'gemini-3.1-flash-lite',
       contents: [{ role: 'user', parts: [{ text: reviewPrompt }] }],
-      config: { temperature: 0.1, maxOutputTokens: 4096 },
+      config: { temperature: 0.1, maxOutputTokens: 8192 },
     })
 
     const raw = result.candidates?.[0]?.content?.parts?.[0]?.text ?? ''

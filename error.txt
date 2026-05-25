@@ -1,14 +1,10 @@
-import { LlmAgent, GOOGLE_SEARCH, Runner, InMemorySessionService } from '@google/adk';
+{
+  "companyName": "ICICI Bank Limited",
+  "confidence": "low",
+  "googleSearchUsed": false,
+  "sourcesCount": 0
+}
 
-export const clientResearchAgent = new LlmAgent({
-  name: 'client_research',
-  model: 'gemini-3.5-flash',
-  description: 'Researches client company intelligence using live web search for proposal tailoring.',
-  instruction: CLIENT_RESEARCH_INSTRUCTION,
-  tools: [GOOGLE_SEARCH],
-  generateContentConfig: {
-    config: {              // <-- Make sure to wrap it inside the nested config object
-      temperature: 0.3 
-    }
-  },
-});
+2026-05-25 06:37:37.272 [info] [32mINFO[39m: [ADK] 2026-05-25T06:37:37.271Z event: {"invocationId":"e-7a623254-6246-416d-893a-4765654ac343","author":"user","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{},"requestedToolConfirmations":{}},"content":{"role":"user","parts":[{"text":"Search for real-world evidence for each of these RFP requirements and return the JSON array:\n\n- ID: req-001\n  Requirement: Process minimum 100,000 TPS at peak with end-to-end fraud decision latency of under 200 milliseconds at P99.\n- ID: req-002\n  Requirement: All customer financial data, transaction records, and fraud model training data must reside exclusively in India (MeitY-approved cloud regions).\n- ID: req-003\n  Requirement: Valid ISO 27001:2022 certification; PCI-DSS Level 1 compliance certification from a QSA.\n- ID: req-004\n  Requirement: Minimum 3 live enterprise fraud risk management or AML implementations at Scheduled Commercial Banks in India, each valued at INR 5 Crore or above.\n- ID: req-005\n  Requirement: Integration with NPCI DPIP, RBI Innovation Hub MuleHunter.AI, and I4C negative beneficiary registry.\n- ID: req-006\n  Requirement: Automated generation of 40+ RBI regulatory reports including XBRL-tagged reports to CIMS, FMR, and Annual Fraud Report."}]},"id":"IL7gh1F2","longRunningToolIds":[],"timestamp":1779691057271}
+2026-05-25 06:37:37.400 [info] [32mINFO[39m: [ADK] 2026-05-25T06:37:37.399Z Sending out request, model: gemini-3.1-flash-lite, backend: GEMINI_API, stream: false
+2026-05-25 06:37:45.790 [info] [32mINFO[39m: [ADK] 2026-05-25T06:37:45.789Z Sending out request, model: gemini-3.1-flash-lite, backend: GEMINI_API, stream: false
