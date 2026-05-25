@@ -51,7 +51,7 @@ Output ONLY valid JSON — no markdown fences, no explanation — matching this 
 
 const clientResearchAgent = new LlmAgent({
   name: 'client_research',
-  model: 'gemini-3.1-flash',
+  model: 'gemini-3.5-flash',
   description: 'Researches client company intelligence using live web search for proposal tailoring.',
   instruction: CLIENT_RESEARCH_INSTRUCTION,
   tools: [GOOGLE_SEARCH],

@@ -51,7 +51,8 @@ Output ONLY valid JSON — no markdown fences, no explanation:
 }
 
 Valid section names: executiveSummary, understandingOfRequirements, proposedSolution,
-technicalApproach, caseStudies, teamAndExpertise, projectTimeline, pricingStructure`
+technicalApproach, caseStudies, teamAndExpertise, projectTimeline, pricingStructure,
+coverLetter, risksMitigation, assumptionsDependencies, whyUs`
 
 type SectionKey =
   | 'executiveSummary'
@@ -62,6 +63,10 @@ type SectionKey =
   | 'teamAndExpertise'
   | 'projectTimeline'
   | 'pricingStructure'
+  | 'coverLetter'
+  | 'risksMitigation'
+  | 'assumptionsDependencies'
+  | 'whyUs'
 
 const SECTION_KEYS = new Set<string>([
   'executiveSummary',
@@ -72,6 +77,10 @@ const SECTION_KEYS = new Set<string>([
   'teamAndExpertise',
   'projectTimeline',
   'pricingStructure',
+  'coverLetter',
+  'risksMitigation',
+  'assumptionsDependencies',
+  'whyUs',
 ])
 
 export interface QualityReviewInput {
@@ -132,6 +141,7 @@ ${JSON.stringify({
 ---
 PROPOSAL SECTIONS:
 ${JSON.stringify({
+  coverLetter: proposal.coverLetter,
   executiveSummary: proposal.executiveSummary,
   understandingOfRequirements: proposal.understandingOfRequirements,
   proposedSolution: proposal.proposedSolution,
@@ -140,6 +150,9 @@ ${JSON.stringify({
   teamAndExpertise: proposal.teamAndExpertise,
   projectTimeline: proposal.projectTimeline,
   pricingStructure: proposal.pricingStructure,
+  risksMitigation: proposal.risksMitigation,
+  assumptionsDependencies: proposal.assumptionsDependencies,
+  whyUs: proposal.whyUs,
 }, null, 2)}
 
 ---
