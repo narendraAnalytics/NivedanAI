@@ -32,7 +32,7 @@ export const clientResearchData = pgTable('client_research_data', {
   competitors: jsonb('competitors'),
   sources: jsonb('sources'),
   researchConfidence: text('research_confidence'), // high | medium | low
-  googleSearchUsed: boolean('google_search_used').default(false).notNull(),
+  tavilySearchUsed: boolean('tavily_search_used').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
