@@ -1,0 +1,621 @@
+================================================================================
+             NIVEDAN AI — AUTONOMOUS PROPOSAL GENERATION PIPELINE
+                       Complete Workflow Documentation
+================================================================================
+
+OVERVIEW
+--------
+Nivedan AI is an autonomous multi-agent SaaS platform that converts an uploaded
+RFP (Request for Proposal) PDF into a submission-ready, branded proposal PDF
+in 15–20 minutes. The pipeline is powered by 6 AI agents running sequentially
+via Inngest (background job orchestration) on Vercel serverless infrastructure,
+backed by a Neon PostgreSQL database.
+
+Tech Stack:
+  - Frontend    : Next.js 15 (App Router)
+  - Database    : Neon PostgreSQL via Drizzle ORM (HTTP driver)
+  - Auth        : Clerk v7
+  - AI Models   : Google Gemini (via @google/genai + @google/adk)
+  - Web Search  : Tavily MCP (StreamableHTTP — Vercel compatible)
+  - Jobs        : Inngest v4 (background function execution)
+  - File Upload : UploadThing v7
+  - Email       : Resend
+  - PDF Export  : @react-pdf/renderer
+
+Trigger Event : nivedan/rfp.submitted
+Pipeline File : src/inngest/functions/generate-proposal.ts
+
+================================================================================
+                          PIPELINE TRIGGER
+================================================================================
+
+TRIGGER: User Uploads RFP PDF
+------------------------------
+  Location    : src/lib/uploadthing.ts → rfpDocument endpoint
+  What Happens:
+    1. User uploads RFP PDF via dashboard (/dashboard)
+    2. User provides recipient email address before upload
+    3. UploadThing stores the PDF and returns ufsUrl
+    4. onUploadComplete callback:
+         - Creates rfp_jobs row in Neon DB (status: pending)
+         - Stores recipient_email on the job
+         - Fires Inngest event: nivedan/rfp.submitted
+    5. Inngest picks up the event and starts the 6-agent pipeline
+
+  Data passed into pipeline:
+    jobId            — UUID of the rfp_jobs row
+    userId           — Clerk user ID
+    rfpDocumentUrl   — UploadThing CDN URL of the PDF
+    companyProfileId — UUID of user's company profile
+    recipientEmail   — Email to send the finished proposal to
+
+
+================================================================================
+                     STEP 1 — ORCHESTRATOR AGENT
+================================================================================
+
+  Agent Name   : Orchestrator Agent
+  File         : src/agents/orchestrator.ts
+  Inngest Step : step-1-orchestrator
+  Model Used   : gemini-3.1-pro-preview
+  Temperature  : 0.3
+  Max Tokens   : 2048
+
+  ROLE:
+    The operational brain of Nivedan AI. Acts as the central execution
+    controller that validates all inputs, creates the shared ADK session,
+    and produces a PipelineDirective — a structured intelligence object
+    that guides every downstream agent.
+
+  WHAT IT DOES:
+    1. Sets job status to "running" in Neon DB
+    2. Records Inngest runId and pipeline start time
+    3. Validates company profile exists in DB
+    4. Validates RFP document URL is accessible (HEAD request)
+    5. Calls Gemini with full company context to generate PipelineDirective
+    6. Creates ADK InMemorySession (sessionId = jobId) with full initial state
+    7. Returns { pipelineDirective, companyName } — cached by Inngest
+
+  OUTPUT (PipelineDirective):
+    sectorHint          — Primary industry sector of the RFP client
+    complexityLevel     — low | medium | high
+    priorityFlags       — Execution risk signals (compliance-heavy, tight-deadline, etc.)
+    focusAreas          — KB item types to prioritize (case_study, certification, etc.)
+    clientResearchFocus — Intelligence areas for Agent 3 (recent-funding, leadership, etc.)
+    proposalTone        — formal | consultative | technical | partnership
+    orchestratorNotes   — Actionable intelligence for downstream agents
+
+  DATA FLOW:
+    Returns pipelineDirective → Inngest caches → available to all downstream steps
+    Returns companyName → Inngest caches → used by Agent 3
+
+  ACTIVITY LOG: "Validating inputs & routing pipeline…"
+                "Session created — agents ready"
+
+
+================================================================================
+                     STEP 2 — RFP PARSER AGENT
+================================================================================
+
+  Agent Name   : RFP Parser Agent
+  File         : src/agents/rfp-parser.ts
+  Inngest Step : step-2-rfp-parser
+  Model Used   : gemini-3.1-flash-lite
+  Temperature  : 0.1
+  Max Tokens   : 4096
+
+  ROLE:
+    Document Intelligence Engine. Transforms the raw RFP PDF into structured
+    machine-readable procurement intelligence that feeds every downstream agent.
+
+  WHAT IT DOES:
+    1. Fetches the RFP PDF from UploadThing CDN
+    2. Converts PDF to base64 and passes as Gemini inlineData (native PDF read)
+    3. Instructs Gemini to extract structured intelligence from the document
+    4. Saves extracted data to parsed_rfp_data table in Neon
+    5. Updates rfp_jobs with clientName, rfpTitle, budgetCeiling, deadline
+    6. Returns summary stats — cached by Inngest
+
+  EXTRACTS FROM RFP:
+    - All mandatory requirements (id, text, category, priority, confidence)
+    - Optional / preferred requirements
+    - Budget ceiling (normalized to text string)
+    - Submission deadline (ISO 8601 where possible)
+    - Project timeline / duration
+    - Evaluation criteria with weights (Technical 40%, Price 30%, etc.)
+    - Vendor qualification requirements (ISO, HIPAA, SOC2, years experience)
+    - Compliance obligations
+    - Contact information (name, email, phone)
+    - Identified risks (aggressive-deadline, compliance-heavy, etc.)
+    - Raw summary (2-3 sentence document overview)
+
+  WHY INLINE PDF (not pdf-parse):
+    pdf-parse silently hangs on Vercel cold starts — it CANNOT be used on
+    serverless. Gemini reads the PDF natively via inlineData — no library needed.
+
+  DB WRITES:
+    - INSERT parsed_rfp_data (all extracted intelligence)
+    - UPDATE rfp_jobs (clientName, rfpTitle, budgetCeiling, deadline)
+
+  OUTPUT RETURNED:
+    { clientName, rfpTitle, mandatoryCount, optionalCount, budgetCeiling, submissionDeadline }
+
+  DATA FLOW:
+    clientName → Inngest caches → passed directly to Agent 3 (|| null guard applied)
+
+  ACTIVITY LOG: "Fetching RFP document from storage…"
+                "Sending RFP document to AI for extraction…"
+                "Extracted N mandatory + N optional requirements"
+
+
+================================================================================
+                     STEP 3 — CLIENT RESEARCH AGENT
+================================================================================
+
+  Agent Name   : Client Research Agent
+  File         : src/agents/client-research.ts
+  Inngest Step : step-3-client-research
+  Model Used   : gemini-3.5-flash (both passes)
+  Temperature  : 0.3
+  Max Tokens   : 2048
+
+  ROLE:
+    Intelligence gathering agent. Builds a comprehensive, live company profile
+    of the RFP client using Tavily web search + Gemini synthesis so the
+    Proposal Writer can craft a hyper-tailored, winning proposal.
+
+  WHAT IT DOES — TWO-PASS PATTERN:
+
+    Pass 1 — Tavily Web Search (MCPToolset + LlmAgent + runEphemeral):
+      - Creates MCPToolset connecting to https://mcp.tavily.com/mcp/ (HTTP)
+      - Creates LlmAgent (gemini-3.5-flash) with TAVILY_SEARCH_INSTRUCTION
+      - Runs runner.runEphemeral() — no pre-created session needed
+      - Agent autonomously searches 2-3 times for: company overview, recent
+        news (2024–2025), leadership, strategic priorities, key challenges,
+        competitors, technology stack, government contracts
+      - Returns rich prose summary with inline source URLs
+      - Non-fatal — failure falls back to LLM knowledge only
+
+    Pass 2 — Gemini Synthesis (generateContent):
+      - Combines Tavily prose intel + pipelineDirective context
+      - Synthesises into structured JSON matching CLIENT_RESEARCH_INSTRUCTION schema
+      - Extracts source URLs into sources[] array
+      - Assigns researchConfidence: high | medium | low
+
+  RECEIVES FROM UPSTREAM:
+    clientName       — from Agent 2 Inngest return (|| null guard: "" → null)
+    pipelineDirective — from Agent 1 Inngest return (sectorHint, focusAreas, etc.)
+
+  DB WRITES:
+    - INSERT client_research_data (full company profile JSON)
+      Fields: companyName, industry, companySummary, recentNews, strategicPriorities,
+              keyChallenges, leadership, fundingStage, competitors, sources,
+              researchConfidence, tavilySearchUsed (true when sources[] non-empty)
+
+  OUTPUT RETURNED:
+    { tavilySearchUsed, sourcesCount, confidence, companyName }
+
+  ACTIVITY LOG: "Initialising client research…"
+                "Tavily searching: <companyName>…"
+                "Tavily: results received — processing…"
+                "Synthesising research for <companyName>…"
+                "Research complete — confidence: high|medium|low"
+
+
+================================================================================
+                     STEP 4 — REQUIREMENTS MATCHER AGENT
+================================================================================
+
+  Agent Name   : Requirements Matcher Agent
+  File         : src/agents/requirements-matcher.ts
+  Inngest Step : step-4-requirements-matcher
+  Model Used   : gemini-3.1-flash-lite (evidence search + per-requirement match)
+  Temperature  : default
+
+  ROLE:
+    Capability alignment engine. Maps every mandatory RFP requirement to the
+    company's Knowledge Base items and assigns a confidence score. Also gathers
+    real-world web evidence via Tavily MCP to strengthen match quality.
+
+  WHAT IT DOES — TWO-PASS PATTERN:
+
+    Pass 1 — Tavily Evidence Gathering (MCPToolset + LlmAgent + runEphemeral):
+      - Sends ALL mandatory requirements to a Tavily-powered LlmAgent
+      - Agent searches web for real-world proof points per requirement
+      - Returns JSON array: [{ requirementId, evidence }]
+      - Evidence is stored per match row in tavilyEvidence column
+      - Non-fatal — silently skipped if Tavily unavailable
+
+    Pass 2 — Per-Requirement KB Matching (generateContent loop):
+      - For each mandatory requirement:
+          * Loads all active KB items for the company profile
+          * Sends requirement + KB summary + Tavily evidence to Gemini
+          * Gemini picks best matching KB item (or null if no match)
+          * Assigns confidenceScore 0.00–1.00
+          * Marks isGap=true if confidenceScore < 0.50
+      - Bulk inserts all match rows to capability_matches
+
+  CONFIDENCE SCORE BANDS:
+    0.90–1.00  Direct evidence, exact KB match
+    0.70–0.89  Strong indirect match
+    0.50–0.69  Partial match, some evidence
+    < 0.50     Gap — no meaningful match (isGap=true)
+
+  DB READS:
+    - parsed_rfp_data (mandatory requirements for this job)
+    - knowledge_base_items (all active items for company)
+
+  DB WRITES:
+    - INSERT capability_matches (one row per mandatory requirement)
+      Fields: rfpJobId, requirementId, requirementText, knowledgeBaseItemId,
+              matchSummary, confidenceScore (numeric 3,2), isGap,
+              gapSuggestion, tavilyEvidence
+
+  OUTPUT RETURNED:
+    { totalRequirements, matchedCount, gapCount, tavilyEvidenceCount, avgConfidence }
+
+  ACTIVITY LOG: "Loaded N KB items — matching N requirements…"
+                "Searching web for requirement evidence via Tavily MCP…"
+                "Web evidence gathered for N requirements — matching against KB…"
+                "Matching requirement N / N…"
+                "Matched N / N — N gaps identified"
+
+
+================================================================================
+                     STEP 5 — PROPOSAL WRITER AGENT
+================================================================================
+
+  Agent Name   : Proposal Writer Agent
+  File         : src/agents/proposal-writer.ts
+  Inngest Step : step-5-proposal-writer
+  Model Used   : gemini-3.1-pro-preview
+  Temperature  : 0.7
+  Max Tokens   : 12000
+
+  ROLE:
+    The primary content generation agent. Writes a complete 12-section,
+    submission-ready RFP proposal tailored to the specific client, their
+    industry, strategic context, and mapped capabilities.
+
+  WHAT IT DOES:
+    1. Fetches all upstream data in parallel from Neon:
+         - parsed_rfp_data (RFP Blueprint — requirements, budget, deadline)
+         - client_research_data (Company profile, news, priorities)
+         - capability_matches (All requirement-to-KB mappings + confidence)
+    2. Constructs a rich combined prompt with all three data sources
+    3. Calls Gemini to write a complete 12-section proposal JSON
+    4. Inserts proposal into proposals table (version 1, isApproved=false)
+
+  12 PROPOSAL SECTIONS WRITTEN:
+    1.  coverLetter              — Formal opening letter addressed to client
+    2.  executiveSummary         — Challenge, understanding, value proposition
+    3.  understandingOfRequirements — Structured breakdown of all requirements
+    4.  proposedSolution         — Solution narrative, methodology, approach
+    5.  technicalApproach        — Stack, integrations, security, scalability
+    6.  caseStudies              — 2-3 relevant past projects with metrics
+    7.  teamAndExpertise         — Key team, roles, qualifications
+    8.  projectTimeline          — Phase-by-phase breakdown within RFP deadline
+    9.  pricingStructure         — Itemised pricing within budget ceiling
+    10. risksMitigation          — Risk register (4-6 risks with mitigation)
+    11. assumptionsDependencies  — 6-10 project assumptions and dependencies
+    12. whyUs                    — 3-5 concrete differentiators for this client
+
+  WRITING RULES ENFORCED:
+    - Every section references client by name
+    - Matched KB items cited in relevant sections
+    - Gaps handled with credible proposed approaches
+    - Budget and timeline stay within RFP constraints
+    - "We" voice throughout
+
+  DB READS:
+    - parsed_rfp_data, client_research_data, capability_matches
+
+  DB WRITES:
+    - INSERT proposals (all 12 sections + wordCount, version=1)
+
+  OUTPUT RETURNED:
+    { proposalId, sectionsGenerated, wordCount, version }
+
+  ACTIVITY LOG: "Drafting 12-section proposal…"
+                "Proposal draft complete"
+
+
+================================================================================
+                     STEP 6 — QUALITY REVIEW AGENT
+================================================================================
+
+  Agent Name   : Quality Review Agent
+  File         : src/agents/quality-review.ts
+  Inngest Step : step-6-quality-review
+  Model Used   : gemini-3.1-flash-lite
+  Temperature  : 0.1
+  Max Tokens   : 8192
+
+  ROLE:
+    The final automated validation gate. Runs 5 quality checks against the
+    proposal, applies corrections to failing sections, calculates a quality
+    score, and parks the job as "awaiting_review" for human approval (HITL).
+
+  WHAT IT DOES:
+    1. Fetches proposal, RFP constraints, and capability_matches in parallel
+    2. Computes coverage statistics from capability_matches:
+         - coverageRatio  = requirements matched (confidence ≥ 0.60) / total
+         - avgConfidence  = average confidence across all match rows
+    3. Injects coverage stats + scoring guidance into prompt
+    4. Calls Gemini to validate proposal against 5-point checklist
+    5. Applies coverage-driven floor/cap to the returned score (see below)
+    6. Saves corrected sections + quality score to proposals table
+    7. Sets job status to "awaiting_review" — pipeline pauses for human
+
+  5-POINT VALIDATION CHECKLIST:
+    1. Every mandatory requirement is addressed somewhere in the proposal
+    2. Project timeline does not exceed the RFP submission deadline
+    3. Proposed pricing does not exceed the RFP budget ceiling
+    4. No section contradicts another (team size, timeline assumptions, etc.)
+    5. No generic filler — every paragraph references the specific client
+
+  COVERAGE-DRIVEN SCORING (NEW LOGIC):
+    After Gemini returns its raw qualityScore:
+
+    Floor (guaranteed high score when matched):
+      IF coverageRatio ≥ 0.85 AND avgConfidence ≥ 0.65
+        → qualityScore = Math.max(qualityScore, 0.92)
+        → Guarantees 92%+ when requirements are well covered
+
+    Cap (limits score when coverage is poor):
+      IF coverageRatio < 0.50 AND totalReqs > 0
+        → qualityScore = Math.min(qualityScore, 0.75)
+        → Prevents inflated scores when major gaps exist
+
+    Final clamp: qualityScore = Math.min(1.0, Math.max(0.0, score))
+
+  SCORING BANDS:
+    0.92–1.00  High coverage, all checks passed — submission-ready
+    0.80–0.91  Minor issues or partial coverage — corrections applied
+    0.50–0.79  Significant gaps — multiple corrections applied
+    < 0.50     Major structural problems
+
+  DB READS:
+    - proposals, parsed_rfp_data, capability_matches
+
+  DB WRITES:
+    - UPDATE proposals (qualityScore, qualityReviewNotes, corrected sections)
+    - UPDATE rfp_jobs status → "awaiting_review"
+
+  OUTPUT RETURNED:
+    { qualityScore, correctionsApplied, sectionsUpdated, validationPassed }
+
+  ACTIVITY LOG: "Running 5 quality checks…"
+                "Quality validated — proposal scored"
+
+
+================================================================================
+                     STEP 7 — HUMAN-IN-THE-LOOP (HITL)
+================================================================================
+
+  Type         : Inngest waitForEvent (NOT an agent)
+  Event Wait   : nivedan/hitl.approved
+  Timeout      : 7 days
+  Correlation  : if: 'event.data.jobId == async.data.jobId'
+
+  WHAT HAPPENS:
+    Pipeline pauses here after Agent 6 completes.
+    User reviews the proposal on /workflow/[jobId]:
+      - Reads all 12 sections
+      - Reviews quality score and review notes
+      - Option A: Approve → fires nivedan/hitl.approved event → pipeline resumes
+      - Option B: Request Changes → POST /api/proposals/[jobId]/changes
+                  Triggers handle-hitl-changes.ts to rewrite flagged sections
+      - Option C: No action within 7 days → job expires
+
+  Valid sections for HITL change requests:
+    executiveSummary, understandingOfRequirements, proposedSolution,
+    technicalApproach, caseStudies, teamAndExpertise,
+    projectTimeline, pricingStructure
+
+
+================================================================================
+                     STEP 8 — PDF EXPORT & EMAIL DELIVERY
+================================================================================
+
+  Type         : Inngest step (post-HITL approval)
+  Inngest Step : step-8-pdf-export
+  Tools Used   : @react-pdf/renderer, UploadThing UTApi, Resend
+
+  WHAT IT DOES:
+    1. Fetches all data in parallel: proposal, company profile, user, job,
+       parsed RFP, client research, capability matches (ordered by confidence)
+    2. Generates branded proposal PDF via generateProposalPdf()
+       - Includes all 12 sections, company branding, quality score badge
+       - File: src/lib/pdf/generate.ts
+    3. Uploads PDF to UploadThing via UTApi.uploadFiles()
+       - Uses new Uint8Array(buffer) — NOT raw Buffer (TypeScript BlobPart fix)
+       - Reads .ufsUrl — NOT deprecated .url getter
+    4. Sends email via Resend to recipient (recipientEmail or Clerk email)
+       - From: "NIVEDAN-AI <admin@nivedan-ai.com>" (RFC 5322 display-name)
+       - Subject: "Your proposal for <clientName> is ready — v1"
+       - Branded HTML email with proposal details card + download button
+       - Shows quality score in % and submission deadline
+    5. Inserts proposal_exports row (pdfUrl, fileName, emailSentTo, etc.)
+    6. Updates rfp_jobs status → "completed"
+
+  OUTPUT RETURNED:
+    { status: 'completed' }
+
+
+================================================================================
+                          DATA FLOW SUMMARY
+================================================================================
+
+  EVENT DATA ────────────────────────────────────────────────────────────────
+    jobId, userId, rfpDocumentUrl, companyProfileId, recipientEmail
+    (all steps receive these via Inngest event.data)
+
+  INNGEST STEP RETURNS (cached, cross-step safe) ────────────────────────────
+    Step 1 → { pipelineDirective, companyName }   used by Step 3
+    Step 2 → { clientName, rfpTitle, ... }         clientName used by Step 3
+
+  DATABASE (Neon PostgreSQL) ────────────────────────────────────────────────
+    Step 2 writes  → parsed_rfp_data           read by Steps 4, 5, 6, 8
+    Step 3 writes  → client_research_data      read by Steps 5, 8
+    Step 4 writes  → capability_matches        read by Steps 5, 6, 8
+    Step 5 writes  → proposals                 read by Steps 6, 8
+    Step 6 updates → proposals (score+fixes)   read by Step 8
+    Step 8 writes  → proposal_exports
+    Step 8 updates → rfp_jobs (completed)
+
+  WHY NOT IN-MEMORY / SESSION ───────────────────────────────────────────────
+    Inngest replays the function on each step. InMemorySession from Step N
+    is gone by Step N+1 (separate Lambda invocation on Vercel serverless).
+    ADK session is only used by Agent 1 (createSession). Agents 2–6 all
+    read exclusively from Neon DB or Inngest cached step return values.
+
+
+================================================================================
+          REAL-WORLD RFP PROBLEMS — AND HOW NIVEDAN AI SOLVES THEM
+================================================================================
+
+PROBLEM 1 — Writing an RFP Response Takes Days or Weeks
+---------------------------------------------------------
+  Real-World Pain:
+    A typical RFP response requires a dedicated team — business analyst to
+    read the document, subject matter experts to map capabilities, writers
+    to draft content, and a reviewer to validate compliance. Even small
+    teams spend 3–7 days per response. For companies chasing multiple RFPs
+    simultaneously, this becomes unsustainable. Deadlines are missed or
+    rushed proposals are submitted that fail to stand out.
+
+  How Nivedan AI Solves It:
+    The 6-agent pipeline completes the entire process — from raw RFP PDF to
+    a reviewed, scored, 12-section proposal — in 15–20 minutes. Agent 2
+    (RFP Parser) reads the full document in seconds using Gemini native PDF
+    intelligence. Agent 5 (Proposal Writer) drafts all 12 sections in a
+    single pass. The only human time required is the final HITL approval.
+
+
+PROBLEM 2 — Generic Proposals That Don't Address the Specific Client
+---------------------------------------------------------------------
+  Real-World Pain:
+    Most vendors submit cookie-cutter proposals — the same boilerplate
+    dressed up with the client's name swapped in. Evaluation committees
+    immediately recognise generic content. Proposals that don't reference
+    the client's known challenges, strategic priorities, or recent context
+    score poorly on "understanding of requirements" criteria and lose to
+    competitors who appear more informed and client-focused.
+
+  How Nivedan AI Solves It:
+    Agent 3 (Client Research) uses Tavily live web search to gather real,
+    current intelligence on the client — recent news, leadership changes,
+    strategic priorities, technology preferences, competitive pressures —
+    before a single word of the proposal is written. Agent 5 (Proposal
+    Writer) is instructed to weave this intelligence throughout every
+    section. The result is a proposal that reads as if it was written by
+    someone who deeply knows the client's business, not a generic template.
+
+
+PROBLEM 3 — Missing or Inadequately Addressed Mandatory Requirements
+--------------------------------------------------------------------
+  Real-World Pain:
+    RFP documents are often 50–150 pages of dense procurement language.
+    Requirements are buried in appendices, scattered across sections, and
+    written in legal or technical jargon. Human reviewers routinely miss
+    requirements, especially optional-but-scored ones. A proposal that
+    fails to address even one compliance or technical requirement can be
+    disqualified outright regardless of how well-written it is.
+
+  How Nivedan AI Solves It:
+    Agent 2 (RFP Parser) extracts every mandatory and optional requirement
+    with category, priority, and confidence score — regardless of where it
+    appears in the document. Agent 4 (Requirements Matcher) then maps each
+    mandatory requirement to the company's Knowledge Base with evidence.
+    Agent 5 is given the full requirement list and explicitly instructed to
+    address every one. Agent 6 (Quality Review) validates this as check #1:
+    "Every mandatory requirement is addressed somewhere in the proposal."
+
+
+PROBLEM 4 — Not Knowing How Competitive Your Capabilities Actually Are
+----------------------------------------------------------------------
+  Real-World Pain:
+    Most companies submit proposals without knowing whether their actual
+    capabilities genuinely match what the RFP is asking for. They guess
+    at their coverage, inflate their confidence, and hope for the best.
+    Without an honest capability-gap analysis, proposals either over-promise
+    (creating delivery risk) or under-leverage actual strengths (missing
+    win opportunities).
+
+  How Nivedan AI Solves It:
+    Agent 4 (Requirements Matcher) performs an honest, scored capability
+    assessment against the company's Knowledge Base for every mandatory
+    requirement. Each requirement gets a confidenceScore (0.00–1.00),
+    isGap flag, and a suggested remedy for gaps. The Quality Review Agent
+    uses this coverage data to assign a score that reflects real coverage —
+    92%+ when requirements are well matched, lower when gaps exist. The
+    company sees exactly where they are strong and where they need to
+    address shortfalls before submitting.
+
+
+PROBLEM 5 — Proposals That Violate Budget or Timeline Constraints
+-----------------------------------------------------------------
+  Real-World Pain:
+    It is surprisingly common for proposals to exceed the stated budget
+    ceiling or propose a delivery timeline longer than the RFP deadline.
+    This typically happens because writers don't have the RFP constraints
+    in front of them while drafting, or multiple authors work on sections
+    independently without coordinating the numbers. A proposal that exceeds
+    the budget is disqualified in most government and enterprise procurement.
+
+  How Nivedan AI Solves It:
+    Budget ceiling and submission deadline are extracted by Agent 2 and
+    stored explicitly. Agent 5 (Proposal Writer) receives these as hard
+    constraints in its prompt: "Budget and timeline must stay within the
+    RFP's stated constraints." Agent 6 (Quality Review) enforces checks
+    2 and 3: timeline does not exceed deadline, pricing does not exceed
+    budget ceiling. Violations trigger a correction rewrite before the
+    proposal reaches human review.
+
+
+PROBLEM 6 — No Consistent Quality Gate Before Submission
+---------------------------------------------------------
+  Real-World Pain:
+    Most proposal processes have informal peer review at best — a colleague
+    reads it once and says "looks good." There is no systematic check for
+    contradictions between sections (e.g. team size stated as 5 in the
+    team section but timeline assumptions reference a 10-person team),
+    no check for generic filler, and no scoring mechanism that tells you
+    objectively how strong the proposal actually is before you send it.
+
+  How Nivedan AI Solves It:
+    Agent 6 (Quality Review) runs a 5-point systematic validation checklist
+    on every proposal — requirement coverage, timeline compliance, budget
+    compliance, cross-section consistency, and client-specificity (no generic
+    filler). It assigns a quality score (0–100%) driven by both automated
+    validation and actual requirement coverage data from Agent 4. Corrections
+    are applied automatically before the proposal reaches the human reviewer.
+    The HITL review panel shows the quality score, review notes, and any
+    sections that were auto-corrected — giving the human a clear, informed
+    decision point before approving.
+
+
+PROBLEM 7 — Losing Track of Proposals and Final Documents
+---------------------------------------------------------
+  Real-World Pain:
+    Companies managing multiple RFPs struggle with file management —
+    proposal drafts saved in Google Drive folders, emails with PDF
+    attachments that are hard to find later, no central record of which
+    version was submitted to which client. When evaluation results come
+    back, there is often no easy way to review what was actually submitted.
+
+  How Nivedan AI Solves It:
+    Every proposal is stored in Neon DB with full versioning (proposals table).
+    After human approval, the final PDF is exported to UploadThing with a
+    permanent CDN URL and an email is sent via Resend to the designated
+    recipient with a branded download link. All exports are logged in the
+    proposal_exports table (pdfUrl, fileName, emailSentTo, emailSentAt).
+    The /proposals/[jobId] viewer gives a full interactive view of every
+    section, quality score, and review notes — accessible any time after
+    submission.
+
+
+================================================================================
+                              END OF DOCUMENTATION
+================================================================================

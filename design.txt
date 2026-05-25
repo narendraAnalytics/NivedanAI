@@ -1,95 +1,151 @@
-2026-05-25 05:01:50.074 [info] [32mINFO[39m: [ADK] 2026-05-25T05:01:50.073Z event: {"invocationId":"e-cd15beb0-a243-4f71-8d6b-44d9ba0ba805","author":"user","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{},"requestedToolConfirmations":{}},"content":{"role":"user","parts":[{"text":"\nResearch the following company for an RFP proposal we are preparing:\n\nCompany: ICICI Bank Limited\nIndustry Sector: B2B Enterprise Software\nResearch Focus Areas: strategic-priorities, current-proposal-workflow, technology-stack-compatibility\n\nUse search_agent to find current intelligence about this company.\nSearch for: recent news, funding, strategic priorities, leadership changes, expansion plans, competitive landscape.\n\nReturn ONLY valid JSON matching the schema in your instructions.\n"}]},"id":"BbDzdPJ9","longRunningToolIds":[],"timestamp":1779685310072}
-2026-05-25 05:01:50.080 [info] [32mINFO[39m: [ADK] 2026-05-25T05:01:50.080Z Sending out request, model: gemini-3.1-flash, backend: GEMINI_API, stream: false
-2026-05-25 05:01:57.904 [info] [32mINFO[39m: [ADK] 2026-05-25T05:01:57.904Z Sending out request, model: gemini-3.1-flash-lite, backend: GEMINI_API, stream: false
-2026-05-25 05:01:50.324 [info] [32mINFO[39m: [ADK] 2026-05-25T05:01:50.324Z event: {"invocationId":"e-46c2702d-4d7a-494c-a6ce-f37170c1675d","author":"user","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{},"requestedToolConfirmations":{}},"content":{"role":"user","parts":[{"text":"Search for real-world evidence for each of these RFP requirements and return the JSON array:\n\n- ID: req-001\n  Requirement: Process minimum 100,000 TPS at peak with end-to-end fraud decision latency of under 200 milliseconds at P99.\n- ID: req-002\n  Requirement: Data Residency: All customer financial data, transaction records, and fraud model training data must reside exclusively in India (MeitY-approved cloud regions).\n- ID: req-003\n  Requirement: Valid ISO 27001:2022 certification; PCI-DSS Level 1 compliance certification from a QSA.\n- ID: req-004\n  Requirement: Minimum 3 live enterprise fraud risk management or AML implementations at Scheduled Commercial Banks in India, each valued at INR 5 Crore or above.\n- ID: req-005\n  Requirement: Integration with NPCI DPIP, RBI Innovation Hub MuleHunter.AI, and I4C negative beneficiary registry."}]},"id":"QYcWLVC6","longRunningToolIds":[],"timestamp":1779685310324}
-2026-05-25 05:01:50.409 [info] [32mINFO[39m: [ADK] 2026-05-25T05:01:50.409Z Sending out request, model: gemini-3.1-flash-lite, backend: GEMINI_API, stream: false
 
-step 3: in Inngest
-{
-  "companyName": "ICICI Bank Limited",
-  "confidence": "low",
-  "googleSearchUsed": false,
-  "sourcesCount": 0
-}
+PROBLEM 1 — pdf-parse hanging on Vercel
+-----------------------------------------
+  Problem:
+    pdf-parse was originally used to extract text from uploaded RFP PDFs.
+    On Vercel serverless (cold starts), pdf-parse silently hangs indefinitely.
+    A try/catch does NOT protect against this — the Lambda times out at 10s
+    with no error thrown, causing the pipeline to fail silently.
 
--------------------------------- --------------------------------------------------------------------------
+  Root Cause:
+    pdf-parse uses Node.js worker threads internally, which are not compatible
+    with Vercel's serverless Lambda execution model.
 
-Based on the trace logs, there isn't actually an application crash or explicit error code being thrown. Instead, you are looking at a **multi-agent orchestration failure (specifically, a routing logic breakdown)** occurring at the framework level within the Google ADK runner.
+  Solution Applied:
+    Replaced pdf-parse entirely with Gemini native PDF reading via inlineData.
+    PDF is fetched from UploadThing, converted to base64, and passed directly
+    to Gemini as { inlineData: { mimeType: 'application/pdf', data: base64 } }.
+    Gemini reads the full document natively — no extraction library needed.
+    This eliminated the hanging issue completely.
 
-Here is the step-by-step root cause analysis of why your workflow is breaking down, along with how to fix it.
 
----
+PROBLEM 2 — InMemorySession state lost between Inngest steps
+-------------------------------------------------------------
+  Problem:
+    Agent 1 wrote pipeline context into ADK InMemorySessionService.
+    Agents 2–6 attempted to read session state written by Agent 1.
+    State was always empty — each Inngest step runs in a separate Lambda
+    invocation; in-memory state does not survive between HTTP requests.
 
-## 🔍 Root Cause Analysis
+  Root Cause:
+    Inngest replays the function body on each step but only executes the
+    current step's callback. Previous step callbacks are skipped. All
+    Object.assign(session.state, ...) mutations from Step 1 are invisible
+    to Step 2+ because the Lambda that ran Step 1 is already terminated.
 
-### 1. Multi-Agent Hand-off Breakdown
+  Solution Applied:
+    Removed all cross-step session reads. Cross-step data now flows via:
+    - Inngest step return values (pipelineDirective, clientName) — cached by
+      Inngest and available to all subsequent steps in the function scope.
+    - Neon PostgreSQL (all other data) — DB is the cross-step state bus.
+    ADK session is now only used by Agent 1 (createSession for state init).
+    Agents 2–6 do not import or use sessionService.
 
-Your logs reveal two completely separate tasks executing at the exact same millisecond timestamp (`05:01:50.074` vs `05:01:50.324`), showing a critical mismatch between what your root coordinator agent is trying to do and what your child agent is receiving.
 
-* **The Coordinator's Intent:** The user explicitly asked the coordinator to trigger `search_agent` to research *ICICI Bank Limited*.
-* **The System's Behavior:** Instead of handing off the *ICICI Bank* request to `search_agent`, the ADK framework bypassed it or immediately context-switched. Look at the very next incoming block: it instantly feeds a completely different prompt into the system regarding *RFP Technical Requirements (req-001 through req-005: Latency, ISO 27001, MeitY cloud, etc.)*.
+PROBLEM 3 — clientName empty string passed to Agent 3
+------------------------------------------------------
+  Problem:
+    When Gemini returned an empty string "" for clientName in Agent 2,
+    the null-coalescing operator (??) was used: parserResult?.clientName ?? null
+    Empty string "" is not null/undefined, so ?? passes it through unchanged.
+    Agent 3 then searched Tavily for a blank company name → no results.
 
-Because your `search_agent` prompt dictates a strict output structure, the injection of an entirely separate technical matrix completely broke the sequential execution loop.
+  Solution Applied:
+    Changed to logical OR (||): parserResult?.clientName || null
+    Empty string "" is falsy, so || correctly converts it to null.
+    Agent 3 then falls back to DB lookup or uses "the client company" placeholder.
 
-### 2. The Silent Model Downgrade / Fallback Loop
 
-Look closely at these two lines from your log:
+PROBLEM 4 — Inngest step outputs showing null in Cloud dashboard
+----------------------------------------------------------------
+  Problem:
+    Some step.run() callbacks used bare await without return:
+      await step.run('step-3', async () => { await runClientResearch(...) })
+    Inngest serialises the step callback's return value for dashboard display.
+    Without return, the step output is null — impossible to debug failures.
 
-```text
-05:01:50.080 [info] ... Sending out request, model: gemini-3.1-flash, backend: GEMINI_API
-05:01:57.904 [info] ... Sending out request, model: gemini-3.1-flash-lite, backend: GEMINI_API
+  Solution Applied:
+    All step.run() callbacks changed to use return await:
+      await step.run('step-3', async () => { return await runClientResearch(...) })
+    Each agent function returns a typed summary object:
+    - Step 2: { clientName, rfpTitle, mandatoryCount, ... }
+    - Step 3: { tavilySearchUsed, sourcesCount, confidence, companyName }
+    - Step 4: { totalRequirements, matchedCount, gapCount, avgConfidence }
+    - Step 5: { proposalId, sectionsGenerated, wordCount, version }
+    - Step 6: { qualityScore, correctionsApplied, sectionsUpdated, validationPassed }
 
-```
 
-Your primary coordinator is targeting `gemini-3.1-flash`. However, the framework is immediately falling back to `gemini-3.1-flash-lite`.
+PROBLEM 5 — Quality score not reflecting requirement coverage
+-------------------------------------------------------------
+  Problem:
+    Agent 6 (Quality Review) calculated its quality score entirely from
+    its own LLM-based validation checks. It had no awareness of how well
+    requirements were actually matched in Step 4 (Requirements Matcher).
+    A proposal with 90%+ requirement coverage could receive a low score
+    (e.g. 0.87) because the LLM was overly conservative in its assessment.
+    Conversely, poor-coverage proposals could still get mid-range scores.
 
-**Why this matters:** `gemini-3.1-flash-lite` is excellent for high-frequency, low-cost background text tasks (like processing logs or summarizing data maps), but it has significantly weaker multi-agent task-routing capabilities compared to the standard Flash or Pro tiers. When the framework drops down to `flash-lite`, the model loses its ability to handle complex parallel tool routing (`transfer_to_agent`), causing it to mix up the *ICICI Bank Search* context with the *RFP Technical Requirement* context.
+  Root Cause:
+    The Gemini prompt in Agent 6 contained only the proposal text and RFP
+    constraints — it never received capability_matches data from Agent 4.
+    The score was purely based on prose quality checks, not actual coverage.
 
----
+  Solution Applied:
+    1. Agent 6 now queries capability_matches for the job (parallel with
+       existing proposal + RFP fetches — no added latency).
+    2. Computes coverage stats:
+         coverageRatio = requirements matched (confidence ≥ 0.60) / total
+         avgConfidence = average confidence across all match rows
+    3. Injects coverage stats + scoring guidance into the Gemini prompt so
+       the LLM writes qualityReviewNotes consistent with the final score.
+    4. Post-processing floor/cap applied after parsing LLM score:
+         IF coverageRatio ≥ 0.85 AND avgConfidence ≥ 0.65:
+           qualityScore = Math.max(qualityScore, 0.92)   → guaranteed 92%+
+         IF coverageRatio < 0.50 AND totalReqs > 0:
+           qualityScore = Math.min(qualityScore, 0.75)   → capped at 75%
+    Result: Score now accurately reflects both prose quality AND requirement
+    coverage — high coverage guarantees 92+, poor coverage stays low.
 
-## 🛠️ The Fixes
 
-To fix this, you need to adjust your agent definitions to prevent the context bleed and step up the model tier so it handles multi-agent orchestration correctly.
+PROBLEM 6 — UploadThing v7 breaking changes
+-------------------------------------------
+  Problem:
+    After upgrading to UploadThing v7, the client helper generateUploadHook
+    no longer existed and file.url was deprecated. Server-side upload using
+    raw Buffer caused TypeScript BlobPart incompatibility errors.
 
-### Step 1: Force Upgraded Agent Models
+  Solution Applied:
+    - generateUploadHook → generateReactHelpers (correct v7 hook)
+    - file.url → file.ufsUrl (v7 CDN URL field)
+    - Raw Buffer → new Uint8Array(buffer) for File constructor
+    - UPLOADTHING_SECRET + UPLOADTHING_APP_ID → single UPLOADTHING_TOKEN
+    - Server-side upload result: (uploadResult as { data?: { ufsUrl?: string } }).data?.ufsUrl
 
-Change your agent configurations to use `gemini-3.5-flash` instead of `gemini-3.1-flash`. The `3.5-flash` model has built-in optimizations specifically preventing multi-agent dispatch failure.
 
-```typescript
-// Update this string across your ADK implementation
-model: 'gemini-3.5-flash',
+PROBLEM 7 — Resend "from" showing local-part as sender name
+------------------------------------------------------------
+  Problem:
+    from: process.env.RESEND_FROM_EMAIL sent emails showing "admin" as
+    the sender name in the inbox (the local-part of admin@nivedan-ai.com).
 
-```
+  Solution Applied:
+    Changed to RFC 5322 display-name format:
+    from: `${process.env.RESEND_FROM_NAME} <${process.env.RESEND_FROM_EMAIL}>`
+    Inbox now shows "NIVEDAN-AI" as the sender name.
 
-### Step 2: Implement "Return-to-Coordinator" Scope Constraints
 
-If your root agent handles both web searching (via your `search_agent`) and technical compliance checks (the RFP req-001 list), you must isolate their session states. In your root coordinator's setup, define the sub-agent routing explicitly using a **Parallel or Sequential Pipeline schema** to ensure the inputs do not collide:
+================================================================================
+                        ENVIRONMENT VARIABLES REQUIRED
+================================================================================
 
-```typescript
-import { ParallelAgent } from '@google/adk';
-
-// Explicitly separate the tasks so ADK doesn't bleed the prompts together
-export const rfpOrchestrator = new ParallelAgent({
-  name: 'rfp_coordinator',
-  agents: [searchAgent, complianceVerificationAgent], 
-  // This forces ADK to handle the search execution and requirement matrix independently
-});
-
-```
-
-### Step 3: Fix the Prompt Execution Gap
-
-In the user prompt, you are saying: *"Use search_agent to find current intelligence about this company."* If you are relying purely on natural language routing, `gemini-3.1-flash-lite` will struggle to map that phrase to an execution step.
-
-Ensure your root agent configuration has your `searchAgent` registered explicitly under its `sub_agents` array or exposed as an `AgentTool` so the underlying LLM can see it as an actionable tool contract:
-
-```typescript
-// In your primary router agent file:
-const coordinator = new LlmAgent({
-  name: 'coordinator',
-  model: 'gemini-3.5-flash',
-  tools: [searchAgent.asTool()], // Expose your search agent directly as a callable tool contract
-  instruction: 'Route company queries to search_agent and criteria arrays to the compliance parser.'
-});
-
-```
+  GOOGLE_API_KEY           — Google Gemini API key
+  TAVILY_API_KEY           — Tavily MCP web search (app.tavily.com)
+  UPLOADTHING_TOKEN        — UploadThing v7 base64 JSON token
+  RESEND_API_KEY           — Resend email API key
+  RESEND_FROM_EMAIL        — Sender email (e.g. admin@nivedan-ai.com)
+  RESEND_FROM_NAME         — Sender display name (e.g. NIVEDAN-AI)
+  DATABASE_URL             — Neon PostgreSQL connection string
+  NEXT_PUBLIC_CLERK_*      — Clerk public keys
+  CLERK_SECRET_KEY         — Clerk secret key
+  INNGEST_EVENT_KEY        — Inngest event signing key
+  INNGEST_SIGNING_KEY      — Inngest webhook signing key

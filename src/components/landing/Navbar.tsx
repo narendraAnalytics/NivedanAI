@@ -209,7 +209,7 @@ export default function Navbar() {
             style={{ display: "flex", alignItems: "center", gap: 36 }}
           >
             <NavLink>Product</NavLink>
-            <NavLink>How It Works</NavLink>
+            <NavLink href={isSignedIn ? '/how-it-works' : '/sign-in'}>How It Works</NavLink>
             <NavLink>Agents</NavLink>
             <NavLink href="/redirecting?to=pricing">Pricing</NavLink>
             <NavLink hasMenu>Resources</NavLink>
