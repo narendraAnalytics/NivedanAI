@@ -11,7 +11,11 @@ function RedirectingContent() {
   const router = useRouter();
   const params = useSearchParams();
   const to = params.get("to") ?? "sign-in";
-  const message = to === "pricing" ? "Exploring your plans" : "Preparing your workspace";
+  const messageMap: Record<string, string> = {
+    pricing: "Exploring your plans",
+    "how-it-works": "Exploring how it works",
+  }
+  const message = messageMap[to] ?? "Preparing your workspace"
   const redirected = useRef(false);
 
   useEffect(() => {
