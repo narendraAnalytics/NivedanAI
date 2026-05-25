@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai'
 import { eq } from 'drizzle-orm'
 import { db } from '@/db'
-import { parsedRfpData, proposals } from '@/db/schema'
+import { capabilityMatches, parsedRfpData, proposals } from '@/db/schema'
 import {
   createAgentRun,
   completeAgentRun,
@@ -111,11 +111,19 @@ export async function runQualityReview(input: QualityReviewInput): Promise<{ qua
       throw new Error('No proposals row found for this job')
     }
 
-    // Fetch proposal and RFP data in parallel
-    const [proposalRows, rfpRows] = await Promise.all([
+    // Fetch proposal, RFP data, and capability matches in parallel
+    const [proposalRows, rfpRows, matchRows] = await Promise.all([
       db.select().from(proposals).where(eq(proposals.id, proposalDraftId)).limit(1),
       db.select().from(parsedRfpData).where(eq(parsedRfpData.rfpJobId, jobId)).limit(1),
+      db.select({ confidenceScore: capabilityMatches.confidenceScore }).from(capabilityMatches).where(eq(capabilityMatches.rfpJobId, jobId)),
     ])
+
+    const totalReqs = matchRows.length
+    const strongMatches = matchRows.filter(r => parseFloat(String(r.confidenceScore)) >= 0.60).length
+    const coverageRatio = totalReqs > 0 ? strongMatches / totalReqs : 0
+    const avgConfidence = totalReqs > 0
+      ? matchRows.reduce((sum, r) => sum + parseFloat(String(r.confidenceScore)), 0) / totalReqs
+      : 0
 
     if (!proposalRows[0]) {
       await failAgentRun(runId, 'proposals row not found')
@@ -126,6 +134,18 @@ export async function runQualityReview(input: QualityReviewInput): Promise<{ qua
     const rfp = rfpRows[0] ?? null
 
     const reviewPrompt = `${REVIEW_INSTRUCTION}
+
+---
+REQUIREMENTS COVERAGE (from capability matching step):
+- Total requirements identified: ${totalReqs}
+- Strongly matched (≥0.60 confidence): ${strongMatches}
+- Coverage ratio: ${(coverageRatio * 100).toFixed(0)}%
+- Average confidence: ${avgConfidence.toFixed(2)}
+
+Scoring guidance based on coverage:
+- Coverage ≥85% with avgConfidence ≥0.65 → score must be 0.92–1.00 (unless critical budget/timeline violations found)
+- Coverage 60–84% → score range 0.80–0.91
+- Coverage <60% → score range 0.50–0.79
 
 ---
 RFP CONSTRAINTS:
@@ -187,7 +207,17 @@ Return ONLY valid JSON matching the schema in your instructions.`
     }
 
     await updateJobActivity(jobId, 'Quality validated — proposal scored')
-    const qualityScore = typeof reviewData.qualityScore === 'number' ? reviewData.qualityScore : 0.5
+    let qualityScore = typeof reviewData.qualityScore === 'number' ? reviewData.qualityScore : 0.5
+
+    // Coverage-driven floor: high requirement coverage guarantees 0.92+
+    if (coverageRatio >= 0.85 && avgConfidence >= 0.65) {
+      qualityScore = Math.max(qualityScore, 0.92)
+    }
+    // Coverage-driven cap: poor coverage limits the score
+    if (coverageRatio < 0.50 && totalReqs > 0) {
+      qualityScore = Math.min(qualityScore, 0.75)
+    }
+    qualityScore = Math.min(1.0, Math.max(0.0, qualityScore))
     const qualityReviewNotes = reviewData.qualityReviewNotes ?? 'Review complete.'
     const corrections = reviewData.corrections ?? []
 
