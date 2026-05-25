@@ -354,6 +354,7 @@ Animations: `pulseGold`, `pulseGoldRing` (active agent card), `drift` (WorkflowV
 - `/proposals/[jobId]` — split into two files: `page.tsx` (server component — auth, DB queries, score computation, passes props) and `ProposalViewer.tsx` (client component — full interactive design: sticky TOC with scroll-spy, reading progress bar, section cards, floating action bar, Thank You closing card). `qualityScore` stored as `0.00–1.00` — multiply × 100 for display. Never move DB queries into `ProposalViewer`. **TOC scroll-jump:** `scrollMarginTop` must be on the outer wrapper `<div>` that holds the `ref` (the `scrollIntoView` target), NOT on the inner `<article>` — otherwise the sticky header covers the section heading on click.
 - `/knowledge-base` — company profile editor + PDF upload (AI extracts title/tags from filename) + manual form.
 - `/pricing` — `'use client'`; uses `<PricingTable appearance={nivedanAppearance} />`. Auth-protected (middleware). Sticky header with back-to-home + logo. All styling via Clerk's `appearance` object — never add manual plan cards here.
+- `/how-it-works` — protected route (not in public routes). Full horizontal carousel of all 15 pipeline steps. Client component with its own page header (logo + back-home + Try Nivedan CTA). Styles in `src/app/how-it-works/page.module.css` (animation keyframes + component classes). Step images: steps 1–2 use Cloudinary URLs; steps 3–15 show placeholder. Reached via `/redirecting?to=how-it-works` from signed-in navbar click.
 - `/redirecting` — transition animation page. Not in public routes. Context-aware message via `?to=` param. Any new nav link that needs the transition should route through here.
 
 ### Clerk v7 Patterns
@@ -380,8 +381,8 @@ Pricing tiers are documented in `pdfdeisgn.txt` at the repo root:
 `/redirecting?to=X` (`src/app/redirecting/page.tsx`) shows the branded tick animation (circle draw-in → checkmark → glow pulse) then pushes to `/${X}` after 2200ms.
 
 - `/redirecting` is **not** in public routes — unauthenticated users hit sign-in first, then land on the transition after auth
-- Message is context-aware: `to=pricing` → "Exploring your plans", all others → "Preparing your workspace"
-- Used in Navbar for: Login → `sign-in`, Book a Demo → `sign-up`, Pricing → `pricing`
+- Message map in `redirecting/page.tsx`: `pricing` → "Exploring your plans", `how-it-works` → "Exploring how it works", all others → "Preparing your workspace". Add new entries to `messageMap` when adding new transition destinations.
+- Used in Navbar for: Login → `sign-in`, Book a Demo → `sign-up`, Pricing → `pricing`, How It Works (signed-in) → `how-it-works`
 
 **`NavLink` in Navbar** accepts an optional `href` prop (default `"#"`). Pass a full path for real navigation:
 ```tsx
