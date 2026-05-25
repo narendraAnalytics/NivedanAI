@@ -20,7 +20,7 @@ type JobStatus = {
 const stages = [
   { n: 1, title: 'Orchestrator Agent',          sub: 'Validating inputs & creating session',      model: 'gemini-3.1-pro',        color: '#D4A84F' },
   { n: 2, title: 'RFP Parser Agent',            sub: 'Extracting requirements & structure',        model: 'gemini-3.1-flash-lite', color: '#D4A84F' },
-  { n: 3, title: 'Client Research Agent',       sub: 'Researching company & industry signals',     model: 'gemini-3.1-flash',      color: '#D4A84F' },
+  { n: 3, title: 'Client Research Agent',       sub: 'Researching company & industry signals',     model: 'gemini-3.5-flash',      color: '#D4A84F' },
   { n: 4, title: 'Requirements Matcher Agent',  sub: 'Mapping capabilities to requirements',       model: 'gemini-3.1-flash-lite', color: '#D4A84F' },
   { n: 5, title: 'Proposal Writer Agent',       sub: 'Drafting full 12-section proposal',           model: 'gemini-3.1-pro',        color: '#D4A84F' },
   { n: 6, title: 'Quality Review Agent',        sub: 'Validating requirements & scoring',          model: 'gemini-3.1-flash-lite', color: '#D4A84F' },
