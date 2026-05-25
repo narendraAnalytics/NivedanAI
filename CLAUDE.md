@@ -38,7 +38,7 @@ Autonomous, multi-agent SaaS that turns an uploaded RFP PDF into a submission-re
 
 - **Stack:** Next.js 15 · Neon PostgreSQL · Drizzle ORM · Clerk auth · UploadThing · Resend · Vercel
 - **AI:** Google Agent Development Kit (ADK) TypeScript + `@google/genai` direct
-- **Models:** `gemini-3.1-pro-preview` (Orchestrator, Writer) · `gemini-3.1-flash` (Client Research) · `gemini-3.1-flash-lite` (Parser, Matcher, Reviewer)
+- **Models:** `gemini-3.1-pro-preview` (Orchestrator, Writer) · `gemini-3.5-flash` (Client Research) · `gemini-3.1-flash-lite` (Parser, Matcher, Reviewer)
 
 ---
 
@@ -65,7 +65,7 @@ Schema in 5 domain files, all re-exported from `src/db/schema/index.ts`:
 - All FK constraints use `{ onDelete: 'cascade' }` except `capability_matches.knowledge_base_item_id` which uses `set null`
 - `capability_matches.confidenceScore` is `numeric(3,2)` — always pass `String(score)`, not a raw number
 - `capability_matches.tavilyEvidence` (text, nullable) — stores the Tavily MCP web evidence used for that requirement; non-null confirms Tavily searched and found something
-- `client_research_data.googleSearchUsed` (boolean, default false) — true when `sources[]` is non-empty after Agent 3 runs; query this in Neon to confirm GOOGLE_SEARCH tool fired
+- `client_research_data.tavilySearchUsed` (boolean, default false) — true when `sources[]` is non-empty after Agent 3 runs; query this in Neon to confirm Tavily web search fired
 
 ### Auth — `src/middleware.ts` + `src/lib/auth.ts`
 
@@ -81,7 +81,7 @@ All agents live in `src/agents/` and are called from `src/inngest/functions/gene
 |---|------|-------|------|
 | 1 | `orchestrator.ts` | gemini-3.1-pro-preview | Validates inputs, LLM pipeline directive, `createSession` |
 | 2 | `rfp-parser.ts` | gemini-3.1-flash-lite | Fetches PDF → base64 `inlineData` → Gemini native PDF reading → `parsedRfpData` |
-| 3 | `client-research.ts` | gemini-3.1-flash | `LlmAgent` with `tools: [GOOGLE_SEARCH]` directly + `Runner.runEphemeral` → `clientResearchData` |
+| 3 | `client-research.ts` | gemini-3.5-flash | Tavily MCP first pass (`MCPToolset` + `LlmAgent` + `runEphemeral`) → live company intel → `generateContent` synthesis → `clientResearchData` |
 | 4 | `requirements-matcher.ts` | gemini-3.1-flash-lite | Tavily MCP evidence pass (`MCPToolset` + `LlmAgent` + `runEphemeral`), then per-requirement `generateContent` match → `capability_matches` |
 | 5 | `proposal-writer.ts` | gemini-3.1-pro-preview | 12-section JSON proposal (incl. coverLetter, risksMitigation, assumptionsDependencies, whyUs) → `proposals` row |
 | 6 | `quality-review.ts` | gemini-3.1-flash-lite | 5 quality checks, applies corrections, sets `awaiting_review` |
@@ -140,7 +140,7 @@ await step.run('step-3-client-research', async () => {
 Every `step.run()` callback must use `return await` — Inngest serialises the return value and shows it as the step's "Output" in the Cloud dashboard. Steps that use bare `await` show `null` in the dashboard and cannot be debugged.
 
 ```typescript
-// ✅ — visible in Inngest dashboard: { googleSearchUsed, sourcesCount, confidence, companyName }
+// ✅ — visible in Inngest dashboard: { tavilySearchUsed, sourcesCount, confidence, companyName }
 await step.run('step-3-client-research', async () => {
   return await runClientResearch({ ... })
 })
@@ -151,7 +151,7 @@ await step.run('step-3-client-research', async () => {
 })
 ```
 
-Each agent function returns a typed summary: step-2 `{ clientName, rfpTitle, mandatoryCount, ... }`, step-3 `{ googleSearchUsed, sourcesCount, confidence, companyName }`, step-4 `{ totalRequirements, matchedCount, gapCount, tavilyEvidenceCount, avgConfidence }`, step-5 `{ proposalId, sectionsGenerated, wordCount, version }`, step-6 `{ qualityScore, correctionsApplied, sectionsUpdated, validationPassed }`.
+Each agent function returns a typed summary: step-2 `{ clientName, rfpTitle, mandatoryCount, ... }`, step-3 `{ tavilySearchUsed, sourcesCount, confidence, companyName }`, step-4 `{ totalRequirements, matchedCount, gapCount, tavilyEvidenceCount, avgConfidence }`, step-5 `{ proposalId, sectionsGenerated, wordCount, version }`, step-6 `{ qualityScore, correctionsApplied, sectionsUpdated, validationPassed }`.
 
 **`runEphemeral` vs `runAsync`:**
 - `runEphemeral({ userId, newMessage })` — no pre-existing session required; correct for one-shot LlmAgent calls within a step (Agents 3 and 4 search passes use this with a local `new InMemorySessionService()`)
@@ -163,30 +163,20 @@ Each agent function returns a typed summary: step-2 `{ clientName, rfpTitle, man
 |-------|-------------|----------------------|
 | 1 Orchestrator | `generateContent` one-shot | `event.data`; creates ADK session; **returns** `{ pipelineDirective, companyName }` |
 | 2 RFP Parser | `generateContent` one-shot | `rfpDocumentUrl` + `companyProfileId` from args; queries `company_profiles` for `companyName` |
-| 3 Client Research | `LlmAgent` (`tools: [GOOGLE_SEARCH]`) + `Runner.runEphemeral` (local `InMemorySessionService`) | `pipelineDirective` from step-1 Inngest return; `clientName` from step-2 Inngest return (DB fallback) |
+| 3 Client Research | Tavily `MCPToolset` + `LlmAgent` + `Runner.runEphemeral` (prose intel), then `generateContent` synthesis → JSON | `pipelineDirective` from step-1 Inngest return; `clientName` from step-2 Inngest return (DB fallback) |
 | 4 Req. Matcher | Tavily `MCPToolset` + `LlmAgent` + `Runner.runEphemeral`, then `generateContent` per-requirement | `companyProfileId` from args |
 | 5–6 | `generateContent` one-shot | All data from DB queries (`parsed_rfp_data`, `client_research_data`, `capability_matches`, `proposals`) |
 
 **`sessionService` is only used by Agent 1** (to `createSession`). Agents 2–6 do not import or use it.
 
-**Agent 3 — `GOOGLE_SEARCH` must be a direct tool, NOT via a sub-agent:**
+**Agent 3 — two-pass Tavily pattern (same as Agent 4):**
 
-```typescript
-// ✅ Correct — LLM sees GOOGLE_SEARCH as a callable tool directly
-const clientResearchAgent = new LlmAgent({
-  tools: [GOOGLE_SEARCH],
-  ...
-})
+Pass 1: `MCPToolset` + `LlmAgent` (`gemini-3.5-flash`) + `runEphemeral` → rich prose company intel with inline source URLs.
+Pass 2: `generateContent` (`gemini-3.5-flash`) synthesises prose into structured JSON schema, extracting URLs into `sources[]`.
 
-// ❌ Broken — requires two-hop routing: LLM → transfer_to_agent → searchAgent → GOOGLE_SEARCH
-// gemini-3.1-flash silently skips the transfer_to_agent call; googleSearchUsed stays false
-const clientResearchAgent = new LlmAgent({
-  subAgents: [searchAgent],  // DO NOT USE for GOOGLE_SEARCH delegation
-  ...
-})
-```
+`tavilySearchUsed` is set `true` and `sources[]` is populated only when Tavily returns results. Both passes are non-fatal — failure falls back to LLM-knowledge-only profile.
 
-`search-agent.ts` still exists but is **not imported by `client-research.ts`**. Using `subAgents` required the LLM to call `transfer_to_agent` as an intermediate step — it didn't reliably do so, causing Google Search to silently not fire.
+`search-agent.ts` still exists in `src/agents/` but is **not imported anywhere** — do not re-enable it.
 
 ### @google/adk TypeScript API — Confirmed Correct Patterns
 
@@ -218,7 +208,7 @@ Read from `node_modules/@google/adk/dist/types/` — do not revert:
    process.env.GOOGLE_GENAI_API_KEY ??= process.env.GOOGLE_API_KEY
    ```
 
-6. **`MCPToolset` — Tavily MCP (used in `requirements-matcher.ts`):**
+6. **`MCPToolset` — Tavily MCP (used in `client-research.ts` and `requirements-matcher.ts`):**
    ```typescript
    import { MCPToolset, LlmAgent, Runner, InMemorySessionService } from '@google/adk'
 
