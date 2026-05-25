@@ -26,24 +26,29 @@ export const generateProposal = inngest.createFunction(
       return { status: 'ok', jobId, ...result }
     })
 
-    await step.run('step-2-rfp-parser', async () => {
-      await runRfpParser({ jobId, userId, rfpDocumentUrl, companyProfileId })
+    const parserResult = await step.run('step-2-rfp-parser', async () => {
+      return await runRfpParser({ jobId, userId, rfpDocumentUrl, companyProfileId })
     })
 
     await step.run('step-3-client-research', async () => {
-      await runClientResearch({ jobId, userId, pipelineDirective: orchestratorResult.pipelineDirective })
+      return await runClientResearch({
+        jobId,
+        userId,
+        pipelineDirective: orchestratorResult.pipelineDirective,
+        clientName: parserResult?.clientName ?? null,
+      })
     })
 
     await step.run('step-4-requirements-matcher', async () => {
-      await runRequirementsMatcher({ jobId, userId, companyProfileId })
+      return await runRequirementsMatcher({ jobId, userId, companyProfileId })
     })
 
     await step.run('step-5-proposal-writer', async () => {
-      await runProposalWriter({ jobId, userId })
+      return await runProposalWriter({ jobId, userId })
     })
 
     await step.run('step-6-quality-review', async () => {
-      await runQualityReview({ jobId, userId })
+      return await runQualityReview({ jobId, userId })
     })
 
     // Pipeline pauses here — waits up to 7 days for human approval

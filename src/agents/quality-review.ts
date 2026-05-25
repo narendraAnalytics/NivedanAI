@@ -79,7 +79,7 @@ export interface QualityReviewInput {
   userId: string
 }
 
-export async function runQualityReview(input: QualityReviewInput): Promise<void> {
+export async function runQualityReview(input: QualityReviewInput): Promise<{ qualityScore: number; correctionsApplied: number; sectionsUpdated: string[]; validationPassed: boolean }> {
   const { jobId, userId } = input
   const startTime = Date.now()
 
@@ -197,6 +197,17 @@ Return ONLY valid JSON matching the schema in your instructions.`
     await updateJobStatus(jobId, 'awaiting_review')
 
     await completeAgentRun(runId, 0, 0, Date.now() - startTime)
+
+    const sectionsUpdated = corrections
+      .filter(c => SECTION_KEYS.has(c.section) && c.fix)
+      .map(c => c.section)
+
+    return {
+      qualityScore,
+      correctionsApplied: sectionsUpdated.length,
+      sectionsUpdated,
+      validationPassed: reviewData.validationPassed ?? qualityScore >= 0.6,
+    }
   } catch (error) {
     await failAgentRun(runId, String(error))
     throw error

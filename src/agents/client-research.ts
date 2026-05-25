@@ -65,9 +65,10 @@ export interface ClientResearchInput {
   jobId: string
   userId: string
   pipelineDirective: PipelineDirective | null
+  clientName?: string | null
 }
 
-export async function runClientResearch(input: ClientResearchInput): Promise<void> {
+export async function runClientResearch(input: ClientResearchInput): Promise<{ googleSearchUsed: boolean; sourcesCount: number; confidence: string; companyName: string }> {
   const { jobId, userId } = input
   const startTime = Date.now()
 
@@ -79,13 +80,15 @@ export async function runClientResearch(input: ClientResearchInput): Promise<voi
 
     const { pipelineDirective } = input
 
-    const [jobRow] = await db
-      .select({ clientName: rfpJobs.clientName })
-      .from(rfpJobs)
-      .where(eq(rfpJobs.id, jobId))
-      .limit(1)
-
-    const clientName = jobRow?.clientName ?? null
+    let clientName = input.clientName ?? null
+    if (!clientName) {
+      const [jobRow] = await db
+        .select({ clientName: rfpJobs.clientName })
+        .from(rfpJobs)
+        .where(eq(rfpJobs.id, jobId))
+        .limit(1)
+      clientName = jobRow?.clientName || null
+    }
 
     const companyToResearch = clientName ?? 'the client company mentioned in the RFP'
     const focusAreas = pipelineDirective?.clientResearchFocus ?? [
@@ -179,6 +182,14 @@ Return ONLY valid JSON matching the schema in your instructions.
     })
 
     await completeAgentRun(runId, 0, 0, Date.now() - startTime)
+
+    const sources = Array.isArray(clientProfile.sources) ? (clientProfile.sources as string[]) : []
+    return {
+      googleSearchUsed: sources.length > 0,
+      sourcesCount: sources.length,
+      confidence,
+      companyName: (clientProfile.companyName as string) || companyToResearch,
+    }
   } catch (error) {
     await failAgentRun(runId, String(error))
     throw error

@@ -1,17 +1,83 @@
-Before your changes: All agents ran on the same warm Vercel Lambda — so the in-memory session happened to survive. Everything "worked" except Google Search, 
-  because clientName written by Agent 2 (Object.assign(session.state)) never survived the step boundary to Agent 3. So Agent 3 always searched for "the client 
-  company mentioned in the RFP" → no results → googleSearchUsed = false.                                                                                                                                                                                                                                                      
-  After your changes: Instead of reading clientName from session, Agent 3 reads it from rfp_jobs in the DB — where Agent 2 already writes it correctly. So       Agent 3 gets the real company name and Google Search fires on the actual client.                                                                           
-                                     
-  What else changed (as a bonus):
+Great question. Let me search specifically for what production-grade multi-agent systems actually do in real deployments.Good. Now I have real production data. Here is the honest, complete answer.
 
-  The pipeline was also one Vercel cold-start away from fully breaking. If any two consecutive steps land on different Lambda instances, the session is gone
-  and every agent from step 2 onward would crash with "Pipeline session missing". Now:
+---
 
-  - Agents 3–6 no longer depend on the in-memory session at all
-  - pipelineDirective comes from Inngest's own cached step return (survives across any invocation)
-  - The pipeline is now deterministically correct in production, not just lucky
+## What production agents actually do — the real answer
 
-  Nothing changes in behaviour you could already see — proposals still generate the same way. The only visible difference: Google Search will now actually
-  search for the right company, googleSearchUsed will be true, and sources[] will have real URLs.
+The short answer is: **it depends on the deployment model.** The ADK `session.state` / `InvocationContext` pattern I described earlier is real and correct — but only for one specific scenario. Here's what the industry actually uses across all frameworks in 2026:
 
+---
+
+### Pattern 1 — Shared In-Memory Context (ADK / single-process)
+
+This is exactly what ADK's `SequentialAgent` does. The `SequentialAgent` passes the same `InvocationContext` to each sub-agent. They all share the same session state in memory, making it easy to pass data between steps within a single turn.
+
+**Works perfectly when:** All agents run inside the same process, same machine, same function call. Your Inngest job runs the whole pipeline end-to-end without interruption.
+
+**Breaks when:** Agents are split across separate servers, serverless functions, or separate HTTP requests with time gaps between them. The object lives in RAM — when the process dies, it's gone.
+
+---
+
+### Pattern 2 — Structured Task Output / Handoff (OpenAI SDK, CrewAI)
+
+OpenAI's Agents SDK core abstraction is the **handoff**: agents transfer control to each other explicitly, carrying conversation context through the transition. Agent A finishes its part and hands off to Agent B, passing context. Clean and predictable.
+
+CrewAI supports a shared crew store that mimics human team structures — often a local SQLite database — so a researcher agent can recall what the planner decided without contaminating private reasoning.
+
+So even CrewAI in production uses a lightweight local DB (SQLite) as the shared store between agents. Not Neon, not Postgres — just a local file while the job runs.
+
+---
+
+### Pattern 3 — Graph State Object (LangGraph — the production standard)
+
+LangGraph models agents as nodes in a directed graph with **shared state flowing between them**. LangGraph's core bet: agent systems are state machines, and developers should have explicit control over every transition.
+
+In 2026, LangGraph is the production standard for stateful, auditable agentic workflows.
+
+In LangGraph, every node (agent) reads from and writes to a **single typed state object** — like a TypeScript interface that travels through the graph. Agent 1 writes to it, Agent 2 receives it with Agent 1's output already inside. No database. No network call. Just a state object passed through graph edges.
+
+---
+
+### Pattern 4 — Checkpointed State / Durable Execution (LangGraph + Postgres, Inngest)
+
+This is where a real database enters the picture — but only for **durability**, not for agent-to-agent transfer within a single run.
+
+Flow systems need aggressive intermediate-artifact schemas and per-stage evaluators. Early artifact errors poison downstream stages.
+
+Meaning: in long-running pipelines, production teams checkpoint the output of each agent to a database **after** it completes — not to transfer to the next agent, but to be able to **resume** if the pipeline crashes at step 4 of 6.
+
+This is exactly what **Inngest's step functions** already give you for free — each `step.run()` is checkpointed. You don't need to manually write to Neon between agents.
+
+---
+
+## The honest summary table
+
+| Pattern | Agent-to-agent transfer | Database involved? | Used by |
+|---|---|---|---|
+| Shared InvocationContext | Same in-memory object | ❌ No | ADK SequentialAgent |
+| Handoff with context | Context object passed explicitly | ❌ No | OpenAI Agents SDK |
+| Graph state object | Typed state flows through graph edges | ❌ No | LangGraph |
+| Crew shared store | Local SQLite or in-memory dict | Light local only | CrewAI |
+| Checkpointing | Saves completed stage outputs | ✅ Yes, but for resume only | LangGraph + Postgres, Inngest |
+
+**The pattern is consistent across every major framework in 2026:** agents pass data through a **shared context/state object in memory** during a pipeline run. A database only enters when you need to **survive a crash** or **resume** a failed run — not for the actual transfer.
+
+---
+
+## What this means for your Nivedan AI specifically
+
+Your setup is actually already correct:
+
+```
+Inngest triggers job
+    ↓
+Single step.run() → runs all 6 ADK agents
+    ↓
+InvocationContext travels: Parser → Researcher → Matcher → Writer → Reviewer
+    ↓ (all in-memory, no DB between agents)
+Final output → save completed proposal to Neon
+```
+
+Neon only touches the result at the **end** — storing the finished proposal for the dashboard, email delivery, and history. It never sits between agents. The ADK `session.state` approach I described earlier is the legitimate production pattern — not a simplification.
+
+ 

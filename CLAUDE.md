@@ -109,7 +109,7 @@ Inngest replays the function body on each step execution, skipping already-compl
 
 - `pipelineDirective` and `companyName` — `runOrchestrator` returns them; step 1 returns this from its `step.run` callback. Inngest caches this and it's available as `orchestratorResult` in the function scope for all subsequent steps.
 - `rfpDocumentUrl`, `companyProfileId` — passed directly from `event.data` to each agent input.
-- `clientName` — Agent 2 writes to `rfp_jobs.clientName` in the DB; Agent 3 reads it from there.
+- `clientName` — step-2 (`runRfpParser`) returns `{ clientName }` via Inngest cached step result; passed directly as `parserResult?.clientName` to step-3. DB read in Agent 3 is a fallback only (empty string handled as null via `|| null`).
 - All other inter-agent data — read from DB tables (`parsed_rfp_data`, `client_research_data`, `capability_matches`, `proposals`).
 
 ```typescript
@@ -119,9 +119,18 @@ const orchestratorResult = await step.run('step-1-orchestrator', async () => {
   return { ...result }  // pipelineDirective, companyName
 })
 
-// step-3 receives pipelineDirective via arg, clientName via DB query
+// step-2 return cached by Inngest — clientName travels with it
+const parserResult = await step.run('step-2-rfp-parser', async () => {
+  return await runRfpParser({ ... })  // returns { clientName }
+})
+
+// step-3 receives both pipelineDirective (step-1 return) and clientName (step-2 return)
 await step.run('step-3-client-research', async () => {
-  await runClientResearch({ jobId, userId, pipelineDirective: orchestratorResult.pipelineDirective })
+  await runClientResearch({
+    jobId, userId,
+    pipelineDirective: orchestratorResult.pipelineDirective,
+    clientName: parserResult?.clientName ?? null,
+  })
 })
 ```
 
@@ -135,7 +144,7 @@ await step.run('step-3-client-research', async () => {
 |-------|-------------|----------------------|
 | 1 Orchestrator | `generateContent` one-shot | `event.data`; creates ADK session; **returns** `{ pipelineDirective, companyName }` |
 | 2 RFP Parser | `generateContent` one-shot | `rfpDocumentUrl` + `companyProfileId` from args; queries `company_profiles` for `companyName` |
-| 3 Client Research | `LlmAgent` + `Runner.runEphemeral` (local `InMemorySessionService`) | `pipelineDirective` from orchestrator return; `clientName` from `rfp_jobs` DB |
+| 3 Client Research | `LlmAgent` + `Runner.runEphemeral` (local `InMemorySessionService`) | `pipelineDirective` from step-1 Inngest return; `clientName` from step-2 Inngest return (DB fallback) |
 | 4 Req. Matcher | Tavily `MCPToolset` + `LlmAgent` + `Runner.runEphemeral`, then `generateContent` per-requirement | `companyProfileId` from args |
 | 5–6 | `generateContent` one-shot | All data from DB queries (`parsed_rfp_data`, `client_research_data`, `capability_matches`, `proposals`) |
 

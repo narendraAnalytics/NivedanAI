@@ -73,7 +73,7 @@ function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length
 }
 
-export async function runProposalWriter(input: ProposalWriterInput): Promise<void> {
+export async function runProposalWriter(input: ProposalWriterInput): Promise<{ proposalId: string; sectionsGenerated: number; wordCount: number; version: number }> {
   const { jobId, userId } = input
   const startTime = Date.now()
 
@@ -194,6 +194,13 @@ Return ONLY valid JSON matching the 12-section schema in your instructions.`
       .returning({ id: proposals.id })
 
     await completeAgentRun(runId, 0, 0, Date.now() - startTime)
+
+    return {
+      proposalId: inserted.id,
+      sectionsGenerated: Object.values(sections).filter(Boolean).length,
+      wordCount,
+      version: 1,
+    }
   } catch (error) {
     await failAgentRun(runId, String(error))
     throw error

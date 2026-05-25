@@ -195,7 +195,7 @@ export interface RfpParserInput {
 
 export async function runRfpParser(
   input: RfpParserInput
-): Promise<void> {
+): Promise<{ clientName: string | null; rfpTitle: string | null; mandatoryCount: number; optionalCount: number; budgetCeiling: string | null; submissionDeadline: string | null }> {
 
   const startTime = Date.now()
 
@@ -281,6 +281,15 @@ export async function runRfpParser(
       result.usageMetadata?.candidatesTokenCount ?? 0,
       Date.now() - startTime,
     )
+
+    return {
+      clientName: (blueprint.clientName as string) || null,
+      rfpTitle: (blueprint.rfpTitle as string) || null,
+      mandatoryCount: (blueprint.mandatoryRequirements ?? []).length,
+      optionalCount: (blueprint.optionalRequirements ?? []).length,
+      budgetCeiling: (blueprint.budgetCeiling as string) || null,
+      submissionDeadline: (blueprint.submissionDeadline as string) || null,
+    }
 
   } catch (error) {
 

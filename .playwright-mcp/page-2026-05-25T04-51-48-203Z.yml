@@ -1,0 +1,1004 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e2] [cursor=pointer]:
+    - /url: https://adk.dev/agents/workflow-agents/sequential-agents/#sequential-template-workflow-agent
+  - complementary [ref=e4]:
+    - generic [ref=e6]:
+      - link "ADK Python 2.0 GA" [ref=e7] [cursor=pointer]:
+        - /url: https://adk.dev/2.0/
+      - text: is LIVE with graph workflows and collaborative agents, and check out
+      - link "ADK Kotlin" [ref=e8] [cursor=pointer]:
+        - /url: https://adk.dev/get-started/kotlin/
+      - text: "!"
+  - banner [ref=e9]:
+    - navigation "Header" [ref=e10]:
+      - img [ref=e12] [cursor=pointer]
+      - generic [ref=e15]:
+        - generic [ref=e16]: ADK
+        - generic: ADK
+      - generic [ref=e18]:
+        - link "Python" [ref=e19] [cursor=pointer]:
+          - /url: https://github.com/google/adk-python
+          - img "Python" [ref=e20]
+        - link "TypeScript" [ref=e21] [cursor=pointer]:
+          - /url: https://github.com/google/adk-js
+          - img "TypeScript" [ref=e22]
+        - link "Go" [ref=e23] [cursor=pointer]:
+          - /url: https://github.com/google/adk-go
+          - img "Go" [ref=e24]
+        - link "Java" [ref=e25] [cursor=pointer]:
+          - /url: https://github.com/google/adk-java
+          - img "Java" [ref=e26]
+        - link "Kotlin" [ref=e27] [cursor=pointer]:
+          - /url: https://github.com/google/adk-kotlin
+          - img "Kotlin" [ref=e28]
+      - generic [ref=e29]:
+        - radio "Switch to dark mode"
+        - generic "Switch to dark mode" [ref=e30] [cursor=pointer]:
+          - img [ref=e31]
+        - radio "Switch to light mode"
+      - dialog [ref=e33]:
+        - search [ref=e34]:
+          - generic [ref=e35]:
+            - textbox "Search" [ref=e36]
+            - generic:
+              - img
+            - navigation "Search":
+              - button "Clear":
+                - img
+          - generic [ref=e38]: Initializing search
+  - generic [ref=e39]:
+    - main [ref=e40]:
+      - generic [ref=e41]:
+        - navigation "Navigation" [ref=e44]:
+          - list [ref=e45]:
+            - listitem [ref=e46]:
+              - link "Home" [ref=e47] [cursor=pointer]:
+                - /url: https://adk.dev/
+                - generic [ref=e48]: Home
+            - listitem [ref=e49]:
+              - generic [ref=e51]: Build Agents
+              - navigation "Build Agents" [ref=e53]:
+                - generic [ref=e54] [cursor=pointer]: Build Agents
+                - list [ref=e56]:
+                  - listitem [ref=e57]:
+                    - link "Get Started" [ref=e59] [cursor=pointer]:
+                      - /url: https://adk.dev/get-started/
+                      - generic [ref=e60]: Get Started
+                    - navigation [ref=e63]:
+                      - generic [ref=e64] [cursor=pointer]: Get Started
+                      - list [ref=e66]:
+                        - listitem [ref=e67]:
+                          - link "Python" [ref=e68] [cursor=pointer]:
+                            - /url: https://adk.dev/get-started/python/
+                            - generic [ref=e69]: Python
+                        - listitem [ref=e70]:
+                          - link "TypeScript" [ref=e71] [cursor=pointer]:
+                            - /url: https://adk.dev/get-started/typescript/
+                            - generic [ref=e72]: TypeScript
+                        - listitem [ref=e73]:
+                          - link "Go" [ref=e74] [cursor=pointer]:
+                            - /url: https://adk.dev/get-started/go/
+                            - generic [ref=e75]: Go
+                        - listitem [ref=e76]:
+                          - link "Java" [ref=e77] [cursor=pointer]:
+                            - /url: https://adk.dev/get-started/java/
+                            - generic [ref=e78]: Java
+                        - listitem [ref=e79]:
+                          - link "Kotlin" [ref=e80] [cursor=pointer]:
+                            - /url: https://adk.dev/get-started/kotlin/
+                            - generic [ref=e81]: Kotlin
+                        - listitem [ref=e82]:
+                          - link "Installation" [ref=e83] [cursor=pointer]:
+                            - /url: https://adk.dev/get-started/installation/
+                            - generic [ref=e84]: Installation
+                  - listitem [ref=e85]:
+                    - link "Build your Agent" [ref=e87] [cursor=pointer]:
+                      - /url: https://adk.dev/tutorials/
+                      - generic [ref=e88]: Build your Agent
+                    - navigation [ref=e91]:
+                      - generic [ref=e92] [cursor=pointer]: Build your Agent
+                      - list [ref=e94]:
+                        - listitem [ref=e95]:
+                          - link "Multi-tool agent" [ref=e96] [cursor=pointer]:
+                            - /url: https://adk.dev/tutorials/multi-tool-agent/
+                            - generic [ref=e97]: Multi-tool agent
+                        - listitem [ref=e98]:
+                          - link "Agent team" [ref=e99] [cursor=pointer]:
+                            - /url: https://adk.dev/tutorials/agent-team/
+                            - generic [ref=e100]: Agent team
+                        - listitem [ref=e101]:
+                          - link "Streaming agent" [ref=e103] [cursor=pointer]:
+                            - /url: https://adk.dev/get-started/streaming/
+                            - generic [ref=e104]: Streaming agent
+                          - navigation [ref=e107]:
+                            - generic [ref=e108] [cursor=pointer]: Streaming agent
+                            - list [ref=e110]:
+                              - listitem [ref=e111]:
+                                - link "Python" [ref=e112] [cursor=pointer]:
+                                  - /url: https://adk.dev/get-started/streaming/quickstart-streaming/
+                                  - generic [ref=e113]: Python
+                              - listitem [ref=e114]:
+                                - link "Java" [ref=e115] [cursor=pointer]:
+                                  - /url: https://adk.dev/get-started/streaming/quickstart-streaming-java/
+                                  - generic [ref=e116]: Java
+                        - listitem [ref=e117]:
+                          - link "Code with AI" [ref=e118] [cursor=pointer]:
+                            - /url: https://adk.dev/tutorials/coding-with-ai/
+                            - generic [ref=e119]: Code with AI
+                        - listitem [ref=e120]:
+                          - link "Agent Config" [ref=e121] [cursor=pointer]:
+                            - /url: https://adk.dev/agents/config/
+                            - generic [ref=e122]: Agent Config
+                  - listitem [ref=e123]:
+                    - link "Agents" [ref=e125] [cursor=pointer]:
+                      - /url: https://adk.dev/agents/
+                      - generic [ref=e126]: Agents
+                    - navigation [ref=e129]:
+                      - generic [ref=e130] [cursor=pointer]: Agents
+                      - list [ref=e132]:
+                        - listitem [ref=e133]:
+                          - link "Simple agents" [ref=e134] [cursor=pointer]:
+                            - /url: https://adk.dev/agents/llm-agents/
+                            - generic [ref=e135]: Simple agents
+                  - listitem [ref=e136]:
+                    - link "Graph Workflows" [ref=e138] [cursor=pointer]:
+                      - /url: https://adk.dev/graphs/
+                      - generic [ref=e139]: Graph Workflows
+                    - navigation [ref=e142]:
+                      - generic [ref=e143] [cursor=pointer]: Graph Workflows
+                      - list [ref=e145]:
+                        - listitem [ref=e146]:
+                          - link "Graph routes" [ref=e147] [cursor=pointer]:
+                            - /url: https://adk.dev/graphs/routes/
+                            - generic [ref=e148]: Graph routes
+                        - listitem [ref=e149]:
+                          - link "Data handling" [ref=e150] [cursor=pointer]:
+                            - /url: https://adk.dev/graphs/data-handling/
+                            - generic [ref=e151]: Data handling
+                        - listitem [ref=e152]:
+                          - link "Human input" [ref=e153] [cursor=pointer]:
+                            - /url: https://adk.dev/graphs/human-input/
+                            - generic [ref=e154]: Human input
+                        - listitem [ref=e155]:
+                          - link "Dynamic workflows" [ref=e156] [cursor=pointer]:
+                            - /url: https://adk.dev/graphs/dynamic/
+                            - generic [ref=e157]: Dynamic workflows
+                  - listitem [ref=e158]:
+                    - link "Multi-Agent Workflows" [ref=e160] [cursor=pointer]:
+                      - /url: https://adk.dev/workflows/
+                      - generic [ref=e161]: Multi-Agent Workflows
+                    - navigation [ref=e164]:
+                      - generic [ref=e165] [cursor=pointer]: Multi-Agent Workflows
+                      - list [ref=e167]:
+                        - listitem [ref=e168]:
+                          - link "Collaborative workflows" [ref=e169] [cursor=pointer]:
+                            - /url: https://adk.dev/workflows/collaboration/
+                            - generic [ref=e170]: Collaborative workflows
+                        - listitem [ref=e171]:
+                          - link "Template workflows" [ref=e173] [cursor=pointer]:
+                            - /url: https://adk.dev/agents/workflow-agents/
+                            - generic [ref=e174]: Template workflows
+                          - navigation [ref=e177]:
+                            - generic [ref=e178] [cursor=pointer]: Template workflows
+                            - list [ref=e180]:
+                              - listitem [ref=e181]:
+                                - link "Sequential workflow" [ref=e182] [cursor=pointer]:
+                                  - /url: https://adk.dev/agents/workflow-agents/sequential-agents/
+                                  - generic [ref=e183]: Sequential workflow
+                              - listitem [ref=e184]:
+                                - link "Loop workflow" [ref=e185] [cursor=pointer]:
+                                  - /url: https://adk.dev/agents/workflow-agents/loop-agents/
+                                  - generic [ref=e186]: Loop workflow
+                              - listitem [ref=e187]:
+                                - link "Parallel workflow" [ref=e188] [cursor=pointer]:
+                                  - /url: https://adk.dev/agents/workflow-agents/parallel-agents/
+                                  - generic [ref=e189]: Parallel workflow
+                              - listitem [ref=e190]:
+                                - link "Custom template workflows" [ref=e191] [cursor=pointer]:
+                                  - /url: https://adk.dev/agents/custom-agents/
+                                  - generic [ref=e192]: Custom template workflows
+                        - listitem [ref=e193]:
+                          - link "Agent routing" [ref=e194] [cursor=pointer]:
+                            - /url: https://adk.dev/agents/routing/
+                            - generic [ref=e195]: Agent routing
+                        - listitem [ref=e196]:
+                          - link "Workflow patterns" [ref=e197] [cursor=pointer]:
+                            - /url: https://adk.dev/workflows/patterns/
+                            - generic [ref=e198]: Workflow patterns
+                  - listitem [ref=e199]:
+                    - link "Models for Agents" [ref=e201] [cursor=pointer]:
+                      - /url: https://adk.dev/agents/models/
+                      - generic [ref=e202]: Models for Agents
+                    - navigation [ref=e205]:
+                      - generic [ref=e206] [cursor=pointer]: Models for Agents
+                      - list [ref=e208]:
+                        - listitem [ref=e209]:
+                          - link "Gemini" [ref=e210] [cursor=pointer]:
+                            - /url: https://adk.dev/agents/models/google-gemini/
+                            - generic [ref=e211]: Gemini
+                        - listitem [ref=e212]:
+                          - link "Gemma" [ref=e213] [cursor=pointer]:
+                            - /url: https://adk.dev/agents/models/google-gemma/
+                            - generic [ref=e214]: Gemma
+                        - listitem [ref=e215]:
+                          - link "Claude" [ref=e216] [cursor=pointer]:
+                            - /url: https://adk.dev/agents/models/anthropic/
+                            - generic [ref=e217]: Claude
+                        - listitem [ref=e218]:
+                          - link "Agent Platform hosted" [ref=e219] [cursor=pointer]:
+                            - /url: https://adk.dev/agents/models/agent-platform/
+                            - generic [ref=e220]: Agent Platform hosted
+                        - listitem [ref=e221]:
+                          - link "Apigee AI Gateway" [ref=e222] [cursor=pointer]:
+                            - /url: https://adk.dev/agents/models/apigee/
+                            - generic [ref=e223]: Apigee AI Gateway
+                        - listitem [ref=e224]:
+                          - link "Model routing" [ref=e225] [cursor=pointer]:
+                            - /url: https://adk.dev/agents/models/routing/
+                            - generic [ref=e226]: Model routing
+                        - listitem [ref=e227]:
+                          - link "Ollama" [ref=e228] [cursor=pointer]:
+                            - /url: https://adk.dev/agents/models/ollama/
+                            - generic [ref=e229]: Ollama
+                        - listitem [ref=e230]:
+                          - link "vLLM" [ref=e231] [cursor=pointer]:
+                            - /url: https://adk.dev/agents/models/vllm/
+                            - generic [ref=e232]: vLLM
+                        - listitem [ref=e233]:
+                          - link "LiteLLM" [ref=e234] [cursor=pointer]:
+                            - /url: https://adk.dev/agents/models/litellm/
+                            - generic [ref=e235]: LiteLLM
+                        - listitem [ref=e236]:
+                          - link "LiteRT-LM" [ref=e237] [cursor=pointer]:
+                            - /url: https://adk.dev/agents/models/litert-lm/
+                            - generic [ref=e238]: LiteRT-LM
+            - listitem [ref=e239]:
+              - generic [ref=e241]: Run Agents
+              - navigation "Run Agents" [ref=e243]:
+                - generic [ref=e244] [cursor=pointer]: Run Agents
+                - list [ref=e246]:
+                  - listitem [ref=e247]:
+                    - link "Agent Runtime" [ref=e249] [cursor=pointer]:
+                      - /url: https://adk.dev/runtime/
+                      - generic [ref=e250]: Agent Runtime
+                    - navigation [ref=e253]:
+                      - generic [ref=e254] [cursor=pointer]: Agent Runtime
+                      - list [ref=e256]:
+                        - listitem [ref=e257]:
+                          - link "Web Interface" [ref=e259] [cursor=pointer]:
+                            - /url: https://adk.dev/runtime/web-interface/
+                            - generic [ref=e260]: Web Interface
+                          - navigation [ref=e263]:
+                            - generic [ref=e264] [cursor=pointer]: Web Interface
+                            - list [ref=e266]:
+                              - listitem [ref=e267]:
+                                - link "Visual Builder" [ref=e268] [cursor=pointer]:
+                                  - /url: https://adk.dev/visual-builder/
+                                  - generic [ref=e269]: Visual Builder
+                        - listitem [ref=e270]:
+                          - link "Command Line" [ref=e271] [cursor=pointer]:
+                            - /url: https://adk.dev/runtime/command-line/
+                            - generic [ref=e272]: Command Line
+                        - listitem [ref=e273]:
+                          - link "API Server" [ref=e274] [cursor=pointer]:
+                            - /url: https://adk.dev/runtime/api-server/
+                            - generic [ref=e275]: API Server
+                        - listitem [ref=e276]:
+                          - link "Ambient Agents" [ref=e277] [cursor=pointer]:
+                            - /url: https://adk.dev/runtime/ambient-agents/
+                            - generic [ref=e278]: Ambient Agents
+                        - listitem [ref=e279]:
+                          - link "Resume Agents" [ref=e280] [cursor=pointer]:
+                            - /url: https://adk.dev/runtime/resume/
+                            - generic [ref=e281]: Resume Agents
+                        - listitem [ref=e282]:
+                          - link "Cancel Agent Runs" [ref=e283] [cursor=pointer]:
+                            - /url: https://adk.dev/runtime/cancel/
+                            - generic [ref=e284]: Cancel Agent Runs
+                        - listitem [ref=e285]:
+                          - link "Runtime Config" [ref=e286] [cursor=pointer]:
+                            - /url: https://adk.dev/runtime/runconfig/
+                            - generic [ref=e287]: Runtime Config
+                        - listitem [ref=e288]:
+                          - link "Event Loop" [ref=e289] [cursor=pointer]:
+                            - /url: https://adk.dev/runtime/event-loop/
+                            - generic [ref=e290]: Event Loop
+                  - listitem [ref=e291]:
+                    - link "Deployment" [ref=e293] [cursor=pointer]:
+                      - /url: https://adk.dev/deploy/
+                      - generic [ref=e294]: Deployment
+                    - navigation [ref=e297]:
+                      - generic [ref=e298] [cursor=pointer]: Deployment
+                      - list [ref=e300]:
+                        - listitem [ref=e301]:
+                          - link "Agent Runtime" [ref=e303] [cursor=pointer]:
+                            - /url: https://adk.dev/deploy/agent-runtime/
+                            - generic [ref=e304]: Agent Runtime
+                          - navigation [ref=e307]:
+                            - generic [ref=e308] [cursor=pointer]: Agent Runtime
+                            - list [ref=e310]:
+                              - listitem [ref=e311]:
+                                - link "Standard deployment" [ref=e312] [cursor=pointer]:
+                                  - /url: https://adk.dev/deploy/agent-runtime/deploy/
+                                  - generic [ref=e313]: Standard deployment
+                              - listitem [ref=e314]:
+                                - link "agents-cli" [ref=e315] [cursor=pointer]:
+                                  - /url: https://adk.dev/deploy/agent-runtime/agents-cli/
+                                  - generic [ref=e316]: agents-cli
+                              - listitem [ref=e317]:
+                                - link "Test deployed agents" [ref=e318] [cursor=pointer]:
+                                  - /url: https://adk.dev/deploy/agent-runtime/test/
+                                  - generic [ref=e319]: Test deployed agents
+                        - listitem [ref=e320]:
+                          - link "Cloud Run" [ref=e321] [cursor=pointer]:
+                            - /url: https://adk.dev/deploy/cloud-run/
+                            - generic [ref=e322]: Cloud Run
+                        - listitem [ref=e323]:
+                          - link "GKE" [ref=e324] [cursor=pointer]:
+                            - /url: https://adk.dev/deploy/gke/
+                            - generic [ref=e325]: GKE
+                  - listitem [ref=e326]:
+                    - link "Observability" [ref=e328] [cursor=pointer]:
+                      - /url: https://adk.dev/observability/
+                      - generic [ref=e329]: Observability
+                    - navigation [ref=e332]:
+                      - generic [ref=e333] [cursor=pointer]: Observability
+                      - list [ref=e335]:
+                        - listitem [ref=e336]:
+                          - link "Logging" [ref=e337] [cursor=pointer]:
+                            - /url: https://adk.dev/observability/logging/
+                            - generic [ref=e338]: Logging
+                        - listitem [ref=e339]:
+                          - link "Metrics" [ref=e340] [cursor=pointer]:
+                            - /url: https://adk.dev/observability/metrics/
+                            - generic [ref=e341]: Metrics
+                        - listitem [ref=e342]:
+                          - link "Traces" [ref=e343] [cursor=pointer]:
+                            - /url: https://adk.dev/observability/traces/
+                            - generic [ref=e344]: Traces
+                  - listitem [ref=e345]:
+                    - link "Evaluation" [ref=e347] [cursor=pointer]:
+                      - /url: https://adk.dev/evaluate/
+                      - generic [ref=e348]: Evaluation
+                    - navigation [ref=e351]:
+                      - generic [ref=e352] [cursor=pointer]: Evaluation
+                      - list [ref=e354]:
+                        - listitem [ref=e355]:
+                          - link "Criteria" [ref=e356] [cursor=pointer]:
+                            - /url: https://adk.dev/evaluate/criteria/
+                            - generic [ref=e357]: Criteria
+                        - listitem [ref=e358]:
+                          - link "User Simulation" [ref=e359] [cursor=pointer]:
+                            - /url: https://adk.dev/evaluate/user-sim/
+                            - generic [ref=e360]: User Simulation
+                        - listitem [ref=e361]:
+                          - link "Environment Simulation" [ref=e362] [cursor=pointer]:
+                            - /url: https://adk.dev/evaluate/environment_simulation/
+                            - generic [ref=e363]: Environment Simulation
+                        - listitem [ref=e364]:
+                          - link "Custom Metrics" [ref=e365] [cursor=pointer]:
+                            - /url: https://adk.dev/evaluate/custom_metrics/
+                            - generic [ref=e366]: Custom Metrics
+                        - listitem [ref=e367]:
+                          - link "Optimization" [ref=e368] [cursor=pointer]:
+                            - /url: https://adk.dev/optimize/
+                            - generic [ref=e369]: Optimization
+                  - listitem [ref=e370]:
+                    - link "Safety and Security" [ref=e372] [cursor=pointer]:
+                      - /url: https://adk.dev/safety/
+                      - generic [ref=e373]: Safety and Security
+                    - navigation [ref=e374]:
+                      - generic [ref=e375] [cursor=pointer]: Safety and Security
+                      - list [ref=e377]
+            - listitem [ref=e378]:
+              - generic [ref=e380]: Components
+              - navigation "Components" [ref=e382]:
+                - generic [ref=e383] [cursor=pointer]: Components
+                - list [ref=e385]:
+                  - listitem [ref=e386]:
+                    - link "Technical Overview" [ref=e387] [cursor=pointer]:
+                      - /url: https://adk.dev/get-started/about/
+                      - generic [ref=e388]: Technical Overview
+                  - listitem [ref=e389]:
+                    - link "Custom Tools" [ref=e391] [cursor=pointer]:
+                      - /url: https://adk.dev/tools-custom/
+                      - generic [ref=e392]: Custom Tools
+                    - navigation [ref=e395]:
+                      - generic [ref=e396] [cursor=pointer]: Custom Tools
+                      - list [ref=e398]:
+                        - listitem [ref=e399]:
+                          - generic [ref=e401]: Function tools
+                          - navigation "Function tools" [ref=e403]:
+                            - generic [ref=e404] [cursor=pointer]: Function tools
+                            - list [ref=e406]:
+                              - listitem [ref=e407]:
+                                - link "Overview" [ref=e408] [cursor=pointer]:
+                                  - /url: https://adk.dev/tools-custom/function-tools/
+                                  - generic [ref=e409]: Overview
+                              - listitem [ref=e410]:
+                                - link "Tool performance" [ref=e411] [cursor=pointer]:
+                                  - /url: https://adk.dev/tools-custom/performance/
+                                  - generic [ref=e412]: Tool performance
+                              - listitem [ref=e413]:
+                                - link "Action confirmations" [ref=e414] [cursor=pointer]:
+                                  - /url: https://adk.dev/tools-custom/confirmation/
+                                  - generic [ref=e415]: Action confirmations
+                        - listitem [ref=e416]:
+                          - link "MCP tools" [ref=e417] [cursor=pointer]:
+                            - /url: https://adk.dev/tools-custom/mcp-tools/
+                            - generic [ref=e418]: MCP tools
+                        - listitem [ref=e419]:
+                          - link "OpenAPI tools" [ref=e420] [cursor=pointer]:
+                            - /url: https://adk.dev/tools-custom/openapi-tools/
+                            - generic [ref=e421]: OpenAPI tools
+                        - listitem [ref=e422]:
+                          - link "Authentication" [ref=e423] [cursor=pointer]:
+                            - /url: https://adk.dev/tools-custom/authentication/
+                            - generic [ref=e424]: Authentication
+                        - listitem [ref=e425]:
+                          - link "Tool limitations" [ref=e426] [cursor=pointer]:
+                            - /url: https://adk.dev/tools/limitations/
+                            - generic [ref=e427]: Tool limitations
+                  - listitem [ref=e428]:
+                    - link "Artifacts" [ref=e430] [cursor=pointer]:
+                      - /url: https://adk.dev/artifacts/
+                      - generic [ref=e431]: Artifacts
+                    - navigation [ref=e432]:
+                      - generic [ref=e433] [cursor=pointer]: Artifacts
+                      - list [ref=e435]
+                  - listitem [ref=e436]:
+                    - link "Skills for Agents" [ref=e438] [cursor=pointer]:
+                      - /url: https://adk.dev/skills/
+                      - generic [ref=e439]: Skills for Agents
+                    - navigation [ref=e440]:
+                      - generic [ref=e441] [cursor=pointer]: Skills for Agents
+                      - list [ref=e443]
+                  - listitem [ref=e444]:
+                    - link "App management" [ref=e446] [cursor=pointer]:
+                      - /url: https://adk.dev/apps/
+                      - generic [ref=e447]: App management
+                    - navigation [ref=e450]:
+                      - generic [ref=e451] [cursor=pointer]: App management
+                      - list [ref=e453]:
+                        - listitem [ref=e454]:
+                          - link "Callbacks" [ref=e456] [cursor=pointer]:
+                            - /url: https://adk.dev/callbacks/
+                            - generic [ref=e457]: Callbacks
+                          - navigation [ref=e460]:
+                            - generic [ref=e461] [cursor=pointer]: Callbacks
+                            - list [ref=e463]:
+                              - listitem [ref=e464]:
+                                - link "Types of callbacks" [ref=e465] [cursor=pointer]:
+                                  - /url: https://adk.dev/callbacks/types-of-callbacks/
+                                  - generic [ref=e466]: Types of callbacks
+                              - listitem [ref=e467]:
+                                - link "Callback patterns" [ref=e468] [cursor=pointer]:
+                                  - /url: https://adk.dev/callbacks/design-patterns-and-best-practices/
+                                  - generic [ref=e469]: Callback patterns
+                        - listitem [ref=e470]:
+                          - link "Plugins" [ref=e471] [cursor=pointer]:
+                            - /url: https://adk.dev/plugins/
+                            - generic [ref=e472]: Plugins
+                  - listitem [ref=e473]:
+                    - link "Context" [ref=e475] [cursor=pointer]:
+                      - /url: https://adk.dev/context/
+                      - generic [ref=e476]: Context
+                    - navigation [ref=e479]:
+                      - generic [ref=e480] [cursor=pointer]: Context
+                      - list [ref=e482]:
+                        - listitem [ref=e483]:
+                          - link "Context caching" [ref=e484] [cursor=pointer]:
+                            - /url: https://adk.dev/context/caching/
+                            - generic [ref=e485]: Context caching
+                        - listitem [ref=e486]:
+                          - link "Context compression" [ref=e487] [cursor=pointer]:
+                            - /url: https://adk.dev/context/compaction/
+                            - generic [ref=e488]: Context compression
+                  - listitem [ref=e489]:
+                    - link "Sessions and Memory" [ref=e491] [cursor=pointer]:
+                      - /url: https://adk.dev/sessions/
+                      - generic [ref=e492]: Sessions and Memory
+                    - navigation [ref=e495]:
+                      - generic [ref=e496] [cursor=pointer]: Sessions and Memory
+                      - list [ref=e498]:
+                        - listitem [ref=e499]:
+                          - link "Sessions" [ref=e501] [cursor=pointer]:
+                            - /url: https://adk.dev/sessions/session/
+                            - generic [ref=e502]: Sessions
+                          - navigation [ref=e505]:
+                            - generic [ref=e506] [cursor=pointer]: Sessions
+                            - list [ref=e508]:
+                              - listitem [ref=e509]:
+                                - link "Rewind sessions" [ref=e510] [cursor=pointer]:
+                                  - /url: https://adk.dev/sessions/session/rewind/
+                                  - generic [ref=e511]: Rewind sessions
+                              - listitem [ref=e512]:
+                                - link "Migrate sessions" [ref=e513] [cursor=pointer]:
+                                  - /url: https://adk.dev/sessions/session/migrate/
+                                  - generic [ref=e514]: Migrate sessions
+                        - listitem [ref=e515]:
+                          - link "State" [ref=e516] [cursor=pointer]:
+                            - /url: https://adk.dev/sessions/state/
+                            - generic [ref=e517]: State
+                        - listitem [ref=e518]:
+                          - link "Events" [ref=e519] [cursor=pointer]:
+                            - /url: https://adk.dev/events/
+                            - generic [ref=e520]: Events
+                        - listitem [ref=e521]:
+                          - link "Memory" [ref=e522] [cursor=pointer]:
+                            - /url: https://adk.dev/sessions/memory/
+                            - generic [ref=e523]: Memory
+                  - listitem [ref=e524]:
+                    - link "MCP" [ref=e526] [cursor=pointer]:
+                      - /url: https://adk.dev/mcp/
+                      - generic [ref=e527]: MCP
+                    - navigation [ref=e528]:
+                      - generic [ref=e529] [cursor=pointer]: MCP
+                      - list [ref=e531]
+                  - listitem [ref=e532]:
+                    - link "A2A Protocol" [ref=e534] [cursor=pointer]:
+                      - /url: https://adk.dev/a2a/
+                      - generic [ref=e535]: A2A Protocol
+                    - navigation [ref=e538]:
+                      - generic [ref=e539] [cursor=pointer]: A2A Protocol
+                      - list [ref=e541]:
+                        - listitem [ref=e542]:
+                          - link "Introduction to A2A" [ref=e543] [cursor=pointer]:
+                            - /url: https://adk.dev/a2a/intro/
+                            - generic [ref=e544]: Introduction to A2A
+                        - listitem [ref=e545]:
+                          - generic [ref=e547]: A2A Quickstart (Exposing)
+                          - navigation "A2A Quickstart (Exposing)" [ref=e549]:
+                            - generic [ref=e550] [cursor=pointer]: A2A Quickstart (Exposing)
+                            - list [ref=e552]:
+                              - listitem [ref=e553]:
+                                - link "Python" [ref=e554] [cursor=pointer]:
+                                  - /url: https://adk.dev/a2a/quickstart-exposing/
+                                  - generic [ref=e555]: Python
+                              - listitem [ref=e556]:
+                                - link "Go" [ref=e557] [cursor=pointer]:
+                                  - /url: https://adk.dev/a2a/quickstart-exposing-go/
+                                  - generic [ref=e558]: Go
+                              - listitem [ref=e559]:
+                                - link "Java" [ref=e560] [cursor=pointer]:
+                                  - /url: https://adk.dev/a2a/quickstart-exposing-java/
+                                  - generic [ref=e561]: Java
+                        - listitem [ref=e562]:
+                          - generic [ref=e564]: A2A Quickstart (Consuming)
+                          - navigation "A2A Quickstart (Consuming)" [ref=e566]:
+                            - generic [ref=e567] [cursor=pointer]: A2A Quickstart (Consuming)
+                            - list [ref=e569]:
+                              - listitem [ref=e570]:
+                                - link "Python" [ref=e571] [cursor=pointer]:
+                                  - /url: https://adk.dev/a2a/quickstart-consuming/
+                                  - generic [ref=e572]: Python
+                              - listitem [ref=e573]:
+                                - link "Go" [ref=e574] [cursor=pointer]:
+                                  - /url: https://adk.dev/a2a/quickstart-consuming-go/
+                                  - generic [ref=e575]: Go
+                              - listitem [ref=e576]:
+                                - link "Java" [ref=e577] [cursor=pointer]:
+                                  - /url: https://adk.dev/a2a/quickstart-consuming-java/
+                                  - generic [ref=e578]: Java
+                        - listitem [ref=e579]:
+                          - link "A2A Extension" [ref=e580] [cursor=pointer]:
+                            - /url: https://adk.dev/a2a/a2a-extension/
+                            - generic [ref=e581]: A2A Extension
+                  - listitem [ref=e582]:
+                    - link "Gemini Live API Toolkit" [ref=e584] [cursor=pointer]:
+                      - /url: https://adk.dev/streaming/
+                      - generic [ref=e585]: Gemini Live API Toolkit
+                    - navigation [ref=e588]:
+                      - generic [ref=e589] [cursor=pointer]: Gemini Live API Toolkit
+                      - list [ref=e591]:
+                        - listitem [ref=e592]:
+                          - generic [ref=e594]: Gemini Live API Toolkit development guide series
+                          - navigation "Gemini Live API Toolkit development guide series" [ref=e596]:
+                            - generic [ref=e597] [cursor=pointer]: Gemini Live API Toolkit development guide series
+                            - list [ref=e599]:
+                              - listitem [ref=e600]:
+                                - link "Part 1. Intro to streaming" [ref=e601] [cursor=pointer]:
+                                  - /url: https://adk.dev/streaming/dev-guide/part1/
+                                  - generic [ref=e602]: Part 1. Intro to streaming
+                              - listitem [ref=e603]:
+                                - link "Part 2. Sending messages" [ref=e604] [cursor=pointer]:
+                                  - /url: https://adk.dev/streaming/dev-guide/part2/
+                                  - generic [ref=e605]: Part 2. Sending messages
+                              - listitem [ref=e606]:
+                                - link "Part 3. Event handling" [ref=e607] [cursor=pointer]:
+                                  - /url: https://adk.dev/streaming/dev-guide/part3/
+                                  - generic [ref=e608]: Part 3. Event handling
+                              - listitem [ref=e609]:
+                                - link "Part 4. Run configuration" [ref=e610] [cursor=pointer]:
+                                  - /url: https://adk.dev/streaming/dev-guide/part4/
+                                  - generic [ref=e611]: Part 4. Run configuration
+                              - listitem [ref=e612]:
+                                - link "Part 5. Audio, Images, and Video" [ref=e613] [cursor=pointer]:
+                                  - /url: https://adk.dev/streaming/dev-guide/part5/
+                                  - generic [ref=e614]: Part 5. Audio, Images, and Video
+                        - listitem [ref=e615]:
+                          - link "Streaming Tools" [ref=e616] [cursor=pointer]:
+                            - /url: https://adk.dev/streaming/streaming-tools/
+                            - generic [ref=e617]: Streaming Tools
+                        - listitem [ref=e618]:
+                          - link "Configuring streaming behavior" [ref=e619] [cursor=pointer]:
+                            - /url: https://adk.dev/streaming/configuration/
+                            - generic [ref=e620]: Configuring streaming behavior
+                  - listitem [ref=e621]:
+                    - link "Grounding" [ref=e623] [cursor=pointer]:
+                      - /url: https://adk.dev/grounding/
+                      - generic [ref=e624]: Grounding
+                    - navigation [ref=e627]:
+                      - generic [ref=e628] [cursor=pointer]: Grounding
+                      - list [ref=e630]:
+                        - listitem [ref=e631]:
+                          - link "Google Search Grounding" [ref=e632] [cursor=pointer]:
+                            - /url: https://adk.dev/grounding/google_search_grounding/
+                            - generic [ref=e633]: Google Search Grounding
+                        - listitem [ref=e634]:
+                          - link "Grounding with Search" [ref=e635] [cursor=pointer]:
+                            - /url: https://adk.dev/grounding/grounding_with_search/
+                            - generic [ref=e636]: Grounding with Search
+            - listitem [ref=e637]:
+              - link "Integrations" [ref=e639] [cursor=pointer]:
+                - /url: https://adk.dev/integrations/
+                - generic [ref=e640]: Integrations
+              - navigation [ref=e641]:
+                - generic [ref=e642] [cursor=pointer]: Integrations
+                - list [ref=e644]
+            - listitem [ref=e645]:
+              - generic [ref=e647]: Reference
+              - navigation "Reference" [ref=e649]:
+                - generic [ref=e650] [cursor=pointer]: Reference
+                - list [ref=e652]:
+                  - listitem [ref=e653]:
+                    - link "API Reference" [ref=e655] [cursor=pointer]:
+                      - /url: https://adk.dev/api-reference/
+                      - generic [ref=e656]: API Reference
+                    - navigation [ref=e659]:
+                      - generic [ref=e660] [cursor=pointer]: API Reference
+                      - list [ref=e662]:
+                        - listitem [ref=e663]:
+                          - link "Python ADK" [ref=e664] [cursor=pointer]:
+                            - /url: https://adk.dev/api-reference/python/
+                            - generic [ref=e665]: Python ADK
+                        - listitem [ref=e666]:
+                          - link "Typescript ADK" [ref=e667] [cursor=pointer]:
+                            - /url: https://adk.dev/api-reference/typescript/
+                            - generic [ref=e668]: Typescript ADK
+                        - listitem [ref=e669]:
+                          - link "Go ADK" [ref=e670] [cursor=pointer]:
+                            - /url: https://pkg.go.dev/google.golang.org/adk
+                            - generic [ref=e671]: Go ADK
+                        - listitem [ref=e672]:
+                          - link "Java ADK" [ref=e673] [cursor=pointer]:
+                            - /url: https://adk.dev/api-reference/java/
+                            - generic [ref=e674]: Java ADK
+                        - listitem [ref=e675]:
+                          - link "Kotlin ADK" [ref=e676] [cursor=pointer]:
+                            - /url: https://adk.dev/api-reference/kotlin/
+                            - generic [ref=e677]: Kotlin ADK
+                        - listitem [ref=e678]:
+                          - link "CLI Reference" [ref=e679] [cursor=pointer]:
+                            - /url: https://adk.dev/api-reference/cli/
+                            - generic [ref=e680]: CLI Reference
+                        - listitem [ref=e681]:
+                          - link "Agent Config Reference" [ref=e682] [cursor=pointer]:
+                            - /url: https://adk.dev/api-reference/agentconfig/
+                            - generic [ref=e683]: Agent Config Reference
+                        - listitem [ref=e684]:
+                          - link "REST API" [ref=e685] [cursor=pointer]:
+                            - /url: https://adk.dev/api-reference/rest/
+                            - generic [ref=e686]: REST API
+                  - listitem [ref=e687]:
+                    - link "Release Notes" [ref=e688] [cursor=pointer]:
+                      - /url: https://adk.dev/release-notes/
+                      - generic [ref=e689]: Release Notes
+            - listitem [ref=e690]:
+              - link "Community" [ref=e692] [cursor=pointer]:
+                - /url: https://adk.dev/community/
+                - generic [ref=e693]: Community
+              - navigation [ref=e696]:
+                - generic [ref=e697] [cursor=pointer]: Community
+                - list [ref=e699]:
+                  - listitem [ref=e700]:
+                    - link "Contributing Guide" [ref=e701] [cursor=pointer]:
+                      - /url: https://adk.dev/community/contributing-guide/
+                      - generic [ref=e702]: Contributing Guide
+            - listitem [ref=e703]:
+              - link "ADK 2.0" [ref=e705] [cursor=pointer]:
+                - /url: https://adk.dev/2.0/
+                - generic [ref=e706]: ADK 2.0
+              - navigation [ref=e707]:
+                - generic [ref=e708] [cursor=pointer]: ADK 2.0
+                - list [ref=e710]
+        - navigation "Table of contents" [ref=e714]:
+          - generic [ref=e715]: Table of contents
+          - list [ref=e716]:
+            - listitem [ref=e717]:
+              - link "Example scenario" [ref=e718] [cursor=pointer]:
+                - /url: https://adk.dev/agents/workflow-agents/sequential-agents/#example-scenario
+                - generic [ref=e719]: Example scenario
+            - listitem [ref=e720]:
+              - link "How it works" [ref=e721] [cursor=pointer]:
+                - /url: https://adk.dev/agents/workflow-agents/sequential-agents/#how-it-works
+                - generic [ref=e722]: How it works
+            - listitem [ref=e723]:
+              - 'link "Full Example: Code Development Pipeline" [ref=e724] [cursor=pointer]':
+                - /url: https://adk.dev/agents/workflow-agents/sequential-agents/#full-example-code-development-pipeline
+                - generic [ref=e725]: "Full Example: Code Development Pipeline"
+        - generic [ref=e726]:
+          - navigation "Navigation" [ref=e727]:
+            - list [ref=e728]:
+              - listitem [ref=e729]:
+                - link "Home" [ref=e730] [cursor=pointer]:
+                  - /url: https://adk.dev/
+                  - generic [ref=e731]: Home
+              - listitem [ref=e732]:
+                - link "Build Agents" [ref=e733] [cursor=pointer]:
+                  - /url: https://adk.dev/get-started/
+                  - generic [ref=e734]: Build Agents
+              - listitem [ref=e735]:
+                - link "Multi-Agent Workflows" [ref=e736] [cursor=pointer]:
+                  - /url: https://adk.dev/workflows/
+                  - generic [ref=e737]: Multi-Agent Workflows
+              - listitem [ref=e738]:
+                - link "Template workflows" [ref=e739] [cursor=pointer]:
+                  - /url: https://adk.dev/agents/workflow-agents/
+                  - generic [ref=e740]: Template workflows
+          - article [ref=e741]:
+            - link "Edit this page on GitHub" [ref=e742] [cursor=pointer]:
+              - /url: https://github.com/google/adk-docs/edit/main/docs/agents/workflow-agents/sequential-agents.md
+              - img [ref=e743]
+            - link "View Markdown source" [ref=e745] [cursor=pointer]:
+              - /url: https://github.com/google/adk-docs/raw/main/docs/agents/workflow-agents/sequential-agents.md
+              - img [ref=e746]
+            - button "Copy page as Markdown" [ref=e748] [cursor=pointer]:
+              - img [ref=e749]
+            - heading "Sequential template workflow agent ¶" [level=1] [ref=e751]:
+              - text: Sequential template workflow agent
+              - link "¶" [ref=e752] [cursor=pointer]:
+                - /url: https://adk.dev/agents/workflow-agents/sequential-agents/#sequential-template-workflow-agent
+            - generic [ref=e753]:
+              - generic [ref=e754]: Supported in ADK
+              - generic [ref=e755]: Python v0.1.0
+              - generic [ref=e756]: Typescript v0.2.0
+              - generic [ref=e757]: Go v0.1.0
+              - generic [ref=e758]: Java v0.2.0
+            - paragraph [ref=e759]:
+              - text: The
+              - strong [ref=e760]:
+                - emphasis [ref=e761]: SequentialAgent
+              - text: class is a
+              - link "template workflow" [ref=e762] [cursor=pointer]:
+                - /url: https://adk.dev/agents/workflow-agents/
+              - text: agent that executes its sub-agents in the order they are specified in a list. Use
+              - strong [ref=e763]:
+                - emphasis [ref=e764]: SequentialAgent
+              - text: when you want execution to occur in a fixed, strict order. As with other templated workflows, the execution of a
+              - strong [ref=e765]:
+                - emphasis [ref=e766]: SequentialAgent
+              - text: object is not controlled by an AI model, and is deterministic in how it executes its sub-agents. The sub-agents specified in the sequential execution set may or may not utilize AI models, but the overall execution of those sub-agents is ultimately managed by the
+              - strong [ref=e767]:
+                - emphasis [ref=e768]: SequentialAgent
+              - text: object you define.
+            - generic [ref=e769]:
+              - paragraph [ref=e770]: "Alternative: graph-based workflows"
+              - paragraph [ref=e771]: Starting in ADK 2.0, templated workflows have been superseded
+              - paragraph [ref=e772]:
+                - text: by more flexible workflow structures, including
+                - link "graph-based workflows" [ref=e773] [cursor=pointer]:
+                  - /url: https://adk.dev/workflows/graphs/
+                - text: and
+                - link "dynamic workflows" [ref=e774] [cursor=pointer]:
+                  - /url: https://adk.dev/workflows/dynamic/
+                - text: .
+            - heading "Example scenario ¶" [level=3] [ref=e775]:
+              - text: Example scenario
+              - link "¶" [ref=e776] [cursor=pointer]:
+                - /url: https://adk.dev/agents/workflow-agents/sequential-agents/#example-scenario
+            - paragraph [ref=e777]:
+              - text: "You want to build an agent that can summarize any webpage, using two tools:"
+              - strong [ref=e778]: Get Page Contents
+              - text: and
+              - strong [ref=e779]: Summarize Page
+              - text: . Since the agent must always call
+              - strong [ref=e780]: Get Page Contents
+              - text: before calling
+              - strong [ref=e781]: Summarize Page
+              - text: ", you can build your agent using the"
+              - strong [ref=e782]:
+                - emphasis [ref=e783]: SequentialAgent
+              - text: class.
+            - heading "How it works ¶" [level=3] [ref=e784]:
+              - text: How it works
+              - link "¶" [ref=e785] [cursor=pointer]:
+                - /url: https://adk.dev/agents/workflow-agents/sequential-agents/#how-it-works
+            - paragraph [ref=e786]:
+              - text: When the
+              - code [ref=e787]: SequentialAgent
+              - text: "'s"
+              - code [ref=e788]: Run Async
+              - text: "method is called, it performs the following actions:"
+            - list [ref=e789]:
+              - listitem [ref=e790]:
+                - strong [ref=e791]: "Iteration:"
+                - text: It iterates through the sub agents list in the order they were provided.
+              - listitem [ref=e792]:
+                - strong [ref=e793]: "Sub-Agent Execution:"
+                - text: For each sub-agent in the list, it calls the sub-agent's
+                - code [ref=e794]: Run Async
+                - text: method.
+            - paragraph [ref=e795]:
+              - img "Sequential Agent" [ref=e796]
+            - generic [ref=e797]:
+              - paragraph [ref=e798]: Shared Invocation Context
+              - paragraph [ref=e799]:
+                - text: The
+                - code [ref=e800]: SequentialAgent
+                - text: passes the same
+                - code [ref=e801]: InvocationContext
+                - text: to each of its sub-agents. This means they all share the same session state, including the temporary (
+                - code [ref=e802]: "temp:"
+                - text: ) namespace, making it easy to pass data between steps within a single turn.
+            - 'heading "Full Example: Code Development Pipeline ¶" [level=3] [ref=e803]':
+              - text: "Full Example: Code Development Pipeline"
+              - link "¶" [ref=e804] [cursor=pointer]:
+                - /url: https://adk.dev/agents/workflow-agents/sequential-agents/#full-example-code-development-pipeline
+            - paragraph [ref=e805]: "Consider a simplified code development pipeline:"
+            - list [ref=e806]:
+              - listitem [ref=e807]:
+                - strong [ref=e808]: "Code Writer Agent:"
+                - text: An LLM Agent that generates initial code based on a specification.
+              - listitem [ref=e809]:
+                - strong [ref=e810]: "Code Reviewer Agent:"
+                - text: An LLM Agent that reviews the generated code for errors, style issues, and adherence to best practices. It receives the output of the Code Writer Agent.
+              - listitem [ref=e811]:
+                - strong [ref=e812]: "Code Refactorer Agent:"
+                - text: An LLM Agent that takes the reviewed code, and the reviewer's comments, and refactors it to improve quality and address issues.
+            - paragraph [ref=e813]:
+              - text: Using a
+              - code [ref=e814]: SequentialAgent
+              - text: "makes it simple to define this exection flow, as shown in the following code snippet:"
+            - generic [ref=e816]:
+              - navigation [ref=e817]:
+                - button "Copy to clipboard" [ref=e818] [cursor=pointer]
+              - code [ref=e819]:
+                - generic [ref=e820]: SequentialAgent(sub_agents=[CodeWriterAgent, CodeReviewerAgent, CodeRefactorerAgent])
+            - paragraph [ref=e821]:
+              - text: This ensures the code is written,
+              - emphasis [ref=e822]: then
+              - text: reviewed, and
+              - emphasis [ref=e823]: finally
+              - text: refactored, in a strict, dependable order.
+              - strong [ref=e824]:
+                - text: The output from each sub-agent is passed to the next by storing them in state via
+                - link "Output Key" [ref=e825] [cursor=pointer]:
+                  - /url: https://adk.dev/agents/llm-agents/##data-handling
+              - text: .
+            - group [ref=e826]:
+              - generic "Code" [ref=e827] [cursor=pointer]
+              - generic [ref=e828]:
+                - radio "Python" [checked]
+                - radio "Typescript"
+                - radio "Go"
+                - radio "Java"
+                - generic [ref=e829]:
+                  - link "Python" [ref=e831] [cursor=pointer]:
+                    - /url: "#python"
+                  - link "Typescript" [ref=e833] [cursor=pointer]:
+                    - /url: "#typescript"
+                  - link "Go" [ref=e835] [cursor=pointer]:
+                    - /url: "#go"
+                  - link "Java" [ref=e837] [cursor=pointer]:
+                    - /url: "#java"
+                - generic [ref=e841]:
+                  - navigation [ref=e842]:
+                    - button "Copy to clipboard" [ref=e843] [cursor=pointer]
+                  - code [ref=e844]:
+                    - generic [ref=e845]: from google.adk.agents.sequential_agent import SequentialAgent
+                    - generic [ref=e846]: from google.adk.agents.llm_agent import LlmAgent
+                    - generic [ref=e848]: "# --- Constants ---"
+                    - generic [ref=e849]: GEMINI_MODEL = "gemini-2.5-flash"
+                    - generic [ref=e851]: "# --- 1. Define Sub-Agents for Each Pipeline Stage ---"
+                    - generic [ref=e853]: "# Code Writer Agent"
+                    - generic [ref=e854]: "# Takes the initial specification (from user query) and writes code."
+                    - generic [ref=e855]: code_writer_agent = LlmAgent(
+                    - generic [ref=e856]: name="CodeWriterAgent",
+                    - generic [ref=e857]: model=GEMINI_MODEL,
+                    - generic [ref=e858]: instruction="""
+                    - generic [ref=e859]: You are a Python Code Generator.
+                    - generic [ref=e860]: Based *only* on the user's request, write Python code that fulfills the requirement.
+                    - generic [ref=e861]: "Output *only* the complete Python code block, enclosed in triple backticks (```python ... ```)."
+                    - generic [ref=e862]: Do not add any other text before or after the code block.
+                    - generic [ref=e863]: "\"\"\","
+                    - generic [ref=e864]: description="Writes initial Python code based on a specification.",
+                    - generic [ref=e865]: output_key="generated_code"
+                    - generic [ref=e866]: )
+                    - generic [ref=e868]: "# Code Reviewer Agent"
+                    - generic [ref=e869]: "# Takes the code generated by the previous agent (read from state) and provides feedback."
+                    - generic [ref=e870]: code_reviewer_agent = LlmAgent(
+                    - generic [ref=e871]: name="CodeReviewerAgent",
+                    - generic [ref=e872]: model=GEMINI_MODEL,
+                    - generic [ref=e873]: instruction="""
+                    - generic [ref=e874]: You are an expert Python Code Reviewer.
+                    - generic [ref=e875]: Your task is to provide constructive feedback on the provided code.
+                    - generic [ref=e877]: "**Code to Review:**"
+                    - generic [ref=e878]: "```python"
+                    - generic [ref=e879]: "{generated_code}"
+                    - generic [ref=e880]: "```"
+                    - generic [ref=e882]: "**Review Criteria:**"
+                    - generic [ref=e883]: 1. **Correctness:** Does the code work as intended? Are there logic errors?
+                    - generic [ref=e884]: 2. **Readability:** Is the code clear and easy to understand? Follows PEP 8 style guidelines?
+                    - generic [ref=e885]: 3. **Efficiency:** Is the code reasonably efficient? Any obvious performance bottlenecks?
+                    - generic [ref=e886]: 4. **Edge Cases:** Does the code handle potential edge cases or invalid inputs gracefully?
+                    - generic [ref=e887]: 5. **Best Practices:** Does the code follow common Python best practices?
+                    - generic [ref=e889]: "**Output:**"
+                    - generic [ref=e890]: Provide your feedback as a concise, bulleted list. Focus on the most important points for improvement.
+                    - generic [ref=e891]: "If the code is excellent and requires no changes, simply state: \"No major issues found.\""
+                    - generic [ref=e892]: Output *only* the review comments or the "No major issues" statement.
+                    - generic [ref=e893]: "\"\"\","
+                    - generic [ref=e894]: description="Reviews code and provides feedback.",
+                    - generic [ref=e895]: output_key="review_comments"
+                    - generic [ref=e896]: )
+                    - generic [ref=e899]: "# Code Refactorer Agent"
+                    - generic [ref=e900]: "# Takes the original code and the review comments (read from state) and refactors the code."
+                    - generic [ref=e901]: code_refactorer_agent = LlmAgent(
+                    - generic [ref=e902]: name="CodeRefactorerAgent",
+                    - generic [ref=e903]: model=GEMINI_MODEL,
+                    - generic [ref=e904]: instruction="""
+                    - generic [ref=e905]: You are a Python Code Refactoring AI.
+                    - generic [ref=e906]: Your goal is to improve the given Python code based on the provided review comments.
+                    - generic [ref=e908]: "**Original Code:**"
+                    - generic [ref=e909]: "```python"
+                    - generic [ref=e910]: "{generated_code}"
+                    - generic [ref=e911]: "```"
+                    - generic [ref=e913]: "**Review Comments:**"
+                    - generic [ref=e914]: "{review_comments}"
+                    - generic [ref=e916]: "**Task:**"
+                    - generic [ref=e917]: Carefully apply the suggestions from the review comments to refactor the original code.
+                    - generic [ref=e918]: If the review comments state "No major issues found," return the original code unchanged.
+                    - generic [ref=e919]: Ensure the final code is complete, functional, and includes necessary imports and docstrings.
+                    - generic [ref=e921]: "**Output:**"
+                    - generic [ref=e922]: "Output *only* the final, refactored Python code block, enclosed in triple backticks (```python ... ```)."
+                    - generic [ref=e923]: Do not add any other text before or after the code block.
+                    - generic [ref=e924]: "\"\"\","
+                    - generic [ref=e925]: description="Refactors code based on review comments.",
+                    - generic [ref=e926]: output_key="refactored_code"
+                    - generic [ref=e927]: )
+                    - generic [ref=e930]: "# --- 2. Create the SequentialAgent ---"
+                    - generic [ref=e931]: "# This agent orchestrates the pipeline by running the sub_agents in order."
+                    - generic [ref=e932]: code_pipeline_agent = SequentialAgent(
+                    - generic [ref=e933]: name="CodePipelineAgent",
+                    - generic [ref=e934]: sub_agents=[code_writer_agent, code_reviewer_agent, code_refactorer_agent],
+                    - generic [ref=e935]: description="Executes a sequence of code writing, reviewing, and refactoring.",
+                    - generic [ref=e936]: )
+                    - generic [ref=e938]: root_agent = code_pipeline_agent
+                - button [ref=e939] [cursor=pointer]
+                - button [ref=e940] [cursor=pointer]
+      - button "Back to top":
+        - img
+        - text: Back to top
+    - contentinfo [ref=e941]:
+      - generic [ref=e944]:
+        - generic [ref=e945]:
+          - text: Copyright Google 2026 |
+          - link "License" [ref=e946] [cursor=pointer]:
+            - /url: //github.com/google/adk-docs/blob/main/LICENSE
+          - text: "|"
+          - link "Privacy" [ref=e947] [cursor=pointer]:
+            - /url: //policies.google.com/privacy
+          - text: "|"
+          - link "Manage cookies" [ref=e948] [cursor=pointer]:
+            - /url: https://adk.dev/agents/workflow-agents/sequential-agents/#__consent
+        - text: Made with
+        - link "Material for MkDocs" [ref=e949] [cursor=pointer]:
+          - /url: https://squidfunk.github.io/mkdocs-material/
+  - progressbar
+  - complementary [ref=e951]:
+    - generic [ref=e952]:
+      - heading "Cookie consent" [level=4] [ref=e953]
+      - paragraph [ref=e954]: We use cookies to recognize repeated visits and preferences, as well as to measure the effectiveness of our documentation and whether users find the information they need. With your consent, you're helping us to make our documentation better.
+      - generic [ref=e955]:
+        - button "Accept" [ref=e956] [cursor=pointer]
+        - text: Manage settings

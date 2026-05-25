@@ -153,7 +153,7 @@ interface MatchResult {
   tavilyEvidence: string | null
 }
 
-export async function runRequirementsMatcher(input: RequirementsMatcherInput): Promise<void> {
+export async function runRequirementsMatcher(input: RequirementsMatcherInput): Promise<{ totalRequirements: number; matchedCount: number; gapCount: number; tavilyEvidenceCount: number; avgConfidence: number }> {
   const { jobId, userId, companyProfileId } = input
   const startTime = Date.now()
 
@@ -298,6 +298,18 @@ Return ONLY valid JSON matching the schema above.`
     }
 
     await completeAgentRun(runId, 0, 0, Date.now() - startTime)
+
+    const avgConfidence = matches.length > 0
+      ? Math.round((matches.reduce((sum, m) => sum + m.confidenceScore, 0) / matches.length) * 100) / 100
+      : 0
+
+    return {
+      totalRequirements: matches.length,
+      matchedCount: matched,
+      gapCount: gaps,
+      tavilyEvidenceCount: tavilyEvidence.size,
+      avgConfidence,
+    }
   } catch (error) {
     await failAgentRun(runId, String(error))
     throw error
