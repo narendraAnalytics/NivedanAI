@@ -1,8 +1,7 @@
-import { LlmAgent, Runner, InMemorySessionService } from '@google/adk'
+import { LlmAgent, GOOGLE_SEARCH, Runner, InMemorySessionService } from '@google/adk'
 import { eq } from 'drizzle-orm'
 import { db } from '@/db'
 import { clientResearchData, rfpJobs } from '@/db/schema'
-import { searchAgent } from './search-agent'
 import {
   createAgentRun,
   completeAgentRun,
@@ -55,7 +54,7 @@ const clientResearchAgent = new LlmAgent({
   model: 'gemini-3.1-flash',
   description: 'Researches client company intelligence using live web search for proposal tailoring.',
   instruction: CLIENT_RESEARCH_INSTRUCTION,
-  subAgents: [searchAgent],
+  tools: [GOOGLE_SEARCH],
   generateContentConfig: { temperature: 0.3 },
 })
 
