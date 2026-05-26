@@ -518,8 +518,56 @@ function Placeholder({ text }: { text?: string }) {
   )
 }
 
+/* -------------------- LIGHTBOX -------------------- */
+function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  return (
+    <div
+      className={styles.lbOverlay}
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'rgba(10,20,16,0.82)',
+        WebkitBackdropFilter: 'blur(12px)',
+        backdropFilter: 'blur(12px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}
+    >
+      <button
+        className={styles.lbClose}
+        onClick={onClose}
+        aria-label="Close image"
+        style={{
+          position: 'fixed', top: 20, right: 24, zIndex: 201,
+          width: 44, height: 44, borderRadius: '50%',
+          background: 'linear-gradient(180deg, #FBF1D8 0%, #E0B663 100%)',
+          border: '1px solid rgba(212,168,79,0.5)',
+          boxShadow: '0 6px 20px rgba(212,168,79,0.35)',
+          display: 'grid', placeItems: 'center', cursor: 'pointer',
+          fontSize: 20, color: '#2A1E08', lineHeight: 1,
+        }}
+      >
+        ×
+      </button>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={alt}
+        className={styles.lbImg}
+        onClick={(e) => e.stopPropagation()}
+        draggable={false}
+      />
+    </div>
+  )
+}
+
 /* -------------------- IMAGE PANEL -------------------- */
-function ImagePanel({ step, direction }: { step: Step; direction: string }) {
+function ImagePanel({ step, direction, onImageClick }: { step: Step; direction: string; onImageClick: (src: string, alt: string) => void }) {
   const animClass = direction === 'next' ? styles.slideInR : styles.slideInL
   return (
     <div className={animClass} style={{ position: 'relative' }}>
@@ -546,8 +594,11 @@ function ImagePanel({ step, direction }: { step: Step; direction: string }) {
         {step.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={step.image} alt={step.title}
+            className={styles.imgClickable}
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-            draggable={false} />
+            draggable={false}
+            onClick={() => onImageClick(step.image!, step.imageAlt ?? step.title)}
+          />
         ) : (
           <Placeholder text={'imagePlaceholder' in step ? (step as { imagePlaceholder?: string }).imagePlaceholder : undefined} />
         )}
@@ -812,7 +863,7 @@ function BottomCTA() {
 }
 
 /* -------------------- CAROUSEL WITH TITLE -------------------- */
-function CarouselWithTitle() {
+function CarouselWithTitle({ onImageClick }: { onImageClick: (src: string, alt: string) => void }) {
   const [active, setActive] = useState(0)
   const [direction, setDirection] = useState<'next' | 'prev'>('next')
   const total = STEPS.length
@@ -921,7 +972,7 @@ function CarouselWithTitle() {
           padding: '40px 6px 24px',
           position: 'relative', zIndex: 1,
         }}>
-          <ImagePanel step={step} direction={direction} />
+          <ImagePanel step={step} direction={direction} onImageClick={onImageClick} />
           <TextPanel step={step} />
         </div>
       </div>
@@ -939,6 +990,8 @@ function CarouselWithTitle() {
 
 /* -------------------- PAGE -------------------- */
 export default function HowItWorksPage() {
+  const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null)
+
   return (
     <div style={{
       background: `
@@ -956,8 +1009,11 @@ export default function HowItWorksPage() {
         position: 'relative', zIndex: 1,
       }}>
         <PageHeader />
-        <CarouselWithTitle />
+        <CarouselWithTitle onImageClick={(src, alt) => setLightbox({ src, alt })} />
       </div>
+      {lightbox && (
+        <Lightbox src={lightbox.src} alt={lightbox.alt} onClose={() => setLightbox(null)} />
+      )}
     </div>
   )
 }
