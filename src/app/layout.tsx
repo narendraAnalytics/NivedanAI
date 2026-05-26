@@ -36,6 +36,10 @@ export const metadata: Metadata = {
   title: "Nivedan AI — Autonomous Proposal Intelligence",
   description:
     "Deploy six AI agents to research, write, review, and perfect RFP responses in 20 minutes. Win more proposals with Nivedan AI.",
+  icons: {
+    icon: "https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779777458/pageimage_ux8cqj.png",
+    apple: "https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779777458/pageimage_ux8cqj.png",
+  },
 };
 
 export default function RootLayout({
