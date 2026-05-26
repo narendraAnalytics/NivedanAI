@@ -341,22 +341,22 @@ export default function Hero() {
 }
 
 const trustedNames = [
-  { name: "Meridian" ,logoUrl:"https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779797530/meridian_wteh8y.png"},
-  { name: "Northwind" },
+  { name: "Meridian" ,logoUrl:"https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779797957/meridian_nwgm1f.png"},
+  { name: "Northwind" ,logoUrl:"https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779798598/northwind_h6qmth.png"},
   { name: "Atlas", logoUrl: "https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779778486/atlas_fn6wr0.png" },
-  { name: "Apex Consulting" },
-  { name: "Vertex" },
-  { name: "Stratum" },
-  { name: "Lumen" },
-  { name: "Praxis" },
-  { name: "Meridian" ,logoUrl :"https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779797530/meridian_wteh8y.png" },
-  { name: "Northwind" },
+  { name: "Apex Consulting" ,logoUrl:"https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779798948/apexconsulting_vvmfln.png"},
+  { name: "Vertex",logoUrl:"https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779799173/vertex_paamp5.png" },
+  { name: "Stratum",logoUrl :"https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779799434/stratum_r06ucw.png" },
+  { name: "Lumen" ,logoUrl :"https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779799720/lumen_cc4obc.png"},
+  { name: "Praxis" ,logoUrl :"https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779799966/praxis_algmey.png"},
+  { name: "Meridian" ,logoUrl :"https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779797957/meridian_nwgm1f.png" },
+  { name: "Northwind",logoUrl:"https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779798598/northwind_h6qmth.png"},
   { name: "Atlas", logoUrl: "https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779778486/atlas_fn6wr0.png" },
-  { name: "Apex Consulting" },
-  { name: "Vertex" },
-  { name: "Stratum" },
-  { name: "Lumen" },
-  { name: "Praxis" },
+  { name: "Apex Consulting",logoUrl:"https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779798948/apexconsulting_vvmfln.png"},
+  { name: "Vertex" ,logoUrl:"https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779799173/vertex_paamp5.png"},
+  { name: "Stratum",logoUrl :"https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779799434/stratum_r06ucw.png" },
+  { name: "Lumen" ,logoUrl :"https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779799720/lumen_cc4obc.png"},
+  { name: "Praxis" ,logoUrl :"https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779799966/praxis_algmey.png"},
 ];
 
 function TrustedStrip() {
