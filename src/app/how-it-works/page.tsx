@@ -520,30 +520,82 @@ function Placeholder({ text }: { text?: string }) {
 
 /* -------------------- LIGHTBOX -------------------- */
 function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
+  const [scale, setScale] = useState(1)
+  const [offset, setOffset] = useState({ x: 0, y: 0 })
+  const dragRef = useRef({ active: false, startX: 0, startY: 0, ox: 0, oy: 0 })
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const scaleRef = useRef(1)
+
+  const applyZoom = (delta: number) => {
+    setScale(prev => {
+      const next = Math.min(4, Math.max(0.5, Math.round((prev + delta) * 10) / 10))
+      scaleRef.current = next
+      if (next === 1) setOffset({ x: 0, y: 0 })
+      return next
+    })
+  }
+  const reset = () => { setScale(1); scaleRef.current = 1; setOffset({ x: 0, y: 0 }) }
+
+  // Non-passive wheel listener — fixes React's passive onWheel letting the page scroll
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const el = overlayRef.current
+    if (!el) return
+    const handler = (e: WheelEvent) => {
+      e.preventDefault()
+      applyZoom(e.deltaY < 0 ? 0.2 : -0.2)
+    }
+    el.addEventListener('wheel', handler, { passive: false })
+    return () => el.removeEventListener('wheel', handler)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+      else if (e.key === '+' || e.key === '=') applyZoom(0.25)
+      else if (e.key === '-') applyZoom(-0.25)
+      else if (e.key === '0') reset()
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [onClose]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const onPointerDown = (e: React.PointerEvent<HTMLImageElement>) => {
+    if (scaleRef.current <= 1) return
+    e.currentTarget.setPointerCapture(e.pointerId)
+    dragRef.current = { active: true, startX: e.clientX, startY: e.clientY, ox: offset.x, oy: offset.y }
+  }
+  const onPointerMove = (e: React.PointerEvent<HTMLImageElement>) => {
+    if (!dragRef.current.active) return
+    setOffset({
+      x: dragRef.current.ox + (e.clientX - dragRef.current.startX),
+      y: dragRef.current.oy + (e.clientY - dragRef.current.startY),
+    })
+  }
+  const onPointerUp = () => { dragRef.current.active = false }
+
+  const imgCursor = scale > 1 ? 'grab' : 'zoom-in'
 
   return (
     <div
+      ref={overlayRef}
       className={styles.lbOverlay}
-      onClick={onClose}
+      onClick={scale === 1 ? onClose : undefined}
       style={{
         position: 'fixed', inset: 0, zIndex: 200,
         background: 'rgba(10,20,16,0.82)',
         WebkitBackdropFilter: 'blur(12px)',
         backdropFilter: 'blur(12px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
+        overflow: 'hidden',
       }}
     >
+      {/* Close button */}
       <button
         className={styles.lbClose}
         onClick={onClose}
         aria-label="Close image"
         style={{
-          position: 'fixed', top: 20, right: 24, zIndex: 201,
+          position: 'fixed', top: 20, right: 24, zIndex: 202,
           width: 44, height: 44, borderRadius: '50%',
           background: 'linear-gradient(180deg, #FBF1D8 0%, #E0B663 100%)',
           border: '1px solid rgba(212,168,79,0.5)',
@@ -554,14 +606,77 @@ function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: ()
       >
         ×
       </button>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt={alt}
+
+      {/* Zoom toolbar */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 202, display: 'inline-flex', alignItems: 'center',
+          background: 'rgba(255,255,255,0.12)',
+          border: '1px solid rgba(255,255,255,0.22)',
+          borderRadius: 999, backdropFilter: 'blur(14px)',
+          WebkitBackdropFilter: 'blur(14px)',
+          boxShadow: '0 8px 28px rgba(0,0,0,0.35)',
+          overflow: 'hidden',
+        }}
+      >
+        {([
+          { label: '−', action: () => applyZoom(-0.25), disabled: scale <= 0.5 },
+          { label: null, action: reset, disabled: false },
+          { label: '+', action: () => applyZoom(0.25), disabled: scale >= 4 },
+        ] as { label: string | null; action: () => void; disabled: boolean }[]).map((btn, i) => (
+          <button
+            key={i}
+            onClick={btn.action}
+            disabled={btn.disabled}
+            style={{
+              width: btn.label === null ? 'auto' : 44, height: 44,
+              padding: btn.label === null ? '0 16px' : 0,
+              background: btn.label !== null
+                ? 'linear-gradient(180deg, rgba(251,241,216,0.18) 0%, rgba(224,182,99,0.22) 100%)'
+                : 'transparent',
+              border: 'none',
+              borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.15)' : 'none',
+              cursor: btn.disabled ? 'not-allowed' : 'pointer',
+              display: 'grid', placeItems: 'center',
+              fontFamily: btn.label === null ? 'var(--f-mono)' : 'system-ui',
+              fontSize: btn.label === null ? 13 : 22,
+              fontWeight: btn.label === null ? 700 : 300,
+              color: btn.label === null ? 'rgba(251,241,216,0.95)' : '#FBF1D8',
+              opacity: btn.disabled ? 0.35 : 1,
+              transition: 'opacity 0.2s, background 0.2s',
+              whiteSpace: 'nowrap', minWidth: btn.label === null ? 56 : undefined,
+            }}
+          >
+            {btn.label ?? `${scale.toFixed(1)}×`}
+          </button>
+        ))}
+      </div>
+
+      {/* Image — wrapper gets entry animation (.lbImg), img itself has NO animation so zoom transform works */}
+      <div
         className={styles.lbImg}
         onClick={(e) => e.stopPropagation()}
-        draggable={false}
-      />
+        onDoubleClick={reset}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        style={{ cursor: imgCursor }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={alt}
+          className={styles.lbImgEl}
+          draggable={false}
+          style={{
+            transform: `scale(${scale}) translate(${offset.x / scale}px, ${offset.y / scale}px)`,
+            transformOrigin: 'center center',
+            transition: dragRef.current.active ? 'none' : 'transform 0.2s cubic-bezier(0.16,1,0.3,1)',
+          }}
+        />
+      </div>
     </div>
   )
 }

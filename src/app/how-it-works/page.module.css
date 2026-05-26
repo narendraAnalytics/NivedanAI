@@ -206,11 +206,17 @@
   animation: lbEnter 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
   border-radius: 20px;
   box-shadow: 0 40px 100px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.12);
+  display: inline-flex;
+  line-height: 0;
+}
+.lbImgEl {
+  display: block;
   max-width: 90vw;
   max-height: 85vh;
   object-fit: contain;
-  display: block;
-  cursor: default;
+  border-radius: 20px;
+  -webkit-user-select: none;
+  user-select: none;
 }
 .lbClose {
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
