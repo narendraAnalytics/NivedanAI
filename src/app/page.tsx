@@ -1,3 +1,4 @@
+import IntroSplash from "@/components/landing/IntroSplash";
 import Navbar from "@/components/landing/Navbar";
 import Hero from "@/components/landing/Hero";
 import ProblemSolution from "@/components/landing/ProblemSolution";
@@ -12,6 +13,7 @@ import ScrollRevealSetup from "@/components/landing/ScrollReveal";
 export default function Home() {
   return (
     <>
+      <IntroSplash />
       <ScrollRevealSetup />
       <Navbar />
       <main>
