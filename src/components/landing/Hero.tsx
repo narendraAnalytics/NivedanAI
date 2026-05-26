@@ -341,7 +341,7 @@ export default function Hero() {
 }
 
 const trustedNames = [
-  { name: "Meridian" },
+  { name: "Meridian" ,logoUrl:"https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779797530/meridian_wteh8y.png"},
   { name: "Northwind" },
   { name: "Atlas", logoUrl: "https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779778486/atlas_fn6wr0.png" },
   { name: "Apex Consulting" },
@@ -349,7 +349,7 @@ const trustedNames = [
   { name: "Stratum" },
   { name: "Lumen" },
   { name: "Praxis" },
-  { name: "Meridian" },
+  { name: "Meridian" ,logoUrl :"https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779797530/meridian_wteh8y.png" },
   { name: "Northwind" },
   { name: "Atlas", logoUrl: "https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779778486/atlas_fn6wr0.png" },
   { name: "Apex Consulting" },
