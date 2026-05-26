@@ -341,10 +341,22 @@ export default function Hero() {
 }
 
 const trustedNames = [
-  "Meridian", "Northwind", "Atlas", "Apex Consulting",
-  "Vertex", "Stratum", "Lumen", "Praxis",
-  "Meridian", "Northwind", "Atlas", "Apex Consulting",
-  "Vertex", "Stratum", "Lumen", "Praxis",
+  { name: "Meridian" },
+  { name: "Northwind" },
+  { name: "Atlas", logoUrl: "https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779778486/atlas_fn6wr0.png" },
+  { name: "Apex Consulting" },
+  { name: "Vertex" },
+  { name: "Stratum" },
+  { name: "Lumen" },
+  { name: "Praxis" },
+  { name: "Meridian" },
+  { name: "Northwind" },
+  { name: "Atlas", logoUrl: "https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1779778486/atlas_fn6wr0.png" },
+  { name: "Apex Consulting" },
+  { name: "Vertex" },
+  { name: "Stratum" },
+  { name: "Lumen" },
+  { name: "Praxis" },
 ];
 
 function TrustedStrip() {
@@ -370,7 +382,7 @@ function TrustedStrip() {
           gap: 0,
         }}
       >
-        {trustedNames.map((name, i) => (
+        {trustedNames.map((item, i) => (
           <div
             key={i}
             style={{
@@ -382,15 +394,30 @@ function TrustedStrip() {
               borderRight: "1px solid var(--line-strong)",
             }}
           >
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 8,
-                background: "linear-gradient(135deg, var(--sage-soft), var(--sage))",
-                border: "1px solid rgba(47,93,80,0.12)",
-              }}
-            />
+            {item.logoUrl ? (
+              <img
+                src={item.logoUrl}
+                alt={item.name}
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  objectFit: "contain",
+                  border: "1px solid rgba(47,93,80,0.12)",
+                  background: "#fff",
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  background: "linear-gradient(135deg, var(--sage-soft), var(--sage))",
+                  border: "1px solid rgba(47,93,80,0.12)",
+                }}
+              />
+            )}
             <span
               style={{
                 fontFamily: "var(--f-display)",
@@ -400,7 +427,7 @@ function TrustedStrip() {
                 whiteSpace: "nowrap",
               }}
             >
-              {name}
+              {item.name}
             </span>
           </div>
         ))}
