@@ -327,6 +327,22 @@ Silent failures that burned us:
    serverExternalPackages: ['@react-pdf/renderer']
    ```
 
+### API Routes — `src/app/api/`
+
+| Route | Purpose |
+|---|---|
+| `auth/sync` | POST — Clerk sign-in/sign-up webhook; lazy-creates `users` row |
+| `inngest` | Inngest function registration endpoint |
+| `uploadthing` | UploadThing file router (`rfpDocument`, `kbDocument`) |
+| `stats` | GET — dashboard stats (job counts, KB item count) |
+| `jobs/[jobId]` | GET — job status + `current_activity` (polled every 3s by `/workflow/[jobId]`) |
+| `proposals/recent` | GET — recent proposals for dashboard list |
+| `proposals/[jobId]/changes` | POST — HITL request-changes; triggers section rewrites |
+| `kb/items` | GET list / POST create knowledge base items |
+| `kb/items/[itemId]` | PATCH update / DELETE remove a KB item |
+| `kb/profile` | GET/PUT company profile |
+| `user/plan` | GET current user's plan (`free`\|`plus`\|`pro`) |
+
 ### UI — Design Tokens (globals.css)
 
 CSS variables and Tailwind tokens live in `src/app/globals.css` `@theme inline {}` — never `tailwind.config.ts`. `cn()` helper in `src/lib/utils.ts`.
@@ -347,6 +363,11 @@ Key classes: `.ni-glass` (glassmorphism), `.ni-section`, `.ni-container`, `.btn-
 
 Animations: `pulseGold`, `pulseGoldRing` (active agent card), `drift` (WorkflowViz float), `twinkle`, `spin` (upload spinner)
 
+**CSS module gotchas:**
+- Always add vendor prefixes for `backdrop-filter` (`-webkit-backdrop-filter`) and `user-select` (`-webkit-user-select`) — linter enforces this.
+- **CSS animation `fill-mode: both` overrides inline `transform`** — if a CSS animation keyframe uses `transform` with `fill-mode: both`, the final keyframe value is frozen on the element and permanently wins over any inline `style={{ transform }}` you apply later. Fix: apply the animation class to a **wrapper `<div>`**; apply the interactive `transform` inline to the **child element** which has no animation. This is the pattern used in the lightbox (`Lightbox` in `how-it-works/page.tsx`).
+- **React `onWheel` is passive** — cannot call `e.preventDefault()` to stop page scroll. For elements that must capture scroll (e.g. zoom controls), attach a native non-passive listener via `useEffect`: `el.addEventListener('wheel', handler, { passive: false })`.
+
 ### Key Pages
 
 - `/dashboard` — single `'use client'` file; all sub-components defined inline. Upload validates email before `startUpload`. Polls `/api/stats`, `/api/kb/items`, and `/api/proposals/recent` on mount. Real proposals rendered as clickable rows — "Draft Ready" rows link to `/workflow/[jobId]` (HITL approve panel); "Submitted" rows link to `/proposals/[jobId]` (viewer).
@@ -354,7 +375,7 @@ Animations: `pulseGold`, `pulseGoldRing` (active agent card), `drift` (WorkflowV
 - `/proposals/[jobId]` — split into two files: `page.tsx` (server component — auth, DB queries, score computation, passes props) and `ProposalViewer.tsx` (client component — full interactive design: sticky TOC with scroll-spy, reading progress bar, section cards, floating action bar, Thank You closing card). `qualityScore` stored as `0.00–1.00` — multiply × 100 for display. Never move DB queries into `ProposalViewer`. **TOC scroll-jump:** `scrollMarginTop` must be on the outer wrapper `<div>` that holds the `ref` (the `scrollIntoView` target), NOT on the inner `<article>` — otherwise the sticky header covers the section heading on click.
 - `/knowledge-base` — company profile editor + PDF upload (AI extracts title/tags from filename) + manual form.
 - `/pricing` — `'use client'`; uses `<PricingTable appearance={nivedanAppearance} />`. Auth-protected (middleware). Sticky header with back-to-home + logo. All styling via Clerk's `appearance` object — never add manual plan cards here.
-- `/how-it-works` — protected route (not in public routes). Full horizontal carousel of all 15 pipeline steps. Client component with its own page header (logo + back-home + Try Nivedan CTA). Styles in `src/app/how-it-works/page.module.css` (animation keyframes + component classes). Step images: steps 1–2 use Cloudinary URLs; steps 3–15 show placeholder. Reached via `/redirecting?to=how-it-works` from signed-in navbar click.
+- `/how-it-works` — protected route (not in public routes). Full horizontal carousel of all 15 pipeline steps. Client component with its own page header (logo + back-home + Try Nivedan CTA). Styles in `src/app/how-it-works/page.module.css` (animation keyframes + component classes). All 15 step images use Cloudinary URLs. Click any image → lightbox opens (`Lightbox` component inline in `page.tsx`) with zoom in/out (scroll wheel, `+`/`−` buttons, keyboard `+`/`-`/`0`), drag-to-pan, double-click to reset. Reached via `/redirecting?to=how-it-works` from signed-in navbar click.
 - `/redirecting` — transition animation page. Not in public routes. Context-aware message via `?to=` param. Any new nav link that needs the transition should route through here.
 
 ### Clerk v7 Patterns
