@@ -147,6 +147,18 @@ export default function IntroSplash() {
 
       {/* Frame + zoom toolbar */}
       <div className={styles.frameWrap}>
+        {/* Ambient robot video — left of frame */}
+        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+        <video
+          className={styles.introVideo}
+          src="https://res.cloudinary.com/dkqbzwicr/video/upload/q_auto/f_auto/v1779805694/robo_c0qtvi.webm"
+          autoPlay
+          muted
+          loop
+          playsInline
+          aria-hidden="true"
+        />
+
         {/* .frame has entry animation — img inside has zoom transform (no animation = no override) */}
         <div className={styles.frame} ref={frameRef}>
           {/* eslint-disable-next-line @next/next/no-img-element */}

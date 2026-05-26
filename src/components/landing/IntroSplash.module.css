@@ -260,12 +260,30 @@
   mix-blend-mode: overlay;
 }
 
-/* ── Frame wrapper (groups frame + zoom bar side-by-side) ── */
+/* ── Ambient robot video (left of frame) ────────────────── */
+.introVideo {
+  display: block;
+  flex-shrink: 0;
+  width: auto;
+  max-width: 460px;
+  max-height: calc(100vh - 60px);
+  object-fit: contain;
+  background: transparent;
+  border: none;
+  outline: none;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  -webkit-mask-image: radial-gradient(ellipse 78% 72% at 50% 52%, black 28%, transparent 72%);
+  mask-image: radial-gradient(ellipse 78% 72% at 50% 52%, black 28%, transparent 72%);
+  animation: introImgIn 1.05s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+
+/* ── Frame wrapper (groups video + frame + zoom bar side-by-side) ── */
 .frameWrap {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 12px;
+  gap: 80px;
   z-index: 2;
 }
 
@@ -392,10 +410,11 @@
 
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 900px) {
-  .splash   { padding: 62px 18px 52px; gap: 14px; }
-  .eyebrow  { font-size: 9.5px; padding: 7px 14px; }
-  .brandName { font-size: 15px; }
-  .frame    { max-height: calc(100vh - 206px); max-width: 80vw; }
-  .cta      { padding: 12px 18px; font-size: 13px; }
-  .hint     { display: none; }
+  .splash      { padding: 62px 18px 52px; gap: 14px; }
+  .eyebrow     { font-size: 9.5px; padding: 7px 14px; }
+  .brandName   { font-size: 15px; }
+  .frame       { max-height: calc(100vh - 206px); max-width: 80vw; }
+  .cta         { padding: 12px 18px; font-size: 13px; }
+  .hint        { display: none; }
+  .introVideo  { display: none; }
 }
