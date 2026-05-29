@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import styles from './IntroSplash.module.css'
 
 export default function IntroSplash() {
-  const [visible, setVisible] = useState(() => !localStorage.getItem('nivedanai_intro_seen'))
+  const [visible, setVisible] = useState(() => !localStorage.getItem('nivedanai_intro_v2'))
   const [closing, setClosing] = useState(false)
   const [scale, setScale] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
@@ -14,7 +14,7 @@ export default function IntroSplash() {
 
   const dismiss = useCallback(() => {
     if (closing) return
-    localStorage.setItem('nivedanai_intro_seen', '1')
+    localStorage.setItem('nivedanai_intro_v2', '1')
     setClosing(true)
     document.body.style.overflow = ''
     setTimeout(() => setVisible(false), 850)
