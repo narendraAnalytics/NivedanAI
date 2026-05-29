@@ -16,6 +16,19 @@ type JobStatus = {
   recipientEmail: string | null
 }
 
+/* ── Startup messages (shown while pipeline is initializing) ── */
+const STARTUP_MESSAGES = [
+  'Inngest is spinning up the pipeline…',
+  'Routing your RFP to the Orchestrator…',
+  'Agents are strapping in — buckle up.',
+  'Gemini models are warming up, hold tight.',
+  'Six agents, one goal: your winning proposal.',
+  'Your RFP is in safe hands.',
+  'Setting up the AI council…',
+  'Firing up the intelligence stack…',
+  'Good proposals take craftsmanship. Almost ready.',
+]
+
 /* ── Stage definitions ── */
 const stages = [
   { n: 1, title: 'Orchestrator Agent',          sub: 'Validating inputs & creating session',      model: 'gemini-3.1-pro',        color: '#D4A84F' },
@@ -954,6 +967,7 @@ export default function WorkflowPage() {
   const [error, setError]             = useState(false)
   const [elapsedSecs, setElapsedSecs] = useState(0)
   const [animTick, setAnimTick]       = useState(0)
+  const [msgIdx, setMsgIdx]           = useState(0)
 
   const poll = useCallback(async () => {
     if (!jobId) return
@@ -980,6 +994,12 @@ export default function WorkflowPage() {
   useEffect(() => {
     if (isTerminal) return
   }, [isTerminal])
+
+  useEffect(() => {
+    if (job && job.status !== 'pending') return
+    const id = setInterval(() => setMsgIdx(i => (i + 1) % STARTUP_MESSAGES.length), 2800)
+    return () => clearInterval(id)
+  }, [job])
 
   /* Derived progress values */
   const overallPct = !job
@@ -1044,7 +1064,11 @@ export default function WorkflowPage() {
               ) : job?.status === 'completed' ? (
                 <><span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--forest)' }} /> Pipeline complete</>
               ) : (
-                <><span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--gold)' }} /> Initializing</>
+                <><span style={{
+                  width: 6, height: 6, borderRadius: '50%', background: 'var(--gold)',
+                  boxShadow: '0 0 8px var(--gold)',
+                  animation: 'pulseGold 1.4s ease-in-out infinite',
+                }} /> Initializing</>
               )}
             </span>
 
@@ -1074,7 +1098,7 @@ export default function WorkflowPage() {
                 ? 'All 6 agents have completed. Review and approve your proposal below.'
                 : job?.status === 'completed'
                 ? 'Proposal exported and delivered to your inbox.'
-                : 'Pipeline is starting up…'}
+                : STARTUP_MESSAGES[msgIdx]}
             </p>
           </div>
 
