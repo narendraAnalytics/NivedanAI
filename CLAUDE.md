@@ -28,7 +28,11 @@ npm run db:studio    # Open Drizzle Studio at localhost:4983
 
 **Schema changes workflow:** Run `db:generate` → apply via Neon MCP tool (`mcp__neon__run_sql_transaction`). `db:push` hangs over TCP from local machine.
 
+**Type checking:** No separate typecheck script — `npm run build` is the only way to surface TS errors. No lint script exists.
+
 **Local pipeline testing:** `npm run dev` + Inngest dev server running separately. Re-sync after every deploy at `https://nivedan-ai.vercel.app/api/inngest` in Inngest Cloud.
+
+**ADK devtools:** `@google/adk-devtools` is installed as a devDependency for local ADK debugging of agent runs.
 
 ---
 
@@ -152,6 +156,8 @@ await step.run('step-3-client-research', async () => {
 ```
 
 Each agent function returns a typed summary: step-2 `{ clientName, rfpTitle, mandatoryCount, ... }`, step-3 `{ tavilySearchUsed, sourcesCount, confidence, companyName }`, step-4 `{ totalRequirements, matchedCount, gapCount, tavilyEvidenceCount, avgConfidence }`, step-5 `{ proposalId, sectionsGenerated, wordCount, version }`, step-6 `{ qualityScore, correctionsApplied, sectionsUpdated, validationPassed }`.
+
+**`tavilySearchUsed` tracking rule (Agent 3):** Set this flag from `tavilyIntel.length > 0` (whether the Tavily LlmAgent returned content), NOT from `sources.length > 0` (whether the synthesis LLM extracted URLs into JSON). The synthesis LLM routinely omits sources even when Tavily ran 15–20 search rounds — using sources as the signal produces a permanently-false flag.
 
 **`runEphemeral` vs `runAsync`:**
 - `runEphemeral({ userId, newMessage })` — no pre-existing session required; correct for one-shot LlmAgent calls within a step (Agents 3 and 4 search passes use this with a local `new InMemorySessionService()`)

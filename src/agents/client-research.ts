@@ -262,13 +262,13 @@ Return ONLY valid JSON matching the schema above.`
       competitors: (clientProfile.competitors as string[]) ?? null,
       sources,
       researchConfidence: confidence,
-      tavilySearchUsed: sources.length > 0,
+      tavilySearchUsed: tavilyIntel.length > 0,
     })
 
     await completeAgentRun(runId, 0, 0, Date.now() - startTime)
 
     return {
-      tavilySearchUsed: sources.length > 0,
+      tavilySearchUsed: tavilyIntel.length > 0,
       sourcesCount: sources.length,
       confidence,
       companyName: (clientProfile.companyName as string) || companyToResearch,
