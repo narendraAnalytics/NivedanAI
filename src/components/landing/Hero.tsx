@@ -387,8 +387,10 @@ function VideoModal({ onClose }: { onClose: () => void }) {
   };
 
   const vidSkip = (s: number) => {
-    if (vidRef.current)
-      vidRef.current.currentTime = Math.max(0, Math.min(vidRef.current.duration || 0, vidRef.current.currentTime + s));
+    if (!vidRef.current) return;
+    const newTime = Math.max(0, Math.min(vidRef.current.duration || 0, vidRef.current.currentTime + s));
+    vidRef.current.currentTime = newTime;
+    setVidTime(newTime);
   };
 
   const vidSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -516,7 +518,6 @@ function VideoModal({ onClose }: { onClose: () => void }) {
               if (v.duration && isFinite(v.duration)) setVidDur(v.duration);
             }}
             onEnded={() => setVidPlaying(false)}
-            onClick={vidToggle}
           />
 
           {/* Play overlay — only when paused */}
@@ -553,6 +554,7 @@ function VideoModal({ onClose }: { onClose: () => void }) {
 
           {/* Controls bar */}
           <div
+            onClick={(e) => e.stopPropagation()}
             style={{
               position: "absolute",
               bottom: 0,
@@ -588,6 +590,7 @@ function VideoModal({ onClose }: { onClose: () => void }) {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               {/* Skip back */}
               <button
+                type="button"
                 onClick={() => vidSkip(-10)}
                 title="Back 10s"
                 style={{
@@ -613,6 +616,7 @@ function VideoModal({ onClose }: { onClose: () => void }) {
 
               {/* Play/Pause */}
               <button
+                type="button"
                 onClick={vidToggle}
                 style={{
                   width: 38,
@@ -640,6 +644,7 @@ function VideoModal({ onClose }: { onClose: () => void }) {
 
               {/* Skip forward */}
               <button
+                type="button"
                 onClick={() => vidSkip(10)}
                 title="Forward 10s"
                 style={{
@@ -681,6 +686,7 @@ function VideoModal({ onClose }: { onClose: () => void }) {
 
               {/* Fullscreen */}
               <button
+                type="button"
                 onClick={vidFullscreen}
                 title="Fullscreen"
                 style={{
