@@ -1,83 +1,121 @@
-The change: removed EventSchemas (doesn't exist in Inngest v4) — the client is now just new Inngest({ id: 'nivedanai' }). The event
-   types are exported as NivedanEvents for TypeScript use elsewhere.
- --- createFunction now takes 2 args: config with triggers: [{ event: '...' }], then handler   
+![Nivedan AI](https://res.cloudinary.com/dkqbzwicr/image/upload/q_auto/f_auto/v1780073397/bannerimage_ocjq9t.png)
 
---------------------https://adk.dev/integrations/
+# Nivedan AI
 
---------------------https://adk.dev/sessions/memory/
+**Autonomous multi-agent SaaS that transforms RFP PDFs into submission-ready proposals in 15–20 minutes.**
 
-import {GOOGLE_SEARCH, LlmAgent} from '@google/adk';
+🔗 [Live Demo](https://nivedan-ai.vercel.app/)
 
-export const rootAgent = new LlmAgent({
-  model: 'gemini-flash-latest',
-  name: 'root_agent',
-  description:
-      'an agent whose job it is to perform Google search queries and answer questions about the results.',
-  instruction:
-      'You are an agent whose job is to perform Google search queries and answer questions about the results.',
-  tools: [GOOGLE_SEARCH],
-});
+---
 
--------------------------------------------------------------- ----------------------------------------------------------
+## What Is Nivedan AI?
 
+Nivedan AI is a fully autonomous proposal generation platform. Upload an RFP PDF and a 6-agent AI pipeline takes over — parsing the document, researching the client company live on the web, matching your capabilities against every requirement, writing a 12-section branded proposal, and delivering the final PDF to your inbox. No manual drafting. No copy-pasting.
 
-Relevant for Later Phases
+---
 
-  ┌────────────────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────┐
-  │        Integration         │                                             Why it fits                                             │
-  ├────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ Knowledge Engine           │ Google-native private data retrieval — potential upgrade for Agent 4's KB search (Phase 2 MCP work) │
-  ├────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ MCP Toolbox for Databases  │ Expose Neon tables to agents as MCP tools — exact fit for Phase 2 (Add MCP roadmap item)            │
-  ├────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ Pinecone / Qdrant / Chroma │ Vector search for knowledge base — better semantic matching than SQL text search for Agent 4        │
-  └────────────────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────┘
-  ---------------------------------------
+## Features
 
- You run "TechSolutions Pvt Ltd" — a software agency. You set up your Company Profile once:
-  - Company Name: TechSolutions Pvt Ltd
-  - Industry: Software Development
-  - Website: techsolutions.com
-  - Tagline: "Delivering enterprise software since 2015"
+- Upload any RFP PDF → receive a full branded proposal PDF by email
+- 6-agent AI pipeline: Parse → Research → Match → Write → Review → Export
+- Live Tavily MCP web search for real-time client company intelligence
+- Knowledge base for case studies, certifications, team bios, and past proposals
+- Human-in-the-loop (HITL) review with targeted section rewrites
+- Automated PDF export + Resend email delivery
+- Plan-gated usage quotas (Free / Plus / Pro)
 
----------------------------------------- ------------
+---
 
-src\app\redirecting\page.tsx-----------------------------------
+## Tech Stack
 
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 15, Tailwind CSS |
+| Auth | Clerk v7 |
+| Backend | Neon PostgreSQL, Drizzle ORM, Inngest |
+| File handling | UploadThing v7 |
+| Email | Resend |
+| AI orchestration | Google Agent Development Kit (ADK) TypeScript |
+| AI models | Gemini 2.5 Pro · Gemini 2.5 Flash · Gemini 2.0 Flash Lite |
+| Web search | Tavily MCP |
+| Deployment | Vercel |
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+---
+
+## Six-Agent Pipeline
+
+| # | Agent | Model | Role |
+|---|---|---|---|
+| 1 | Orchestrator | Gemini 2.5 Pro | Validates inputs, issues pipeline directive |
+| 2 | RFP Parser | Gemini 2.0 Flash Lite | Reads PDF natively via Gemini inline data |
+| 3 | Client Research | Gemini 2.5 Flash | Tavily MCP web search → company intelligence |
+| 4 | Requirements Matcher | Gemini 2.0 Flash Lite | Maps RFP requirements to KB items + Tavily evidence |
+| 5 | Proposal Writer | Gemini 2.5 Pro | Generates 12-section JSON proposal |
+| 6 | Quality Reviewer | Gemini 2.0 Flash Lite | 5 quality checks, applies corrections |
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js 18+
+- Accounts: [Clerk](https://clerk.com), [Neon](https://neon.tech), [UploadThing](https://uploadthing.com), [Inngest](https://inngest.com), [Resend](https://resend.com), [Tavily](https://tavily.com), [Google AI Studio](https://aistudio.google.com)
+
+### Environment Variables
+
+```env
+GOOGLE_API_KEY=
+TAVILY_API_KEY=
+CLERK_SECRET_KEY=
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+DATABASE_URL=
+UPLOADTHING_TOKEN=
+INNGEST_EVENT_KEY=
+INNGEST_SIGNING_KEY=
+RESEND_API_KEY=
+RESEND_FROM_EMAIL=
+RESEND_FROM_NAME=
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Install & Run
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev       # http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+For local pipeline testing, also run the Inngest dev server separately and re-sync at your Inngest Cloud dashboard after every deploy.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Commands
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Start Next.js dev server |
+| `npm run build` | Production build (surfaces TypeScript errors) |
+| `npm run start` | Start production server |
+| `npm run db:generate` | Generate Drizzle migration SQL from schema |
+| `npm run db:migrate` | Apply pending migrations |
+| `npm run db:studio` | Open Drizzle Studio at localhost:4983 |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+> **Schema changes:** Run `db:generate` then apply via Neon MCP. `db:push` hangs over TCP from local.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Pricing
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Plan | Price | Proposals/mo | KB PDFs/mo | Extras |
+|---|---|---|---|---|
+| Free | $0 | 1 | 1 | Core pipeline |
+| Plus | $9/mo | 5 | 10 | Priority processing |
+| Pro | $19/mo | Unlimited | Unlimited | White-label, REST API, 5 team seats |
+
+---
+
+## Deployment
+
+Auto-deploys to Vercel on push to `main`.
+
+**Live:** [https://nivedan-ai.vercel.app/](https://nivedan-ai.vercel.app/)
