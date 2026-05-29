@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import WorkflowViz from "./WorkflowViz";
@@ -67,6 +67,7 @@ export default function Hero() {
   const lightRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { isSignedIn } = useUser();
+  const [videoOpen, setVideoOpen] = useState(false);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -211,6 +212,13 @@ export default function Hero() {
               <button
                 className="ni-btn ni-btn-ghost"
                 style={{ padding: "15px 22px", display: "flex", alignItems: "center", gap: 8 }}
+                onClick={() => {
+                  if (isSignedIn) {
+                    router.push("/redirecting?to=how-it-works");
+                  } else {
+                    setVideoOpen(true);
+                  }
+                }}
               >
                 <span
                   style={{
@@ -336,7 +344,367 @@ export default function Hero() {
 
       {/* Trusted strip */}
       <TrustedStrip />
+
+      {videoOpen && <VideoModal onClose={() => setVideoOpen(false)} />}
     </section>
+  );
+}
+
+const VIDEO_URL =
+  "https://res.cloudinary.com/dkqbzwicr/video/upload/q_auto/f_auto/v1780070947/nivedanaivideo_fgvlqu.webm";
+
+function VideoModal({ onClose }: { onClose: () => void }) {
+  const [vidPlaying, setVidPlaying] = useState(false);
+  const [vidTime, setVidTime] = useState(0);
+  const [vidDur, setVidDur] = useState(0);
+  const vidRef = useRef<HTMLVideoElement>(null);
+  const vidWrapRef = useRef<HTMLDivElement>(null);
+
+  // ESC to close
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") handleClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-play on mount
+  useEffect(() => {
+    vidRef.current?.play().then(() => setVidPlaying(true)).catch(() => {});
+  }, []);
+
+  function handleClose() {
+    const v = vidRef.current;
+    if (v) { v.pause(); v.currentTime = 0; }
+    setVidPlaying(false);
+    onClose();
+  }
+
+  const vidToggle = () => {
+    const v = vidRef.current;
+    if (!v) return;
+    v.paused ? v.play().then(() => setVidPlaying(true)).catch(() => {}) : (v.pause(), setVidPlaying(false));
+  };
+
+  const vidSkip = (s: number) => {
+    if (vidRef.current)
+      vidRef.current.currentTime = Math.max(0, Math.min(vidRef.current.duration || 0, vidRef.current.currentTime + s));
+  };
+
+  const vidSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = Number(e.target.value);
+    setVidTime(val);
+    if (vidRef.current) vidRef.current.currentTime = val;
+  };
+
+  const fmtTime = (s: number) =>
+    `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+
+  const vidFullscreen = () => {
+    if (!vidWrapRef.current) return;
+    document.fullscreenElement
+      ? document.exitFullscreen()
+      : vidWrapRef.current.requestFullscreen().catch(() => {});
+  };
+
+  return (
+    <div
+      onClick={handleClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        background: "rgba(15,30,25,0.85)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px 16px",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: "100%",
+          maxWidth: 920,
+          background: "var(--forest-deep)",
+          border: "1px solid rgba(212,168,79,0.25)",
+          borderRadius: 20,
+          overflow: "hidden",
+          boxShadow: "0 32px 80px rgba(0,0,0,0.55)",
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "16px 20px",
+            borderBottom: "1px solid rgba(212,168,79,0.15)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                background: "var(--gold)",
+                display: "grid",
+                placeItems: "center",
+                flexShrink: 0,
+              }}
+            >
+              <svg width="10" height="10" viewBox="0 0 10 10">
+                <path d="M3 2 L8 5 L3 8 Z" fill="#2A1E08" />
+              </svg>
+            </span>
+            <span
+              style={{
+                fontFamily: "var(--f-display)",
+                fontWeight: 600,
+                fontSize: 15,
+                color: "var(--ivory)",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              Nivedan AI — Platform Demo
+            </span>
+          </div>
+          <button
+            onClick={handleClose}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              border: "1px solid rgba(255,255,255,0.15)",
+              background: "rgba(255,255,255,0.07)",
+              color: "var(--ivory)",
+              cursor: "pointer",
+              display: "grid",
+              placeItems: "center",
+              fontSize: 16,
+              lineHeight: 1,
+            }}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Video */}
+        <div ref={vidWrapRef} style={{ position: "relative", background: "#000" }}>
+          <video
+            ref={vidRef}
+            src={VIDEO_URL}
+            playsInline
+            preload="metadata"
+            style={{ width: "100%", display: "block", maxHeight: "60vh", objectFit: "contain" }}
+            onLoadedMetadata={() => {
+              const d = vidRef.current?.duration;
+              if (d && isFinite(d)) setVidDur(d);
+            }}
+            onDurationChange={() => {
+              const d = vidRef.current?.duration;
+              if (d && isFinite(d)) setVidDur(d);
+            }}
+            onTimeUpdate={() => {
+              const v = vidRef.current;
+              if (!v) return;
+              setVidTime(v.currentTime);
+              if (v.duration && isFinite(v.duration)) setVidDur(v.duration);
+            }}
+            onEnded={() => setVidPlaying(false)}
+            onClick={vidToggle}
+          />
+
+          {/* Play overlay — only when paused */}
+          {!vidPlaying && (
+            <div
+              onClick={vidToggle}
+              style={{
+                position: "absolute",
+                inset: 0,
+                zIndex: 2,
+                display: "grid",
+                placeItems: "center",
+                cursor: "pointer",
+                background: "rgba(0,0,0,0.18)",
+              }}
+            >
+              <div
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: "50%",
+                  background: "var(--gold)",
+                  display: "grid",
+                  placeItems: "center",
+                  boxShadow: "0 8px 32px rgba(212,168,79,0.45)",
+                }}
+              >
+                <svg width="22" height="22" viewBox="0 0 22 22">
+                  <path d="M7 4 L18 11 L7 18 Z" fill="#2A1E08" />
+                </svg>
+              </div>
+            </div>
+          )}
+
+          {/* Controls bar */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              zIndex: 10,
+              background: "rgba(15,30,25,0.88)",
+              backdropFilter: "blur(10px)",
+              WebkitBackdropFilter: "blur(10px)",
+              padding: "10px 16px 14px",
+            }}
+          >
+            {/* Seek slider */}
+            <div style={{ marginBottom: 10 }}>
+              <input
+                type="range"
+                title="Seek video"
+                min={0}
+                max={vidDur > 0 ? vidDur : 100}
+                step={0.1}
+                value={vidTime}
+                onChange={vidSeek}
+                style={{
+                  width: "100%",
+                  height: 4,
+                  accentColor: "var(--gold)",
+                  cursor: "pointer",
+                }}
+              />
+            </div>
+
+            {/* Controls row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              {/* Skip back */}
+              <button
+                onClick={() => vidSkip(-10)}
+                title="Back 10s"
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--ivory)",
+                  padding: "4px 6px",
+                  borderRadius: 6,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 3,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  opacity: 0.8,
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" fill="currentColor"/>
+                </svg>
+                10
+              </button>
+
+              {/* Play/Pause */}
+              <button
+                onClick={vidToggle}
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: "50%",
+                  background: "var(--gold)",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "grid",
+                  placeItems: "center",
+                  flexShrink: 0,
+                }}
+              >
+                {vidPlaying ? (
+                  <svg width="14" height="14" viewBox="0 0 14 14">
+                    <rect x="2" y="1" width="4" height="12" rx="1" fill="#2A1E08" />
+                    <rect x="8" y="1" width="4" height="12" rx="1" fill="#2A1E08" />
+                  </svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 14 14">
+                    <path d="M3 2 L12 7 L3 12 Z" fill="#2A1E08" />
+                  </svg>
+                )}
+              </button>
+
+              {/* Skip forward */}
+              <button
+                onClick={() => vidSkip(10)}
+                title="Forward 10s"
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--ivory)",
+                  padding: "4px 6px",
+                  borderRadius: 6,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 3,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  opacity: 0.8,
+                }}
+              >
+                10
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z" fill="currentColor"/>
+                </svg>
+              </button>
+
+              {/* Time */}
+              <span
+                style={{
+                  fontFamily: "var(--f-mono)",
+                  fontSize: 12,
+                  color: "rgba(250,247,242,0.7)",
+                  marginLeft: 6,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {fmtTime(vidTime)} / {fmtTime(vidDur)}
+              </span>
+
+              {/* Spacer */}
+              <div style={{ flex: 1 }} />
+
+              {/* Fullscreen */}
+              <button
+                onClick={vidFullscreen}
+                title="Fullscreen"
+                style={{
+                  background: "none",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                  color: "var(--ivory)",
+                  padding: "5px 8px",
+                  display: "grid",
+                  placeItems: "center",
+                  opacity: 0.8,
+                }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"
+                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
