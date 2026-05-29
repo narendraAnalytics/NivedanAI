@@ -322,10 +322,11 @@ Silent failures that burned us:
 
 5. **`awaitServerData: true` only when client MUST have `serverData`** (e.g. `rfpDocument` → `jobId`). `kbDocument` does not use it; read `files[0].ufsUrl` directly.
 
-6. **`@react-pdf/renderer` in `next.config.ts`:**
+6. **`serverExternalPackages` in `next.config.ts`** — all packages that must run outside the Next.js bundle on the server:
    ```typescript
-   serverExternalPackages: ['@react-pdf/renderer']
+   serverExternalPackages: ['@react-pdf/renderer', '@google/adk', '@google/genai', 'mammoth', 'pdf-parse']
    ```
+   Add any new native/heavy server package here or it will fail to bundle on Vercel.
 
 ### API Routes — `src/app/api/`
 
@@ -364,9 +365,10 @@ Key classes: `.ni-glass` (glassmorphism), `.ni-section`, `.ni-container`, `.btn-
 Animations: `pulseGold`, `pulseGoldRing` (active agent card), `drift` (WorkflowViz float), `twinkle`, `spin` (upload spinner)
 
 **CSS module gotchas:**
-- Always add vendor prefixes for `backdrop-filter` (`-webkit-backdrop-filter`) and `user-select` (`-webkit-user-select`) — linter enforces this.
+- Always add vendor prefixes for `backdrop-filter` (`-webkit-backdrop-filter`), `user-select` (`-webkit-user-select`), and `mask-image` (`-webkit-mask-image`) — linter enforces this.
 - **CSS animation `fill-mode: both` overrides inline `transform`** — if a CSS animation keyframe uses `transform` with `fill-mode: both`, the final keyframe value is frozen on the element and permanently wins over any inline `style={{ transform }}` you apply later. Fix: apply the animation class to a **wrapper `<div>`**; apply the interactive `transform` inline to the **child element** which has no animation. This is the pattern used in the lightbox (`Lightbox` in `how-it-works/page.tsx`).
 - **React `onWheel` is passive** — cannot call `e.preventDefault()` to stop page scroll. For elements that must capture scroll (e.g. zoom controls), attach a native non-passive listener via `useEffect`: `el.addEventListener('wheel', handler, { passive: false })`.
+- **Blending a video with a non-black background** — `mix-blend-mode: screen` only dissolves pure-black pixels. If the video has a dark-but-not-black background (e.g. a space scene), pair it with a radial gradient `mask-image` to fade the edges to transparent instead: `-webkit-mask-image: radial-gradient(ellipse 78% 72% at 50% 52%, black 28%, transparent 72%)`. This removes the hard rectangular boundary without touching the subject in the centre.
 
 ### Favicon
 
@@ -374,7 +376,7 @@ Animations: `pulseGold`, `pulseGoldRing` (active agent card), `drift` (WorkflowV
 
 ### Key Pages
 
-- `/` (landing page) — server component (`src/app/page.tsx`). Renders `<IntroSplash />` first, then the standard landing sections. `IntroSplash` is a `'use client'` component (`src/components/landing/IntroSplash.tsx`) that shows a full-screen overlay with the infographic image, animated background, and zoom/pan controls. Dismiss via "Enter site" button, "Enter Nivedan AI" CTA, ESC key, or clicking outside the frame. Zoom: scroll wheel (non-passive native listener), `+`/`−` buttons, keyboard `+`/`-`/`0`, drag-to-pan, double-click to reset. Styles in `IntroSplash.module.css` — the `introImgIn` animation lives on `.frame` (wrapper); zoom `transform` is on `.frameImg` (inner `<img>` with no CSS animation) to avoid the fill-mode override trap. Zoom toolbar is positioned to the right of the frame (row layout) so it takes no vertical space and the eyebrow pill at the top stays clear.
+- `/` (landing page) — server component (`src/app/page.tsx`). Renders `<IntroSplash />` first, then the standard landing sections. `IntroSplash` is a `'use client'` component (`src/components/landing/IntroSplash.tsx`) that shows a full-screen overlay with the infographic image, animated background, and zoom/pan controls. Dismiss via "Enter site" button, "Enter Nivedan AI" CTA, ESC key, or clicking outside the frame. Zoom: scroll wheel (non-passive native listener), `+`/`−` buttons, keyboard `+`/`-`/`0`, drag-to-pan, double-click to reset. Styles in `IntroSplash.module.css` — the `introImgIn` animation lives on `.frame` (wrapper); zoom `transform` is on `.frameImg` (inner `<img>` with no CSS animation) to avoid the fill-mode override trap. Zoom toolbar is positioned to the right of the frame (row layout). An ambient robot video (`.introVideo`) sits to the left of the frame — `autoPlay muted loop playsInline`, `mix-blend-mode: screen` + radial `mask-image` to blend the dark space background seamlessly, `pointer-events: none` so click-outside-dismiss still works. Hidden at ≤900 px.
 - `/dashboard` — single `'use client'` file; all sub-components defined inline. Upload validates email before `startUpload`. Polls `/api/stats`, `/api/kb/items`, and `/api/proposals/recent` on mount. Real proposals rendered as clickable rows — "Draft Ready" rows link to `/workflow/[jobId]` (HITL approve panel); "Submitted" rows link to `/proposals/[jobId]` (viewer).
 - `/workflow/[jobId]` — polls `/api/jobs/[jobId]` every 3s. `CircularProgress` shows ETA while running, "Complete" + "View Proposal" button when `awaiting_review`/`completed`. **HITL "Request Changes":** `POST /api/proposals/[jobId]/changes` must include ALL rewritable sections in `flaggedSections` — passing `[]` causes `handle-hitl-changes.ts` to exit early and no sections get rewritten (only Quality Review re-runs). Valid sections: `executiveSummary`, `understandingOfRequirements`, `proposedSolution`, `technicalApproach`, `caseStudies`, `teamAndExpertise`, `projectTimeline`, `pricingStructure`.
 - `/proposals/[jobId]` — split into two files: `page.tsx` (server component — auth, DB queries, score computation, passes props) and `ProposalViewer.tsx` (client component — full interactive design: sticky TOC with scroll-spy, reading progress bar, section cards, floating action bar, Thank You closing card). `qualityScore` stored as `0.00–1.00` — multiply × 100 for display. Never move DB queries into `ProposalViewer`. **TOC scroll-jump:** `scrollMarginTop` must be on the outer wrapper `<div>` that holds the `ref` (the `scrollIntoView` target), NOT on the inner `<article>` — otherwise the sticky header covers the section heading on click.
@@ -388,6 +390,10 @@ Animations: `pulseGold`, `pulseGoldRing` (active agent card), `drift` (WorkflowV
 - `useUser()` → `{ isSignedIn, user }`
 - `<UserButton />` — no `afterSignOutUrl` prop (removed in v7; use `NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL` env var)
 - Middleware: `clerkMiddleware` + `createRouteMatcher` from `@clerk/nextjs/server`
+
+### Plan Limits — `src/lib/plans.ts`
+
+`PLAN_LIMITS` maps `free | plus | pro` to `{ proposals, kbDocuments }` monthly quotas (matching `pdfdeisgn.txt`). Import this constant wherever you need to enforce or display tier limits — do not hardcode numbers inline.
 
 ### Clerk Billing — Pricing Page
 
